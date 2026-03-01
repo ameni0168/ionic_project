@@ -1,0 +1,451 @@
+:host {
+  --blue-accent:   #3b82f6;      /* Bleu vif (remplace #00b14f) */
+  --blue-dark:     #1e3a8a;       /* Bleu foncé (remplace #14532d) */
+  --blue-light:    #eff6ff;        /* Bleu très clair (remplace #f0fdf4) */
+  --blue-border:   #bfdbfe;        /* Bleu clair pour bordures (remplace #bbf7d0) */
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --bg-page:        #f3f4f6;
+  --border-color:   #e5e7eb;
+  --card-bg:        #ffffff;
+  --radius:         14px;
+}
+
+// ----------------------------------------------------------------
+// TOOLBAR
+// ----------------------------------------------------------------
+.dashboard-toolbar {
+  --background: #ffffff;
+  --border-width: 0;
+  padding: 6px 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+
+  .avatar-btn {
+    width: 40px; height: 40px;
+    margin-left: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    &:active { opacity: 0.7; }
+  }
+  .dashboard-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+.dashboard-content { --background: var(--bg-page); }
+
+// ----------------------------------------------------------------
+// STATS
+// ----------------------------------------------------------------
+.stats-section {
+  display: flex;
+  gap: 12px;
+  padding: 20px 16px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  .stats-card {
+    flex: 1;
+    min-width: 100px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px 12px 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .18s ease;
+    &:active { transform: scale(0.95); }
+
+    .stat-icon-wrapper {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      ion-icon { font-size: 22px; color: #fff; }
+    }
+    .stat-value {
+      font-size: 22px; font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px; margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-secondary); line-height: 1.35;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// HERO CARD
+// ----------------------------------------------------------------
+.hero-card {
+  background: var(--card-bg);
+  padding: 36px 24px 28px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+
+  .briefcase-emoji {
+    font-size: 72px;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+  .hero-text {
+    font-size: 16px; font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.55; margin: 18px 0 28px;
+  }
+  .hero-actions {
+    display: flex; gap: 12px;
+    .btn-find-talent {
+      flex: 1;
+      --border-color: var(--blue-accent);
+      --color: var(--blue-accent);
+      --border-radius: 50px; --border-width: 2px;
+      font-weight: 600; height: 48px;
+    }
+    .btn-post-job {
+      flex: 1;
+      --background: var(--blue-accent);
+      --border-radius: 50px;
+      font-weight: 600; height: 48px;
+    }
+  }
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
+}
+
+// ----------------------------------------------------------------
+// ACTIVE JOBS
+// ----------------------------------------------------------------
+.active-jobs-section {
+  background: var(--card-bg);
+  padding: 16px 16px 0;
+  border-bottom: 1px solid var(--border-color);
+
+  .section-subtitle {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-primary); margin: 0 0 8px;
+  }
+  .jobs-list { background: transparent; }
+  .job-item {
+    --background: #f9fafb;
+    --border-radius: 12px;
+    --padding-start: 12px; --inner-padding-end: 12px;
+    margin-bottom: 8px; border-radius: 12px;
+    .job-avatar { width: 42px; height: 42px; }
+    .job-title  { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+    .job-meta   { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  }
+}
+
+// ----------------------------------------------------------------
+// LIENS RAPIDES
+// ----------------------------------------------------------------
+.links-row {
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px 24px;
+  background: var(--card-bg);
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+
+  .link-item {
+    font-size: 13px; color: var(--text-primary);
+    text-decoration: underline; cursor: pointer; font-weight: 500;
+    &:active { opacity: 0.6; }
+  }
+  .divider { color: var(--border-color); font-size: 16px; }
+}
+
+// ----------------------------------------------------------------
+// EXPERTS SECTION (wrapper)
+// ----------------------------------------------------------------
+.experts-section {
+  background: var(--card-bg);
+  margin-top: 12px;
+  padding: 22px 16px 20px;
+}
+
+// En-tête avec "See all"
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  .section-title {
+    font-size: 18px; font-weight: 800;
+    color: var(--text-primary); margin: 0;
+    letter-spacing: -0.2px;
+  }
+  .see-all-link {
+    font-size: 13px; font-weight: 600;
+    color: var(--blue-accent); cursor: pointer;
+    &:active { opacity: 0.7; }
+  }
+}
+
+// ----------------------------------------------------------------
+// CATEGORY GRID — 2 lignes × 5 colonnes scrollable
+// ----------------------------------------------------------------
+.category-grid-wrapper {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.category-grid {
+  display: grid;
+  grid-template-rows: repeat(2, auto);  // 2 lignes
+  grid-auto-flow: column;               // remplit colonne par colonne
+  gap: 10px;
+  width: max-content;                   // s'étend selon le contenu
+  padding-bottom: 4px;
+
+  .cat-card {
+    width: 120px;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+
+    &:active { transform: scale(0.96); }
+
+    &.cat-card--active {
+      border-color: var(--blue-accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); /* bleu */
+      .cat-icon-box ion-icon { color: var(--blue-accent); }
+    }
+
+    .cat-icon-box {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+
+      ion-icon {
+        font-size: 32px;
+        color: var(--blue-accent);
+        transition: color 0.18s;
+      }
+    }
+
+    .cat-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35; margin: 0;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// TOP EXPERTS
+// ----------------------------------------------------------------
+.top-experts-header {
+  margin-top: 24px;
+
+  .subsection-title {
+    font-size: 16px; font-weight: 800;
+    color: var(--text-primary); margin: 0;
+  }
+}
+
+.expert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+
+  .expert-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f9fafb;
+    border: 1.5px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: box-shadow 0.18s ease, transform 0.15s ease;
+
+    &:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    // ----- Avatar -----
+    .expert-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+
+      .expert-avatar {
+        width: 52px; height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--border-color);
+      }
+      .online-dot {
+        position: absolute;
+        bottom: 2px; right: 2px;
+        width: 11px; height: 11px;
+        background: var(--blue-accent); /* bleu */
+        border: 2px solid #fff;
+        border-radius: 50%;
+      }
+    }
+
+    // ----- Infos -----
+    .expert-details {
+      flex: 1;
+      min-width: 0;
+
+      .expert-top-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 2px;
+
+        .expert-name {
+          font-size: 14px; font-weight: 700;
+          color: var(--text-primary);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .top-rated-badge {
+          font-size: 10px; font-weight: 700;
+          background: #fef9c3; color: #854d0e;
+          border-radius: 20px;
+          padding: 2px 7px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+      }
+
+      .expert-job-title {
+        font-size: 12px; color: var(--text-secondary);
+        margin: 0 0 5px; line-height: 1.3;
+      }
+
+      .expert-stars {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-bottom: 6px;
+
+        .star {
+          font-size: 13px;
+          &.filled { color: #f59e0b; }
+          &.empty  { color: #d1d5db; }
+        }
+        .rating-val {
+          font-size: 12px; font-weight: 700;
+          color: var(--text-primary); margin-left: 4px;
+        }
+        .rating-count {
+          font-size: 11px; color: var(--text-secondary); margin-left: 2px;
+        }
+      }
+
+      .expert-bottom-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .expert-rate {
+          font-size: 13px; font-weight: 700;
+          color: var(--blue-accent);
+        }
+        .expert-loc {
+          display: flex; align-items: center; gap: 3px;
+          font-size: 11px; color: var(--text-secondary);
+          ion-icon { font-size: 13px; }
+        }
+      }
+    }
+
+    // ----- Hire button -----
+    .hire-btn {
+      flex-shrink: 0;
+      --border-radius: 20px;
+      --border-color: var(--blue-accent);
+      --color: var(--blue-accent);
+      --border-width: 1.5px;
+      font-size: 12px; font-weight: 600;
+      height: 34px;
+      align-self: center;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// GUIDED TOUR
+// ----------------------------------------------------------------
+.guided-tour-banner {
+  background: var(--blue-dark);
+  color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 20px;
+  cursor: pointer;
+  margin-top: 12px;
+  font-weight: 600; font-size: 15px;
+  ion-icon { font-size: 19px; color: rgba(255,255,255,0.8); }
+}
+
+.guided-tour-content {
+  background: var(--blue-light); /* remplace #ecfdf5 */
+  padding: 16px 20px;
+
+  .tour-step {
+    display: flex; align-items: flex-start;
+    gap: 14px; margin-bottom: 16px;
+    &:last-child { margin-bottom: 0; }
+
+    .step-number {
+      width: 28px; height: 28px; min-width: 28px;
+      background: var(--blue-accent); color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+    }
+    .step-text {
+      strong { font-size: 14px; color: var(--text-primary); display: block; }
+      p { font-size: 12px; color: var(--text-secondary); margin: 3px 0 0; line-height: 1.4; }
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// TAB BAR
+// ----------------------------------------------------------------
+.custom-tab-bar {
+  --background: #ffffff;
+  border-top: 1px solid var(--border-color);
+  height: 62px;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  .tab-btn {
+    --color: var(--text-secondary);
+    ion-icon  { font-size: 22px; }
+    ion-label { font-size: 10px; font-weight: 500; margin-top: 2px; }
+    &.tab-active { --color: var(--blue-accent); }
+  }
+}
+
+// ----------------------------------------------------------------
+// FAB
+// ----------------------------------------------------------------
+ion-fab-button {
+  --background: var(--blue-accent);
+  --background-activated: #2563eb; /* bleu foncé */
+  --box-shadow: 0 4px 18px rgba(59, 130, 246, 0.45);
+  width: 54px; height: 54px;
+}

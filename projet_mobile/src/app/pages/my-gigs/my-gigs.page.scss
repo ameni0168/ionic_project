@@ -1,0 +1,269 @@
+// My Gigs Page Styles
+
+.gigs-page {
+  --background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
+}
+
+.gigs-container {
+  min-height: calc(100vh - 56px);
+  padding: var(--spacing-6) var(--spacing-4);
+}
+
+.header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-6);
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.page-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.page-subtitle {
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.header-icon-btn {
+  --background: rgba(255, 255, 255, 0.2);
+  --border-radius: 12px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  height: 48px;
+  width: 48px;
+  
+  ion-icon {
+    font-size: 24px;
+    color: var(--color-white);
+  }
+}
+
+.create-gig-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  margin-bottom: var(--spacing-6);
+  animation: fadeInUp 0.4s ease-out 0.1s both;
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.create-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border-radius: 50%;
+  flex-shrink: 0;
+  
+  ion-icon {
+    font-size: 28px;
+    color: var(--color-white);
+  }
+}
+
+.create-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.gigs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.gig-card {
+  position: relative;
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  animation: fadeInUp 0.4s ease-out both;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  &:active {
+    transform: translateY(-2px) scale(0.99);
+  }
+}
+
+.gig-accent {
+  height: 6px;
+  width: 100%;
+}
+
+.gig-content {
+  padding: var(--spacing-5);
+}
+
+.gig-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-4) 0;
+  line-height: var(--line-height-tight);
+}
+
+.gig-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.gig-price {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  
+  ion-icon {
+    font-size: 20px;
+    color: var(--color-success);
+  }
+}
+
+.gig-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  
+  ion-icon {
+    font-size: 16px;
+  }
+  
+  &[data-status="active"] {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    
+    ion-icon {
+      color: var(--color-success);
+    }
+  }
+  
+  &[data-status="pending"] {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+    
+    ion-icon {
+      color: var(--color-warning);
+    }
+  }
+  
+  &[data-status="paused"] {
+    background: rgba(107, 114, 128, 0.1);
+    color: var(--color-text-secondary);
+    
+    ion-icon {
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+.gig-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.orders-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.view-details-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  
+  ion-icon {
+    font-size: 16px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-4);
+  
+  ion-icon {
+    font-size: 80px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: var(--spacing-4);
+  }
+  
+  h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-white);
+    margin-bottom: var(--spacing-2);
+  }
+  
+  p {
+    font-size: var(--font-size-base);
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  ion-button {
+    --background: var(--color-white);
+    --color: var(--color-primary);
+  }
+}
+
+// Responsive
+@media (min-width: 768px) {
+  .gigs-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+// Dark mode adjustments
+@media (prefers-color-scheme: dark) {
+  .gig-card {
+    background: var(--color-surface);
+  }
+}

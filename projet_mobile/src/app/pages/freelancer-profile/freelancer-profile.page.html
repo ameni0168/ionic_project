@@ -1,0 +1,92 @@
+<ion-header mode="ios">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="editProfile()">
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="profile-page">
+  <div class="profile-container safe-area-bottom">
+    
+    <!-- Profile Header -->
+    <div class="profile-header" @fadeInUp>
+      <div class="profile-avatar">
+        <div class="avatar-placeholder">
+          <ion-icon name="person"></ion-icon>
+        </div>
+        <div class="rating-badge">
+          <ion-icon name="star"></ion-icon>
+          <span>{{ profile.rating }}</span>
+        </div>
+      </div>
+      
+      <h1 class="profile-name">{{ profile.name }}</h1>
+      <p class="profile-title">{{ profile.title }}</p>
+      
+      <div class="profile-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.completedProjects }}</div>
+          <div class="stat-label">Projects</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.rating }}</div>
+          <div class="stat-label">Rating</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.reviews }}</div>
+          <div class="stat-label">Reviews</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="section-card" @fadeInUp>
+      <h2 class="section-title">About</h2>
+      <p class="bio-text">{{ profile.bio }}</p>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="section-card" @fadeInUp>
+      <h2 class="section-title">Contact Information</h2>
+      <div class="info-list">
+        <div class="info-item" *ngFor="let info of profileInfo">
+          <div class="info-icon">
+            <ion-icon [name]="info.icon"></ion-icon>
+          </div>
+          <div class="info-content">
+            <div class="info-label">{{ info.label }}</div>
+            <div class="info-value">{{ info.value }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="section-card" @fadeInUp>
+      <h2 class="section-title">Skills</h2>
+      <div class="skills-list">
+        <div class="skill-item" *ngFor="let skill of skills">
+          <div class="skill-header">
+            <span class="skill-name">{{ skill.name }}</span>
+            <span class="skill-percentage">{{ skill.level }}%</span>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-progress" [style.width.%]="skill.level"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

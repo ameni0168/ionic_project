@@ -1,0 +1,351 @@
+// ============================================================
+// Talent Page - Ionic 6+ | Standalone | Thème vert
+// ============================================================
+
+:host {
+  --green-accent:   #006ab1;
+  --green-dark:     #141653;
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --bg-page:        #ffffff;
+  --border-color:   #e5e7eb;
+  --radius:         14px;
+}
+
+// ----------------------------------------------------------------
+// TOOLBAR
+// ----------------------------------------------------------------
+.talent-toolbar {
+  --background: #ffffff;
+  --border-width: 0;
+  padding: 6px 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+
+  .avatar-btn {
+    width: 40px; height: 40px;
+    margin-left: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%; overflow: hidden;
+    cursor: pointer;
+    &:active { opacity: 0.7; }
+  }
+  .talent-title {
+    font-size: 20px; font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+.talent-content { --background: #ffffff; }
+
+// ----------------------------------------------------------------
+// SEARCH SECTION
+// ----------------------------------------------------------------
+.search-section {
+  padding: 16px 16px 12px;
+  background: #fff;
+
+  .search-bar-row {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    background: #fff;
+
+    .search-input {
+      flex: 1;
+      border: none; outline: none;
+      padding: 13px 16px;
+      font-size: 15px;
+      color: var(--text-primary);
+      background: transparent;
+
+      &::placeholder { color: #9ca3af; }
+    }
+
+    .search-btn {
+      background: var(--green-accent);
+      border: none; cursor: pointer;
+      width: 54px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 0 50px 50px 0;
+      transition: background 0.15s;
+      &:active { background: #009940; }
+
+      ion-icon { font-size: 20px; color: #fff; }
+    }
+  }
+
+  // Discover dropdown
+  .discover-dropdown {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50px;
+    padding: 13px 18px;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 0.15s;
+    &:active { border-color: var(--green-accent); }
+
+    .discover-label {
+      font-size: 15px; color: #9ca3af; font-weight: 400;
+    }
+    ion-icon { font-size: 18px; color: var(--text-secondary); }
+  }
+
+  .discover-options {
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    margin-top: 6px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+
+    .discover-option {
+      padding: 13px 18px;
+      font-size: 14px; color: var(--text-primary);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+      transition: background 0.12s;
+      &:last-child { border-bottom: none; }
+      &:active, &.active {
+        background: var(--green-accent);
+        color: #fff;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// DIVIDER
+// ----------------------------------------------------------------
+.page-divider {
+  height: 8px;
+  background: #f3f4f6;
+  margin: 4px 0;
+}
+
+// ----------------------------------------------------------------
+// TALENT BLOCK (section générique)
+// ----------------------------------------------------------------
+.talent-block {
+  padding: 20px 16px 16px;
+  background: #fff;
+
+  .block-title {
+    font-size: 22px; font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.25; margin: 0 0 14px;
+    letter-spacing: -0.3px;
+  }
+}
+
+// ----------------------------------------------------------------
+// SEE MORE BUTTON
+// ----------------------------------------------------------------
+.see-more-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 50px;
+  padding: 14px 20px;
+  background: #fff;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:active {
+    background: #f0fdf4;
+    border-color: var(--green-accent);
+  }
+
+  .see-more-icon {
+    font-size: 18px; color: var(--green-accent);
+  }
+  span {
+    font-size: 15px; font-weight: 600;
+    color: var(--green-accent);
+  }
+}
+
+// ----------------------------------------------------------------
+// TALENT SCROLL (cards horizontales)
+// ----------------------------------------------------------------
+.talent-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  &::-webkit-scrollbar { display: none; }
+
+  // ---- Talent Card ----
+  .talent-card {
+    min-width: 240px;
+    max-width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: 18px;
+    padding: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.18s ease, transform 0.15s ease;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+
+    &:active {
+      transform: scale(0.97);
+      box-shadow: 0 3px 14px rgba(0,0,0,0.1);
+    }
+
+    // --- Top row: avatar + info + fav ---
+    .card-top-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .card-avatar-wrap {
+        position: relative; flex-shrink: 0;
+
+        .card-avatar {
+          width: 56px; height: 56px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--border-color);
+        }
+        .online-dot {
+          position: absolute; bottom: 2px; right: 2px;
+          width: 12px; height: 12px;
+          border-radius: 50%; border: 2px solid #fff;
+          &.online  { background: var(--green-accent); }
+          &.offline { background: #9ca3af; }
+        }
+      }
+
+      .card-info {
+        flex: 1; min-width: 0;
+
+        .card-name {
+          display: block;
+          font-size: 15px; font-weight: 700;
+          color: var(--green-accent);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .card-job {
+          font-size: 13px; color: var(--text-secondary);
+          margin: 3px 0 0; line-height: 1.3;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+      }
+
+      .fav-btn {
+        background: none; border: none; cursor: pointer;
+        padding: 4px; flex-shrink: 0;
+        ion-icon {
+          font-size: 22px; color: #d1d5db;
+          transition: color 0.15s;
+          &.fav-active { color: #ef4444; }
+        }
+        &:active ion-icon { transform: scale(1.2); }
+      }
+    }
+
+    // --- Stats row ---
+    .card-stats {
+      display: flex; align-items: center;
+      gap: 16px; margin-bottom: 6px;
+
+      .stat-rate {
+        font-size: 15px; font-weight: 700;
+        color: var(--text-primary);
+      }
+      .stat-earned {
+        font-size: 13px; color: var(--text-secondary);
+      }
+    }
+
+    // --- Job success ---
+    .card-success {
+      .success-pct {
+        font-size: 13px; font-weight: 500;
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// BROWSE BY CATEGORY
+// ----------------------------------------------------------------
+.browse-block {
+  padding: 20px 16px 16px;
+  background: #fff;
+
+  .block-title {
+    font-size: 22px; font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 20px; letter-spacing: -0.3px;
+  }
+
+  .browse-category {
+    margin-bottom: 8px;
+
+    .cat-name {
+      font-size: 17px; font-weight: 700;
+      color: var(--green-accent);
+      margin: 0 0 12px;
+      cursor: pointer;
+      &:active { opacity: 0.7; }
+    }
+
+    .chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+
+      .chip {
+        border: 1.5px solid var(--border-color);
+        border-radius: 50px;
+        padding: 8px 16px;
+        font-size: 13px; font-weight: 500;
+        color: var(--text-primary);
+        background: #fff;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+        &:active {
+          border-color: var(--green-accent);
+          background: var(--green-accent);
+          color: #fff;
+        }
+      }
+    }
+
+    .cat-divider {
+      height: 1px; background: var(--border-color);
+      margin-bottom: 20px;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// TAB BAR
+// ----------------------------------------------------------------
+.custom-tab-bar {
+  --background: #ffffff;
+  border-top: 1px solid var(--border-color);
+  height: 62px;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  .tab-btn {
+    --color: var(--text-secondary);
+    ion-icon  { font-size: 22px; }
+    ion-label { font-size: 10px; font-weight: 500; margin-top: 2px; }
+    &.tab-active { --color: var(--green-accent); font-weight: 700; }
+  }
+}

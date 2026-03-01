@@ -1,0 +1,169 @@
+<ion-content [fullscreen]="true" class="accueil-page">
+  <div *ngIf="showContent">
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+      <div class="navbar-logo">FreelanceHub</div>
+      <div class="navbar-actions">
+        <ion-button fill="clear" class="nav-btn" (click)="goToSignIn()">Sign In</ion-button>
+        <ion-button class="nav-signup-btn" (click)="goToSignUp()">Sign Up</ion-button>
+      </div>
+    </div>
+
+    <!-- NAV LINKS -->
+    <div class="nav-links">
+      <button class="nav-link" (click)="goToHireFreelancer()">
+        <ion-icon name="people-outline"></ion-icon>
+        Hire a Freelancer
+      </button>
+      <button class="nav-link" (click)="goToFindWork()">
+        <ion-icon name="briefcase-outline"></ion-icon>
+        Find Work
+      </button>
+      <button class="nav-link active" (click)="goToPostJob()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        Offer a Job
+      </button>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Trusted by 10,000+ companies
+      </div>
+      <h1 class="hero-title">
+        Find the perfect<br>
+        <span class="hero-accent">freelance</span> talent
+      </h1>
+      <p class="hero-sub">
+        Connect with top-tier professionals. Post a job, browse talent, and get work done — your way.
+      </p>
+
+      <!-- Search -->
+      <div class="hero-search">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input type="text" placeholder="Search for a skill or service..." class="search-input" />
+        <button class="search-btn">Search</button>
+      </div>
+
+      <!-- Tags -->
+      <div class="hero-tags">
+        <span class="tags-label">Popular:</span>
+        <span class="hero-tag">Web Dev</span>
+        <span class="hero-tag">UI Design</span>
+        <span class="hero-tag">Mobile</span>
+        <span class="hero-tag">Data</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Freelancers</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-number">12K+</div>
+          <div class="stat-label">Jobs Posted</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Satisfaction</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-tag">How It Works</span>
+        <h2 class="section-title">Up and running in minutes</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-icon">📝</div>
+          <div class="step-num">01</div>
+          <h3 class="step-title">Post a Job</h3>
+          <p class="step-desc">Describe your project and set a budget in under 5 minutes.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">🔍</div>
+          <div class="step-num">02</div>
+          <h3 class="step-title">Review Proposals</h3>
+          <p class="step-desc">Get proposals from skilled freelancers and browse portfolios.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">💬</div>
+          <div class="step-num">03</div>
+          <h3 class="step-title">Collaborate</h3>
+          <p class="step-desc">Chat, share files, and track milestones all in one place.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">✅</div>
+          <div class="step-num">04</div>
+          <h3 class="step-title">Pay Securely</h3>
+          <p class="step-desc">Release payment only when you're 100% satisfied.</p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="section section--gray">
+      <div class="section-header">
+        <span class="section-tag">Explore</span>
+        <h2 class="section-title">Browse Categories</h2>
+      </div>
+      <div class="categories-grid">
+        <div class="category-card" *ngFor="let cat of categories">
+          <div class="cat-icon">{{ cat.icon }}</div>
+          <div class="cat-name">{{ cat.name }}</div>
+          <div class="cat-count">{{ cat.count }} jobs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP FREELANCERS -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-tag">Top Talent</span>
+        <h2 class="section-title">Work with the best</h2>
+      </div>
+      <div class="freelancers-list">
+        <div class="freelancer-card" *ngFor="let f of freelancers">
+          <div class="freelancer-avatar">{{ f.avatar }}</div>
+          <div class="freelancer-info">
+            <div class="freelancer-name">{{ f.name }}</div>
+            <div class="freelancer-title">{{ f.title }}</div>
+            <div class="freelancer-tags">
+              <span class="ftag" *ngFor="let tag of f.tags">{{ tag }}</span>
+            </div>
+          </div>
+          <div class="freelancer-right">
+            <div class="freelancer-rate">{{ f.rate }}<span>/hr</span></div>
+            <div class="freelancer-stars">★ {{ f.rating }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <div class="cta-glow"></div>
+      <h2 class="cta-title">Ready to get<br><span class="cta-accent">started?</span></h2>
+      <p class="cta-sub">Thousands of companies and freelancers are already growing with us.</p>
+      <div class="cta-btns">
+        <ion-button class="cta-btn-primary" expand="block" (click)="goToHireFreelancer()">
+          Hire a Freelancer
+        </ion-button>
+        <ion-button class="cta-btn-secondary" fill="outline" expand="block" (click)="goToFindWork()">
+          Find Work
+        </ion-button>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -1,0 +1,230 @@
+<ion-header mode="ios">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Create Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="register-page">
+  <div class="register-container safe-area-bottom" *ngIf="showContent">
+    
+    <!-- Header -->
+    <div class="register-header" @fadeInUp>
+      <div class="icon-wrapper icon-wrapper--secondary">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <h1 class="register-title">Freelancer Account</h1>
+      <p class="register-subtitle">Create your profile and start finding work</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="register-form" @fadeInUp>
+      
+      <div class="form-group">
+        <app-input-field
+          label="Full Name"
+          type="text"
+          placeholder="John Doe"
+          icon="person-outline"
+          [formControlRef]="fullNameControl"
+          [required]="true"
+          formControlName="fullName">
+        </app-input-field>
+      </div>
+
+      <div class="form-group">
+        <app-input-field
+          label="Email Address"
+          type="email"
+          placeholder="john@example.com"
+          icon="mail-outline"
+          [formControlRef]="emailControl"
+          [required]="true"
+          formControlName="email">
+        </app-input-field>
+      </div>
+
+      <div class="form-group">
+        <app-input-field
+          label="Portfolio URL"
+          type="url"
+          placeholder="https://yourportfolio.com"
+          icon="link-outline"
+          [formControlRef]="portfolioUrlControl"
+          hintText="Optional - Link to your online portfolio or website"
+          formControlName="portfolioUrl">
+        </app-input-field>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          Professional Bio <span class="required">*</span>
+        </label>
+        <div class="textarea-wrapper">
+          <ion-icon name="text-outline" class="textarea-icon"></ion-icon>
+          <textarea
+            class="form-textarea"
+            [class.error]="bioControl?.invalid && bioControl?.touched"
+            placeholder="Tell clients about your skills, experience, and what makes you unique..."
+            rows="5"
+            formControlName="bio"
+            [attr.aria-label]="'Professional Bio'"
+            [attr.aria-invalid]="bioControl?.invalid && bioControl?.touched">
+          </textarea>
+        </div>
+        <div class="char-count">
+          <span [class.error]="getBioCharCount() > 500">{{ getBioCharCount() }}</span> / 500 characters
+          <span class="hint">(min 50)</span>
+        </div>
+        <div class="form-error" *ngIf="bioControl?.invalid && bioControl?.touched">
+          <span *ngIf="bioControl?.errors?.['required']">Bio is required</span>
+          <span *ngIf="bioControl?.errors?.['minlength']">Bio must be at least 50 characters</span>
+          <span *ngIf="bioControl?.errors?.['maxlength']">Bio must not exceed 500 characters</span>
+        </div>
+      </div>
+
+      <!-- CV Upload -->
+      <div class="form-group">
+        <label class="form-label">CV / Resume</label>
+        <div class="file-upload">
+          <input
+            type="file"
+            id="cv-upload"
+            accept=".pdf,.doc,.docx"
+            (change)="onCvFileSelect($event)"
+            style="display: none;">
+          
+          <label for="cv-upload" class="file-upload__button" *ngIf="!cvFile">
+            <ion-icon name="cloud-upload-outline"></ion-icon>
+            <span>Upload CV/Resume</span>
+            <span class="file-upload__hint">PDF, DOC, DOCX (Max 5MB)</span>
+          </label>
+          
+          <div class="file-preview" *ngIf="cvFile">
+            <div class="file-preview__icon">
+              <ion-icon [name]="getFileIcon(cvFile.type)"></ion-icon>
+            </div>
+            <div class="file-preview__info">
+              <div class="file-preview__name">{{ cvFile.name }}</div>
+              <div class="file-preview__size">{{ formatFileSize(cvFile.size) }}</div>
+            </div>
+            <button type="button" class="file-preview__remove" (click)="removeCvFile()">
+              <ion-icon name="close-circle"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portfolio Upload -->
+      <div class="form-group">
+        <label class="form-label">Portfolio Files</label>
+        <div class="file-upload">
+          <input
+            type="file"
+            id="portfolio-upload"
+            accept=".pdf,.zip,image/*"
+            multiple
+            (change)="onPortfolioFileSelect($event)"
+            style="display: none;">
+          
+          <label for="portfolio-upload" class="file-upload__button">
+            <ion-icon name="images-outline"></ion-icon>
+            <span>Upload Portfolio Files</span>
+            <span class="file-upload__hint">PDF, ZIP, Images (Max 10MB each)</span>
+          </label>
+          
+          <div class="file-preview-list" *ngIf="portfolioFiles.length > 0">
+            <div class="file-preview" *ngFor="let file of portfolioFiles; let i = index">
+              <div class="file-preview__icon">
+                <ion-icon [name]="getFileIcon(file.type)"></ion-icon>
+              </div>
+              <div class="file-preview__info">
+                <div class="file-preview__name">{{ file.name }}</div>
+                <div class="file-preview__size">{{ formatFileSize(file.size) }}</div>
+              </div>
+              <button type="button" class="file-preview__remove" (click)="removePortfolioFile(i)">
+                <ion-icon name="close-circle"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <app-input-field
+          label="Password"
+          type="password"
+          placeholder="Create a strong password"
+          icon="lock-closed-outline"
+          [formControlRef]="passwordControl"
+          [required]="true"
+          formControlName="password">
+        </app-input-field>
+        
+        <!-- Password Strength Indicator -->
+        <div class="password-strength" *ngIf="passwordControl?.value">
+          <div class="password-strength__label">Password Strength:</div>
+          <div class="password-strength__bars">
+            <div class="password-strength__bar" 
+                 [class.active]="getPasswordStrength() === 'weak' || getPasswordStrength() === 'medium' || getPasswordStrength() === 'strong'"
+                 [class.weak]="getPasswordStrength() === 'weak'">
+            </div>
+            <div class="password-strength__bar" 
+                 [class.active]="getPasswordStrength() === 'medium' || getPasswordStrength() === 'strong'"
+                 [class.medium]="getPasswordStrength() === 'medium'">
+            </div>
+            <div class="password-strength__bar" 
+                 [class.active]="getPasswordStrength() === 'strong'"
+                 [class.strong]="getPasswordStrength() === 'strong'">
+            </div>
+          </div>
+          <div class="password-strength__text" 
+               [class.weak]="getPasswordStrength() === 'weak'"
+               [class.medium]="getPasswordStrength() === 'medium'"
+               [class.strong]="getPasswordStrength() === 'strong'">
+            {{ getPasswordStrength() | titlecase }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <app-input-field
+          label="Confirm Password"
+          type="password"
+          placeholder="Re-enter your password"
+          icon="lock-closed-outline"
+          [formControlRef]="confirmPasswordControl"
+          [required]="true"
+          formControlName="confirmPassword">
+        </app-input-field>
+        
+        <div class="form-error" *ngIf="registerForm.hasError('passwordMismatch') && confirmPasswordControl?.touched">
+          Passwords do not match
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <app-button
+          type="submit"
+          variant="secondary"
+          size="lg"
+          [fullWidth]="true"
+          [loading]="isLoading">
+          Create Freelancer Account
+        </app-button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="register-footer" @fadeInUp>
+      <p class="footer-text">
+        Already have an account? 
+        <a class="link" (click)="navigateToLogin()">Sign in</a>
+      </p>
+    </div>
+  </div>
+</ion-content>

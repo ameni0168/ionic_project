@@ -1,0 +1,210 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="dashboard-toolbar">
+    <ion-buttons slot="start">
+      <ion-avatar class="avatar-btn" (click)="openProfile()">
+        <img
+          src="assets/default-avatar.png"
+          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+          alt="avatar"
+        />
+      </ion-avatar>
+    </ion-buttons>
+    <ion-title class="dashboard-title">Your dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="openMenu()">
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content">
+
+  <!-- ========== STATS CARDS ========== -->
+  <div class="stats-section">
+    <div class="stats-card" *ngFor="let stat of stats" (click)="viewStat(stat)">
+      <div class="stat-icon-wrapper" [style.background]="stat.gradient">
+        <ion-icon [name]="stat.icon"></ion-icon>
+      </div>
+      <div class="stat-value">{{ stat.value }}</div>
+      <div class="stat-label">{{ stat.label }}</div>
+    </div>
+  </div>
+
+  <!-- ========== HERO : PAS DE JOBS ACTIFS ========== -->
+  <div class="hero-card" *ngIf="!hasActiveJobs">
+    <div class="hero-illustration">
+      <div class="briefcase-emoji">💼</div>
+    </div>
+    <p class="hero-text">No job posts or contracts in<br />progress right now</p>
+    <div class="hero-actions">
+      <ion-button class="btn-find-talent" fill="outline" color="success" (click)="findTalent()">
+        <ion-icon slot="start" name="search-outline"></ion-icon>
+        Find a talent
+      </ion-button>
+      <ion-button class="btn-post-job" fill="solid" color="success" (click)="postJob()">
+        <ion-icon slot="start" name="add"></ion-icon>
+        Post a job
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- ========== LISTE JOBS ACTIFS ========== -->
+  <div class="active-jobs-section" *ngIf="hasActiveJobs">
+    <h3 class="section-subtitle">Jobs en cours</h3>
+    <ion-list lines="none" class="jobs-list">
+      <ion-item
+        *ngFor="let job of activeJobs"
+        class="job-item"
+        (click)="viewJob(job)"
+        detail="false"
+      >
+        <ion-avatar slot="start" class="job-avatar">
+          <img [src]="job.avatar" onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'" />
+        </ion-avatar>
+        <ion-label>
+          <h2 class="job-title">{{ job.title }}</h2>
+          <p class="job-meta">{{ job.status }} · {{ job.date }}</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="job.badgeColor">{{ job.badge }}</ion-badge>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- ========== LIENS RAPIDES ========== -->
+  <div class="links-row">
+    <a class="link-item" (click)="viewAllJobs()">View all job posts</a>
+    <span class="divider">|</span>
+    <a class="link-item" (click)="viewAllContracts()">View all contracts</a>
+  </div>
+
+  <!-- ========== FIND EXPERTS BY CATEGORY ========== -->
+  <div class="experts-section">
+
+    <!-- Titre + See all -->
+    <div class="section-header">
+      <h2 class="section-title">Find experts by category</h2>
+      <a class="see-all-link" (click)="browseConsultations()">See all</a>
+    </div>
+
+    <!-- Grille 2 lignes scrollable horizontalement -->
+    <div class="category-grid-wrapper">
+      <div class="category-grid">
+        <div
+          class="cat-card"
+          *ngFor="let cat of categories"
+          (click)="selectCategory(cat)"
+          [class.cat-card--active]="selectedCategoryId === cat.id"
+        >
+          <div class="cat-icon-box">
+            <ion-icon [name]="cat.ionIcon"></ion-icon>
+          </div>
+          <p class="cat-label">{{ cat.name }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TOP EXPERTS ========== -->
+    <div class="section-header top-experts-header">
+      <h3 class="subsection-title">Top rated experts</h3>
+      <a class="see-all-link" (click)="seeAllExperts()">See all</a>
+    </div>
+
+    <div class="expert-list">
+      <div
+        class="expert-card"
+        *ngFor="let expert of topExperts"
+        (click)="viewExpert(expert)"
+      >
+        <!-- Avatar -->
+        <div class="expert-avatar-wrap">
+          <img
+            class="expert-avatar"
+            [src]="expert.avatar"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+          />
+          <span class="online-dot" *ngIf="expert.online"></span>
+        </div>
+
+        <!-- Détails -->
+        <div class="expert-details">
+          <div class="expert-top-row">
+            <span class="expert-name">{{ expert.name }}</span>
+            <span class="top-rated-badge" *ngIf="expert.topRated">⭐ Top Rated</span>
+          </div>
+          <p class="expert-job-title">{{ expert.title }}</p>
+          <div class="expert-stars">
+            <ion-icon name="star"         class="star filled" *ngFor="let s of getStars(expert.rating)"></ion-icon>
+            <ion-icon name="star-outline" class="star empty"  *ngFor="let s of getEmptyStars(expert.rating)"></ion-icon>
+            <span class="rating-val">{{ expert.rating }}</span>
+            <span class="rating-count">({{ expert.reviews }} reviews)</span>
+          </div>
+          <div class="expert-bottom-row">
+            <span class="expert-rate">${{ expert.hourlyRate }}/hr</span>
+            <span class="expert-loc">
+              <ion-icon name="location-outline"></ion-icon> {{ expert.location }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Bouton Hire -->
+        <ion-button
+          class="hire-btn"
+          fill="outline"
+          color="success"
+          size="small"
+          (click)="hireExpert($event, expert)"
+        >Hire</ion-button>
+      </div>
+    </div>
+
+  </div><!-- /experts-section -->
+
+  <!-- ========== GUIDED TOUR ========== -->
+  <div class="guided-tour-banner" (click)="toggleGuidedTour()">
+    <span>Guided tour</span>
+    <ion-icon [name]="tourExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+  </div>
+  <div class="guided-tour-content" *ngIf="tourExpanded">
+    <div class="tour-step" *ngFor="let step of tourSteps; let i = index">
+      <div class="step-number">{{ i + 1 }}</div>
+      <div class="step-text">
+        <strong>{{ step.title }}</strong>
+        <p>{{ step.desc }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 90px;"></div>
+</ion-content>
+
+<!-- ========== FAB ========== -->
+<ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab-button color="success" (click)="postJob()">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- ========== TAB BAR ========== -->
+<ion-tab-bar slot="bottom" class="custom-tab-bar">
+  <ion-tab-button class="tab-btn tab-active" (click)="goTo('/dashboard')">
+    <ion-icon name="briefcase"></ion-icon>
+    <ion-label>Dashboard</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="goTo('/talent')">
+    <ion-icon name="people-outline"></ion-icon>
+    <ion-label>Talent</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="goTo('/catalog')">
+    <ion-icon name="albums-outline"></ion-icon>
+    <ion-label>Catalog</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="goTo('/messages')">
+    <ion-icon name="chatbubble-outline"></ion-icon>
+    <ion-label>Messages</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="goTo('/alerts')">
+    <ion-icon name="notifications-outline"></ion-icon>
+    <ion-label>Alerts</ion-label>
+  </ion-tab-button>
+</ion-tab-bar>

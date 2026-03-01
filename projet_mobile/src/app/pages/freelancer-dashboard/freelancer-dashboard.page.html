@@ -1,0 +1,39 @@
+<ion-content [fullscreen]="true" class="dashboard-page">
+  <div class="dashboard-container safe-area-top safe-area-bottom">
+    
+    <!-- Header Card -->
+    <div class="header-card" @fadeInUp>
+      <div class="header-content">
+        <div class="welcome-section">
+          <h1 class="welcome-title">Welcome Back! 👋</h1>
+          <p class="user-name">{{ userName }}</p>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" *ngFor="let stat of stats" [attr.data-color]="stat.color">
+            <div class="stat-icon-wrapper" [ngClass]="'bg-' + stat.color">
+              <ion-icon [name]="stat.icon"></ion-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-label">{{ stat.label }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="menu-section" @fadeInUp>
+      <div class="menu-item" *ngFor="let item of menuItems" (click)="navigateTo(item.route)">
+        <div class="menu-icon-wrapper" [ngClass]="'bg-' + item.color">
+          <ion-icon [name]="item.icon"></ion-icon>
+        </div>
+        <span class="menu-title">{{ item.title }}</span>
+        <ion-icon name="chevron-forward-outline" class="menu-arrow"></ion-icon>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
