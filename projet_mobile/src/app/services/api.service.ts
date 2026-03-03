@@ -6,12 +6,11 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ApiService {
 
-  private baseUrl = 'http://localhost:5000';
+  private baseUrl = 'http://localhost:5000/api';
 
   constructor(private http: HttpClient) {}
 
-  testApi() {
-    return this.http.get(`${this.baseUrl}/api/test`);
+  registerClient(data: any) {
+    return this.http.post(`${this.baseUrl}/auth/register/client`, data);
   }
-
 }
