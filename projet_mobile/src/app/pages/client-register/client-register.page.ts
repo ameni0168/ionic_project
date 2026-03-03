@@ -126,7 +126,7 @@ export class ClientRegisterPage implements OnInit {
       console.log("Registration success:", response);
 
       // Redirection après succès
-      this.navCtrl.navigateRoot(['/clientdashboard']);
+      this.navCtrl.navigateRoot(['/client-dashboard']);
     },
     error: (error) => {
       this.isLoading = false;

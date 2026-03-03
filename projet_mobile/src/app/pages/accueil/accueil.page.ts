@@ -43,7 +43,7 @@ export class AccueilPage {
   }
 
   goToSignIn() {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   goToSignUp() {
@@ -51,11 +51,11 @@ export class AccueilPage {
   }
 
   goToFindWork() {
-    this.router.navigate(['/find-work']);
+    this.router.navigate(['/find-work']);//pas developpé encore
   }
 
   goToHireFreelancer() {
-    this.router.navigate(['/hire']);
+    this.router.navigate(['/hire']);//pas developpé encore 
   }
 
 }
