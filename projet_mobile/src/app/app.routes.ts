@@ -72,6 +72,14 @@ export const routes: Routes = [
   {
     path: 'accueil', 
     loadComponent: () => import("./pages/accueil/accueil.page").then( m=> m.AccueilPage)
+  },  {
+    path: 'talent-profile',
+    loadComponent: () => import('./pages/talent-profile/talent-profile.page').then( m => m.TalentProfilePage)
+  },
+  {
+    path: 'create-gig',
+    loadComponent: () => import('./pages/create-gig/create-gig.page').then( m => m.CreateGigPage)
   }
+
 
 ];

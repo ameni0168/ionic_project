@@ -1,54 +1,81 @@
-from werkzeug.security import generate_password_hash
-from app.models.client_model import get_clients_collection
-import re
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
-def register_client(data):
+# ------------------ REGISTER CLIENT ------------------
+def register_client(mongo,name, email, password, phone=None):
 
-    full_name = data.get("fullName")
-    email = data.get("email")
-    phone = data.get("phone")
-    location = data.get("location")
-    company = data.get("companyName")
-    password = data.get("password")
-    confirm_password = data.get("confirmPassword")
+    if mongo.db.users.find_one({"email": email}):
+        return None, "Email déjà utilisé"
 
-    # 1️⃣ Vérifier champs obligatoires
-    if not all([full_name, email, phone, location, password, confirm_password]):
-        return {"error": "Tous les champs obligatoires doivent être remplis"}, 400
-
-    # 2️⃣ Vérifier email format
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-        return {"error": "Email invalide"}, 400
-
-    # 3️⃣ Vérifier password match
-    if password != confirm_password:
-        return {"error": "Les mots de passe ne correspondent pas"}, 400
-
-    # 4️⃣ Vérifier longueur password
-    if len(password) < 8:
-        return {"error": "Mot de passe trop court (min 8 caractères)"}, 400
-
-    clients = get_clients_collection()
-
-    # 5️⃣ Vérifier email unique
-    if clients.find_one({"email": email}):
-        return {"error": "Email déjà utilisé"}, 400
-
-    # 6️⃣ Hasher password
     hashed_password = generate_password_hash(password)
 
-    # 7️⃣ Construire document Mongo
-    new_client = {
-        "fullName": full_name,
+    user_data = {
         "email": email,
-        "phone": phone,
-        "location": location,
-        "companyName": company,
         "password": hashed_password,
         "role": "client",
-        "createdAt": __import__("datetime").datetime.utcnow()
+        "created_at": datetime.utcnow()
     }
 
-    clients.insert_one(new_client)
+    try:
+        user_result = mongo.db.users.insert_one(user_data)
+        user_id = user_result.inserted_id
 
-    return {"message": "Compte client créé avec succès"}, 201
+        client_data = {
+            "user_id": user_id,
+            "name": name,
+            "phone": phone,
+            "created_at": datetime.utcnow()
+        }
+
+        mongo.db.clients.insert_one(client_data)
+        return user_id, None
+
+    except Exception as e:
+        if 'user_id' in locals():
+            mongo.db.users.delete_one({"_id": user_id})
+        return None, str(e)
+
+# ------------------ REGISTER FREELANCER ------------------
+def register_freelancer(mongo,name, email, password, phone=None):
+
+    if mongo.db.users.find_one({"email": email}):
+        return None, "Email déjà utilisé"
+
+    hashed_password = generate_password_hash(password)
+
+    user_data = {
+        "email": email,
+        "password": hashed_password,
+        "role": "freelancer",
+        "created_at": datetime.utcnow()
+    }
+
+    try:
+        user_result = mongo.db.users.insert_one(user_data)
+        user_id = user_result.inserted_id
+
+        freelancer_data = {
+            "user_id": user_id,
+            "name": name,
+            "phone": phone,
+            "skills": [],
+            "bio": "",
+            "created_at": datetime.utcnow()
+        }
+
+        mongo.db.freelancers.insert_one(freelancer_data)
+        return user_id, None
+
+    except Exception as e:
+        if 'user_id' in locals():
+            mongo.db.users.delete_one({"_id": user_id})
+        return None, str(e)
+
+# ------------------ LOGIN ------------------
+def authenticate_user(mongo,email, password):
+    user = mongo.db.users.find_one({"email": email})
+
+    if user and check_password_hash(user["password"], password):
+        return user
+
+    return None
