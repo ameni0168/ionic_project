@@ -1,116 +1,313 @@
+// src/app/pages/my-gigs/my-gigs.page.ts
+// VERSION MODIFIÉE avec intégration API
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController } from '@ionic/angular';
-import { trigger, transition, style, animate } from '@angular/animations';
-
-interface Gig {
-  id: string;
-  title: string;
-  price: number;
-  status: 'active' | 'pending' | 'paused';
-  ordersCompleted: number;
-  category: string;
-  description: string;
-  deliveryTime: string;
-  colorAccent: string;
-}
+import { IonicModule, NavController, LoadingController, ToastController, AlertController } from '@ionic/angular';
+import { ApiService } from '../../services/api.service';  // ← AJOUT
 
 @Component({
   selector: 'app-my-gigs',
   templateUrl: './my-gigs.page.html',
   styleUrls: ['./my-gigs.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule],
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ]
+  imports: [CommonModule, IonicModule]
 })
 export class MyGigsPage implements OnInit {
-  gigs: Gig[] = [
-    {
-      id: '1',
-      title: 'Professional Logo Design',
-      price: 150,
-      status: 'active',
-      ordersCompleted: 24,
-      category: 'Graphic Design',
-      description: 'I will create a professional and unique logo for your business',
-      deliveryTime: '3 days',
-      colorAccent: '#10b981'
-    },
-    {
-      id: '2',
-      title: 'Full Stack Web Development',
-      price: 500,
-      status: 'pending',
-      ordersCompleted: 0,
-      category: 'Web Development',
-      description: 'Complete full-stack web application development with modern technologies',
-      deliveryTime: '7 days',
-      colorAccent: '#f59e0b'
-    },
-    {
-      id: '3',
-      title: 'SEO Optimization Service',
-      price: 200,
-      status: 'active',
-      ordersCompleted: 12,
-      category: 'Digital Marketing',
-      description: 'Comprehensive SEO optimization to improve your website ranking',
-      deliveryTime: '5 days',
-      colorAccent: '#3b82f6'
+  gigs: any[] = [];  // ← Les gigs seront chargés depuis l'API
+  loading = true;
+  selectedFilter: string = 'all';  // ← AJOUT: Filtrer par statut
+
+  // ← AJOUT: Injection des services
+  constructor(
+    private navCtrl: NavController,
+    private api: ApiService,
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
+  ) {}
+
+  ngOnInit() {
+    this.loadGigs();  // ← Charger les gigs au démarrage
+  }
+
+  // ← AJOUT: Charger les gigs depuis l'API
+  async loadGigs(status?: string) {
+    const loading = await this.loadingCtrl.create({
+      message: 'Loading gigs...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      const response = await this.api.getMyGigs(status).toPromise();
+      this.gigs = response.gigs;
+      this.loading = false;
+      await loading.dismiss();
+
+      console.log('Gigs loaded:', this.gigs);
+
+      // Si aucun gig
+      if (this.gigs.length === 0) {
+        const toast = await this.toastCtrl.create({
+          message: 'No gigs found. Create your first gig!',
+          duration: 2000,
+          color: 'warning',
+          position: 'top'
+        });
+        await toast.present();
+      }
+
+    } catch (error: any) {
+      console.error('Error loading gigs:', error);
+      this.loading = false;
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: this.api.getErrorMessage(error),
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
     }
-  ];
+  }
 
-  constructor(private navCtrl: NavController) {}
+  // ← AJOUT: Refresh manuel
+  async doRefresh(event: any) {
+    await this.loadGigs(this.selectedFilter === 'all' ? undefined : this.selectedFilter);
+    event.target.complete();
+  }
 
-  ngOnInit() {}
+  // ← AJOUT: Filtrer les gigs
+  async filterGigs(filter: string) {
+    this.selectedFilter = filter;
+    const status = filter === 'all' ? undefined : filter;
+    await this.loadGigs(status);
+  }
+
+  // ← MODIFIÉ: Voir les détails d'un gig
+  viewGigDetails(gig: any) {
+    this.navCtrl.navigateForward(['/gig-details', gig._id], {
+      state: { gig }
+    });
+  }
+
+  // ← AJOUT: Changer le statut d'un gig
+  async toggleGigStatus(gig: any, event: Event) {
+    event.stopPropagation();  // Empêcher la navigation
+
+    const newStatus = gig.status === 'active' ? 'paused' : 'active';
+    const statusText = newStatus === 'active' ? 'activate' : 'pause';
+
+    const alert = await this.alertCtrl.create({
+      header: `${statusText.charAt(0).toUpperCase() + statusText.slice(1)} Gig?`,
+      message: `Are you sure you want to ${statusText} this gig?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: statusText.charAt(0).toUpperCase() + statusText.slice(1),
+          handler: async () => {
+            await this.changeStatus(gig, newStatus);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  // ← AJOUT: Changer le statut (API)
+  async changeStatus(gig: any, newStatus: 'active' | 'paused') {
+    const loading = await this.loadingCtrl.create({
+      message: 'Updating status...'
+    });
+    await loading.present();
+
+    try {
+      await this.api.changeGigStatus(gig._id, newStatus).toPromise();
+      
+      // Mettre à jour localement
+      gig.status = newStatus;
+
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: `Gig ${newStatus === 'active' ? 'activated' : 'paused'} successfully`,
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+    } catch (error: any) {
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: this.api.getErrorMessage(error),
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+
+  // ← AJOUT: Dupliquer un gig
+  async duplicateGig(gig: any, event: Event) {
+    event.stopPropagation();
+
+    const alert = await this.alertCtrl.create({
+      header: 'Duplicate Gig?',
+      message: 'This will create a copy of this gig.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Duplicate',
+          handler: async () => {
+            await this.performDuplicate(gig);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  // ← AJOUT: Effectuer la duplication (API)
+  async performDuplicate(gig: any) {
+    const loading = await this.loadingCtrl.create({
+      message: 'Duplicating gig...'
+    });
+    await loading.present();
+
+    try {
+      await this.api.duplicateGig(gig._id).toPromise();
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: 'Gig duplicated successfully',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+      // Recharger la liste
+      await this.loadGigs();
+
+    } catch (error: any) {
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: this.api.getErrorMessage(error),
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+
+  // ← AJOUT: Supprimer un gig
+  async deleteGig(gig: any, event: Event) {
+    event.stopPropagation();
+
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Gig?',
+      message: 'Are you sure? This action cannot be undone.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            await this.performDelete(gig);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  // ← AJOUT: Effectuer la suppression (API)
+  async performDelete(gig: any) {
+    const loading = await this.loadingCtrl.create({
+      message: 'Deleting gig...'
+    });
+    await loading.present();
+
+    try {
+      await this.api.deleteGig(gig._id).toPromise();
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: 'Gig deleted successfully',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+      // Recharger la liste
+      await this.loadGigs();
+
+    } catch (error: any) {
+      await loading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: this.api.getErrorMessage(error),
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+
+  createNewGig() {
+    this.navCtrl.navigateForward(['/create-gig']);
+  }
 
   goBack() {
     this.navCtrl.navigateBack(['/freelancer-dashboard']);
   }
 
-  createNewGig() {
-    // Navigate to create gig page
-    console.log('Create new gig');
-    // this.navCtrl.navigateForward(['/create-gig']);
-  }
-
-  viewGigDetails(gig: Gig) {
-    this.navCtrl.navigateForward(['/gig-details', gig.id], {
-      state: { gig }
-    });
-  }
-
+  // ← AJOUT: Helpers pour l'affichage
   getStatusLabel(status: string): string {
-    switch(status) {
-      case 'active': return 'Active';
-      case 'pending': return 'Pending';
-      case 'paused': return 'Paused';
-      default: return status;
-    }
+    const labels: any = {
+      'active': 'Active',
+      'pending': 'Pending',
+      'paused': 'Paused'
+    };
+    return labels[status] || status;
   }
 
   getStatusColor(status: string): string {
-    switch(status) {
-      case 'active': return 'success';
-      case 'pending': return 'warning';
-      case 'paused': return 'medium';
-      default: return 'medium';
-    }
+    const colors: any = {
+      'active': 'success',
+      'pending': 'warning',
+      'paused': 'medium'
+    };
+    return colors[status] || 'medium';
   }
 
   getStatusIcon(status: string): string {
-    switch(status) {
-      case 'active': return 'checkmark-circle';
-      case 'pending': return 'time';
-      case 'paused': return 'pause-circle';
-      default: return 'ellipse';
-    }
+    const icons: any = {
+      'active': 'checkmark-circle',
+      'pending': 'time',
+      'paused': 'pause-circle'
+    };
+    return icons[status] || 'ellipse';
   }
 }

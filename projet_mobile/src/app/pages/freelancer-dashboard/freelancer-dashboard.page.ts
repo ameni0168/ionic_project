@@ -1,7 +1,11 @@
+// src/app/pages/freelancer-dashboard/freelancer-dashboard.page.ts
+// VERSION MODIFIÉE avec intégration API
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController } from '@ionic/angular';
+import { IonicModule, NavController, LoadingController, ToastController } from '@ionic/angular';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { ApiService } from '../../services/api.service';  // ← AJOUT
 
 interface StatCard {
   icon: string;
@@ -44,38 +48,39 @@ interface RecentActivity {
   ]
 })
 export class FreelancerDashboardPage implements OnInit {
-  userName = 'Sarah Johnson';
+  userName = 'Loading...';  // ← MODIFIÉ: Sera chargé depuis l'API
   profileImage = 'assets/avatar.jpg';
-  currentTab = 'home'; // Track current tab
+  currentTab = 'home';
+  isLoading = true;  // ← AJOUT: Pour afficher un loading
   
   stats: StatCard[] = [
     {
       icon: 'briefcase',
-      value: '12',
+      value: '...',  // ← MODIFIÉ: Sera chargé depuis l'API
       label: 'Active Gigs',
       color: 'primary',
-      trend: '+2'
+      trend: '...'
     },
     {
       icon: 'cash',
-      value: '$2.4k',
+      value: '$...',
       label: 'This Month',
       color: 'success',
-      trend: '+15%'
+      trend: '...'
     },
     {
       icon: 'star',
-      value: '4.9',
+      value: '...',
       label: 'Rating',
       color: 'warning',
-      trend: '38 reviews'
+      trend: '...'
     },
     {
       icon: 'checkmark-done',
-      value: '47',
+      value: '...',
       label: 'Completed',
       color: 'tertiary',
-      trend: 'All time'
+      trend: '...'
     }
   ];
 
@@ -91,14 +96,14 @@ export class FreelancerDashboardPage implements OnInit {
       title: 'My Orders',
       route: '/orders',
       color: 'secondary',
-      badge: 3
+      badge: 0  // ← MODIFIÉ: Sera chargé depuis l'API
     },
     {
       icon: 'chatbubbles',
       title: 'Messages',
       route: '/messages',
       color: 'tertiary',
-      badge: 5
+      badge: 0
     },
     {
       icon: 'wallet',
@@ -108,45 +113,110 @@ export class FreelancerDashboardPage implements OnInit {
     }
   ];
 
-  recentActivities: RecentActivity[] = [
-    {
-      type: 'order',
-      title: 'New Order Received',
-      description: 'Logo Design from John Doe',
-      time: '2 min ago',
-      icon: 'bag-check',
-      color: 'success'
-    },
-    {
-      type: 'message',
-      title: 'New Message',
-      description: 'Jane Smith sent you a message',
-      time: '1 hour ago',
-      icon: 'chatbubble-ellipses',
-      color: 'primary'
-    },
-    {
-      type: 'payment',
-      title: 'Payment Received',
-      description: '$150 for Web Development',
-      time: '3 hours ago',
-      icon: 'cash',
-      color: 'success'
-    },
-    {
-      type: 'review',
-      title: 'New Review',
-      description: '5 stars from Mike Johnson',
-      time: '1 day ago',
-      icon: 'star',
-      color: 'warning'
-    }
-  ];
+  recentActivities: RecentActivity[] = [];  // ← MODIFIÉ: Sera chargé depuis l'API
 
-  constructor(private navCtrl: NavController) {}
+  // ← AJOUT: Injection du service API
+  constructor(
+    private navCtrl: NavController,
+    private api: ApiService,
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController
+  ) {}
 
   ngOnInit() {
-    console.log('Dashboard loaded');
+    this.loadDashboardData();  // ← AJOUT: Charger les données au démarrage
+  }
+
+  // ← AJOUT: Nouvelle fonction pour charger les données
+  async loadDashboardData() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Loading dashboard...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      // 1. Charger le compte freelancer
+      const accountResponse = await this.api.getFreelancerAccount().toPromise();
+      const profile = accountResponse.profile;
+      const profileStats = profile.stats;
+
+      // Mettre à jour le nom d'utilisateur
+      this.userName = profile.fullName || 'Freelancer';
+      
+      // 2. Charger les statistiques des gigs
+      const gigsStatsResponse = await this.api.getGigsStats().toPromise();
+
+      // 3. Mettre à jour les stats cards
+      this.stats[0].value = gigsStatsResponse.activeGigs.toString();
+      this.stats[0].trend = `Total: ${gigsStatsResponse.totalGigs}`;
+
+      // Pour le moment, This Month = $0 (à implémenter avec wallet)
+      this.stats[1].value = '$0';
+      this.stats[1].trend = '+0%';
+
+      this.stats[2].value = profileStats.rating ? profileStats.rating.toFixed(1) : '0.0';
+      this.stats[2].trend = `${profileStats.totalReviews || 0} reviews`;
+
+      this.stats[3].value = (profileStats.completedProjects || 0).toString();
+      this.stats[3].trend = 'All time';
+
+      // 4. Charger les activités récentes (mock pour l'instant)
+      this.loadRecentActivities();
+
+      this.isLoading = false;
+      await loading.dismiss();
+
+    } catch (error: any) {
+      console.error('Error loading dashboard:', error);
+      this.isLoading = false;
+      await loading.dismiss();
+
+      // Afficher un toast d'erreur
+      const toast = await this.toastCtrl.create({
+        message: error.error?.error || 'Error loading dashboard data',
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+
+      // Valeurs par défaut en cas d'erreur
+      this.userName = 'Freelancer';
+      this.stats[0].value = '0';
+      this.stats[1].value = '$0';
+      this.stats[2].value = '0.0';
+      this.stats[3].value = '0';
+    }
+  }
+
+  // ← AJOUT: Charger les activités récentes (mock pour l'instant)
+  loadRecentActivities() {
+    // TODO: Remplacer par un vrai call API quand le backend sera prêt
+    this.recentActivities = [
+      {
+        type: 'order',
+        title: 'New Order Received',
+        description: 'Logo Design from John Doe',
+        time: '2 min ago',
+        icon: 'bag-check',
+        color: 'success'
+      },
+      {
+        type: 'message',
+        title: 'New Message',
+        description: 'Jane Smith sent you a message',
+        time: '1 hour ago',
+        icon: 'chatbubble-ellipses',
+        color: 'primary'
+      }
+    ];
+  }
+
+  // ← MODIFIÉ: Refresh manuel
+  async doRefresh(event: any) {
+    await this.loadDashboardData();
+    event.target.complete();
   }
 
   navigateTo(route: string) {
@@ -155,23 +225,18 @@ export class FreelancerDashboardPage implements OnInit {
   }
 
   navigateToProfile() {
-    console.log('Navigate to profile');
     this.navCtrl.navigateForward(['/freelancer-profile']);
   }
 
   navigateToNotifications() {
-    console.log('Navigate to notifications');
     this.navCtrl.navigateForward(['/notifications']);
   }
 
   viewAllActivities() {
-    console.log('View all activities');
     this.navCtrl.navigateForward(['/activities']);
   }
 
   onActivityClick(activity: RecentActivity) {
-    console.log('Activity clicked:', activity);
-    // Navigate based on activity type
     switch(activity.type) {
       case 'order':
         this.navCtrl.navigateForward(['/orders']);
@@ -189,13 +254,10 @@ export class FreelancerDashboardPage implements OnInit {
   }
 
   onTabClick(tab: string) {
-    console.log('Tab clicked:', tab);
     this.currentTab = tab;
     
-    // Navigation based on tab
     switch(tab) {
       case 'home':
-        // Already on home, scroll to top
         const content = document.querySelector('ion-content');
         if (content) {
           content.scrollToTop(300);
