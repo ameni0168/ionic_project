@@ -12,8 +12,8 @@ import { InputFieldComponent } from '../../components/input-field/input-field.co
   styleUrls: ['./login.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
-    IonicModule, 
+    CommonModule,
+    IonicModule,
     ReactiveFormsModule,
     ButtonComponent,
     InputFieldComponent
@@ -34,7 +34,7 @@ export class LoginPage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController  // ← NavController au lieu de Router
+    private navCtrl: NavController
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -48,23 +48,25 @@ export class LoginPage implements OnInit {
     }, 100);
   }
 
-  get emailControl() {
-    return this.loginForm.get('email');
-  }
-
-  get passwordControl() {
-    return this.loginForm.get('password');
-  }
+  get emailControl() { return this.loginForm.get('email'); }
+  get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
     if (this.loginForm.valid) {
       this.isLoading = true;
-      
+      const { email, password } = this.loginForm.value;
+
       setTimeout(() => {
         this.isLoading = false;
-        console.log('Login successful', this.loginForm.value);
-        // Navigate to dashboard
-        this.navCtrl.navigateForward(['/client-dashboard']);
+
+        // TODO : remplacer par appel API réel
+        const role = this.determineRole(email);
+
+        if (role === 'client') {
+          this.navCtrl.navigateForward('/client-dashboard');
+        } else if (role === 'freelancer') {
+          this.navCtrl.navigateForward('/freelancer-dashboard');
+        }
       }, 2000);
     } else {
       Object.keys(this.loginForm.controls).forEach(key => {
@@ -74,16 +76,19 @@ export class LoginPage implements OnInit {
   }
 
   goBack() {
-    this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
+    this.navCtrl.navigateBack('/welcome');
   }
 
   navigateToRegister() {
-    this.navCtrl.navigateForward(['/auth/client-register']);  // ← navigateForward
+    this.navCtrl.navigateForward('/auth/client-register');
   }
- 
 
   navigateToForgotPassword() {
+    // TODO : implémenter la navigation réelle
     console.log('Navigate to forgot password');
-    // this.navCtrl.navigateForward(['/auth/forgot-password']);
+  }
+
+  private determineRole(email: string): 'client' | 'freelancer' {
+    return email.includes('freelancer') ? 'freelancer' : 'client';
   }
 }

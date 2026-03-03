@@ -43,7 +43,7 @@ export class AccueilPage {
   }
 
   goToSignIn() {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   goToSignUp() {
