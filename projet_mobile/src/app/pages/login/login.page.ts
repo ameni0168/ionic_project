@@ -13,8 +13,8 @@ import { ApiService } from 'src/app/services/api.service';
   styleUrls: ['./login.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
-    IonicModule, 
+    CommonModule,
+    IonicModule,
     ReactiveFormsModule,
     ButtonComponent,
     InputFieldComponent,
@@ -50,13 +50,8 @@ export class LoginPage implements OnInit {
     }, 100);
   }
 
-  get emailControl() {
-    return this.loginForm.get('email');
-  }
-
-  get passwordControl() {
-    return this.loginForm.get('password');
-  }
+  get emailControl() { return this.loginForm.get('email'); }
+  get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
   if (this.loginForm.valid) {
@@ -92,16 +87,19 @@ export class LoginPage implements OnInit {
 }
 
   goBack() {
-    this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
+    this.navCtrl.navigateBack('/welcome');
   }
 
   navigateToRegister() {
-    this.navCtrl.navigateForward(['/auth/client-register']);  // ← navigateForward
+    this.navCtrl.navigateForward('/auth/client-register');
   }
- 
 
   navigateToForgotPassword() {
+    // TODO : implémenter la navigation réelle
     console.log('Navigate to forgot password');
-    // this.navCtrl.navigateForward(['/auth/forgot-password']);
+  }
+
+  private determineRole(email: string): 'client' | 'freelancer' {
+    return email.includes('freelancer') ? 'freelancer' : 'client';
   }
 }
