@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +17,7 @@ import { InputFieldComponent } from '../../components/input-field/input-field.co
     IonicModule,
     ReactiveFormsModule,
     ButtonComponent,
-    InputFieldComponent
+    InputFieldComponent,
   ],
   animations: [
     trigger('fadeInUp', [

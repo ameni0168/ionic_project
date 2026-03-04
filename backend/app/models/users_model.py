@@ -18,3 +18,7 @@ class User:
             "phone": self.phone,
             "created_at": self.created_at
         }
+from app.extension import db
+
+def get_users_collection():
+    return db["users"]
