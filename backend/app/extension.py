@@ -1,8 +1,9 @@
 from pymongo import MongoClient
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+client = None
+db = None
 
-client = MongoClient(os.getenv("MONGO_URI"))  #deja importe depuis .env
-db = client["freelancerDB"]
+def init_db(app):
+    global client, db
+    client = MongoClient(app.config["MONGO_URI"])
+    db = client["freelancerDB"]
