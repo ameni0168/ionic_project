@@ -18,7 +18,6 @@ import { ApiService } from 'src/app/services/api.service';
     ReactiveFormsModule,
     ButtonComponent,
     InputFieldComponent,
-    ApiService
   ],
   animations: [
     trigger('fadeInUp', [
