@@ -20,18 +20,33 @@ def login():
         data = request.json
         email = data.get("email")
         password = data.get("password")
-        
+
         if not email or not password:
             return jsonify({"error": "Email et mot de passe requis"}), 400
 
         user = users_collection.find_one({"email": email})
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
-        
+
         if not check_password_hash(user["password"], password):
             return jsonify({"error": "Mot de passe incorrect"}), 401
-        
-        
-        return jsonify({"message": "Login success", "role": user["role"]}), 200
+
+        role = user.get("role", "client")  # ← ⚠ Assure toi que role existe
+
+        from flask_jwt_extended import create_access_token
+        access_token = create_access_token(
+            identity=str(user["_id"]),
+            additional_claims={"role": role}
+        )
+
+        return jsonify({
+            "access_token": access_token,
+            "role": role,
+            "user_id": str(user["_id"])
+        }), 200
+
     except Exception as e:
+        # 🔥 log complet de l'erreur pour debug
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
