@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +17,8 @@ import { InputFieldComponent } from '../../components/input-field/input-field.co
     IonicModule, 
     ReactiveFormsModule,
     ButtonComponent,
-    InputFieldComponent
+    InputFieldComponent,
+    ApiService
   ],
   animations: [
     trigger('fadeInUp', [
@@ -34,7 +36,8 @@ export class LoginPage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController  // ← NavController au lieu de Router
+    private navCtrl: NavController,
+    private api:ApiService  // ← NavController au lieu de Router
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -57,21 +60,37 @@ export class LoginPage implements OnInit {
   }
 
   async onLogin() {
-    if (this.loginForm.valid) {
-      this.isLoading = true;
-      
-      setTimeout(() => {
+  if (this.loginForm.valid) {
+    this.isLoading = true;
+    const formData = this.loginForm.value;
+
+    // Appelle ton API
+    this.api.login(formData).subscribe({
+      next: (res: any) => {
         this.isLoading = false;
-        console.log('Login successful', this.loginForm.value);
-        // Navigate to dashboard
-        this.navCtrl.navigateForward(['/client-dashboard']);
-      }, 2000);
-    } else {
-      Object.keys(this.loginForm.controls).forEach(key => {
-        this.loginForm.get(key)?.markAsTouched();
-      });
-    }
+
+        console.log('Login success', res);
+
+        // Redirection selon le rôle
+        if (res.role === 'client') {
+          this.navCtrl.navigateRoot(['/client-dashboard']);
+        } else if (res.role === 'freelancer') {
+          this.navCtrl.navigateRoot(['/freelancer-dashboard']);
+        } else {
+          alert("Rôle inconnu");
+        }
+      },
+      error: (err:any) => {
+        this.isLoading = false;
+        alert(err.error?.error || "Erreur serveur");
+      }
+    });
+  } else {
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAsTouched();
+    });
   }
+}
 
   goBack() {
     this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
