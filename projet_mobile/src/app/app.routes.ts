@@ -30,14 +30,7 @@ export const routes: Routes = [
       }
     ]
   },
-  {
-    path: 'freelancer-dashboard',
-    loadComponent: () => import('./pages/freelancer-dashboard/freelancer-dashboard.page').then( m => m.FreelancerDashboardPage)
-  },
-  {
-    path: 'freelancer-profile',
-    loadComponent: () => import('./pages/freelancer-profile/freelancer-profile.page').then( m => m.FreelancerProfilePage)
-  },
+
   {
     path: 'freelancer-dashboard',
     loadComponent: () => import('./pages/freelancer-dashboard/freelancer-dashboard.page').then(m => m.FreelancerDashboardPage)
@@ -72,9 +65,14 @@ export const routes: Routes = [
   {
     path: 'accueil', 
     loadComponent: () => import("./pages/accueil/accueil.page").then( m=> m.AccueilPage)
-  },  {
-    path: 'talent-profile',
+  },
+  {
+    path: 'talent-profile/:id',
     loadComponent: () => import('./pages/talent-profile/talent-profile.page').then( m => m.TalentProfilePage)
+  },
+  {
+    path: 'client-profile',
+    loadComponent: () => import('./pages/client-profile/client-profile.page').then( m => m.ClientProfilePage)
   }
 
 

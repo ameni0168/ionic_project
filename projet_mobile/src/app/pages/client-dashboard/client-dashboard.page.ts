@@ -1,176 +1,195 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+// src/app/pages/client-dashboard/client-dashboard.page.ts
+import { Component, OnInit }  from '@angular/core';
+import { CommonModule }       from '@angular/common';
+import { IonicModule, NavController } from '@ionic/angular';
+import { DashboardService }   from 'src/app/services/client-dashboard.service';
+
+// ── Interface stats pour éviter TS2339 ───────────────────────────
+interface DashboardStats {
+  active_projects:  number;
+  total_spent:      number;
+  total_contracts:  number;
+  avg_rating?:      number;
+}
 
 @Component({
-  selector: 'app-client-dashboard',
-  templateUrl: './client-dashboard.page.html',
-  styleUrls: ['./client-dashboard.page.scss'],
-  standalone: true,
-  imports: [CommonModule, IonicModule],
+  selector:    'app-client-dashboard',
+  templateUrl: './client-dashboard.page.html',   // ← nom correct
+  styleUrls:  ['./client-dashboard.page.scss'],  // ← nom correct
+  standalone:  true,
+  imports:    [CommonModule, IonicModule],
 })
-export class ClientDashboardPage implements OnInit {
+export class ClientDashboardPage implements OnInit {   // ← nom correct
 
-  // ── État ──────────────────────────────────────────────────
-  hasActiveJobs      = false;
-  tourExpanded       = false;
-  selectedCategoryId = 1; // catégorie active par défaut
+  isLoading        = true;
+  isLoadingExperts = false;
+  userAvatar       = '';
+  userName         = '';
 
-  // ── Stats ─────────────────────────────────────────────────
   stats = [
-    {
-      icon: 'briefcase', value: '5', label: 'Active Projects',
-      gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)', route: '/jobs',
-    },
-    {
-      icon: 'cash', value: '$8.2k', label: 'Total Spent',
-      gradient: 'linear-gradient(135deg, #34d399, #059669)', route: '/payments',
-    },
-    {
-      icon: 'trending-up', value: '4.8', label: 'Avg Rating',
-      gradient: 'linear-gradient(135deg, #fb923c, #ef4444)', route: '/reviews',
-    },
+    { icon: 'briefcase-outline',   value: '0',  label: 'Active Projects', gradient: 'linear-gradient(135deg, #6c63ff, #4f46e5)', route: '/jobs'      },
+    { icon: 'cash-outline',        value: '$0', label: 'Total Spent',     gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)', route: '/payments'  },
+    { icon: 'trending-up-outline', value: '0',  label: 'Contracts',       gradient: 'linear-gradient(135deg, #f97316, #dc2626)', route: '/contracts' },
   ];
 
-  // ── Catégories (grille 2 × 5) ─────────────────────────────
+  hasActiveJobs = false;
+  activeJobs:   any[] = [];
+
+  selectedCategoryId = 1;
   categories = [
-    { id: 1,  name: 'AI Services',           ionIcon: 'hardware-chip-outline'  },
-    { id: 2,  name: 'Development & IT',      ionIcon: 'code-slash-outline'     },
-    { id: 3,  name: 'Design & Creative',     ionIcon: 'color-palette-outline'  },
-    { id: 4,  name: 'Sales & Marketing',     ionIcon: 'megaphone-outline'      },
-    { id: 5,  name: 'Writing & Translation', ionIcon: 'create-outline'         },
-    { id: 6,  name: 'Admin & Support',       ionIcon: 'headset-outline'        },
-    { id: 7,  name: 'Finance & Accounting',  ionIcon: 'bar-chart-outline'      },
-    { id: 8,  name: 'Legal',                 ionIcon: 'scale-outline'          },
-    { id: 9,  name: 'HR & Training',         ionIcon: 'people-circle-outline'  },
-    { id: 10, name: 'Engineering',           ionIcon: 'construct-outline'      },
+    { id: 1,  name: 'AI Services',       ionIcon: 'hardware-chip-outline'  },
+    { id: 2,  name: 'Development & IT',  ionIcon: 'code-slash-outline'     },
+    { id: 3,  name: 'Design & Creative', ionIcon: 'color-palette-outline'  },
+    { id: 4,  name: 'Sales & Marketing', ionIcon: 'megaphone-outline'       },
+    { id: 5,  name: 'Writing',           ionIcon: 'create-outline'          },
+    { id: 6,  name: 'Admin & Support',   ionIcon: 'headset-outline'         },
+    { id: 7,  name: 'Finance',           ionIcon: 'bar-chart-outline'       },
+    { id: 8,  name: 'Legal',             ionIcon: 'scale-outline'           },
+    { id: 9,  name: 'HR & Training',     ionIcon: 'people-circle-outline'   },
+    { id: 10, name: 'Engineering',       ionIcon: 'construct-outline'       },
   ];
 
-  // ── Top experts ───────────────────────────────────────────
-  topExperts = [
-    {
-      id: 1,
-      name:       'Sarah Johnson',
-      title:      'Full-Stack Developer · React & Node.js',
-      avatar:     'assets/experts/sarah.jpg',
-      rating:     5,
-      reviews:    142,
-      hourlyRate: 85,
-      location:   'USA',
-      online:     true,
-      topRated:   true,
-    },
-    {
-      id: 2,
-      name:       'Ahmed Khalil',
-      title:      'UI/UX Designer · Figma & Adobe XD',
-      avatar:     'assets/experts/ahmed.jpg',
-      rating:     5,
-      reviews:    98,
-      hourlyRate: 60,
-      location:   'Tunisia',
-      online:     true,
-      topRated:   true,
-    },
-    {
-      id: 3,
-      name:       'Maria Lopez',
-      title:      'Digital Marketing Specialist',
-      avatar:     'assets/experts/maria.jpg',
-      rating:     4,
-      reviews:    76,
-      hourlyRate: 45,
-      location:   'Spain',
-      online:     false,
-      topRated:   false,
-    },
-    {
-      id: 4,
-      name:       'James Chen',
-      title:      'Mobile Developer · Flutter & Ionic',
-      avatar:     'assets/experts/james.jpg',
-      rating:     5,
-      reviews:    211,
-      hourlyRate: 90,
-      location:   'Canada',
-      online:     true,
-      topRated:   true,
-    },
-    {
-      id: 5,
-      name:       'Fatima Benali',
-      title:      'Content Writer & Translator (FR/EN/AR)',
-      avatar:     'assets/experts/fatima.jpg',
-      rating:     4,
-      reviews:    53,
-      hourlyRate: 30,
-      location:   'Morocco',
-      online:     false,
-      topRated:   false,
-    },
-  ];
+  private categoryNames: Record<number, string> = {
+    1: 'AI Services',          2: 'Development & IT',
+    3: 'Design & Creative',    4: 'Sales & Marketing',
+    5: 'Writing & Translation',6: 'Admin & Customer Support',
+    7: 'Finance & Accounting', 8: 'Legal',
+    9: 'HR & Training',        10: 'Engineering',
+  };
 
-  // ── Jobs actifs ───────────────────────────────────────────
-  activeJobs = [
-    {
-      title: 'Développement App Mobile',
-      status: 'En cours', date: '12 Fév 2026',
-      avatar: 'assets/avatar1.png', badge: 'Actif', badgeColor: 'success',
-    },
-    {
-      title: 'Design UI/UX Dashboard',
-      status: 'En revue', date: '10 Fév 2026',
-      avatar: 'assets/avatar2.png', badge: 'En revue', badgeColor: 'warning',
-    },
-  ];
+  topExperts: any[] = [];
 
-  // ── Guided tour ───────────────────────────────────────────
+  tourExpanded = false;
   tourSteps = [
-    { title: 'Poster une offre',   desc: 'Décrivez votre projet et trouvez des freelancers qualifiés.' },
-    { title: 'Trouver un talent',  desc: 'Parcourez des profils et contactez-les directement.'        },
-    { title: 'Gérer vos contrats', desc: 'Suivez l\'avancement et effectuez des paiements sécurisés.' },
+    { title: 'Publiez une offre',    desc: 'Décrivez votre projet et fixez votre budget.'           },
+    { title: 'Choisissez un talent', desc: 'Parcourez les profils et embauchez le meilleur.'        },
+    { title: 'Travaillez ensemble',  desc: 'Collaborez, suivez l\'avancement et payez en sécurité.' },
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private dashboardSvc: DashboardService,
+    private navCtrl:      NavController,
+  ) {}
 
-  ngOnInit() { this.loadDashboardData(); }
-
-  loadDashboardData() {
-    // TODO: charger depuis vos services
-    // this.jobService.getActiveJobs().subscribe(jobs => {
-    //   this.activeJobs    = jobs;
-    //   this.hasActiveJobs = jobs.length > 0;
-    // });
-    // this.expertService.getTopRated().subscribe(e => this.topExperts = e);
+  ngOnInit() {
+    this._loadUserFromStorage();
+    this._loadDashboard();
+    this._loadTopFreelancers();
   }
 
-  // ── Helpers étoiles ───────────────────────────────────────
-  getStars(rating: number):      any[] { return Array(Math.round(rating));     }
-  getEmptyStars(rating: number): any[] { return Array(5 - Math.round(rating)); }
+  private _loadUserFromStorage() {
+    try {
+      const user    = JSON.parse(localStorage.getItem('user')    || '{}');
+      const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+      this.userName   = user.full_name  || '';
+      this.userAvatar = profile.avatar  || '';
+    } catch { this.userAvatar = ''; }
+  }
 
-  // ── Actions ───────────────────────────────────────────────
-  goTo(path: string)           { this.router.navigate([path]); }
-  openProfile()                { this.router.navigate(['/profile']); }
-  openMenu()                   { /* TODO ActionSheet */ }
-  findTalent()                 { this.router.navigate(['/talent']); }
-  postJob()                    { this.router.navigate(['/post-job']); }
-  viewAllJobs()                { this.router.navigate(['/jobs']); }
-  viewAllContracts()           { this.router.navigate(['/contracts']); }
-  browseConsultations()        { this.router.navigate(['/categories']); }
-  seeAllExperts()              { this.router.navigate(['/talent']); }
-  viewStat(s: any)             { this.router.navigate([s.route]); }
-  viewJob(job: any)            { this.router.navigate(['/job-detail'], { state: { job } }); }
-  viewExpert(expert: any)      { this.router.navigate(['/expert', expert.id]); }
-  toggleGuidedTour()           { this.tourExpanded = !this.tourExpanded; }
+  private _loadDashboard() {
+    this.isLoading = true;
+    this.dashboardSvc.getDashboard().subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+
+        // ── Stats avec typage explicite ────────────────────────
+        const s: DashboardStats = res.stats || {
+          active_projects: 0, total_spent: 0, total_contracts: 0
+        };
+        this.stats[0].value = String(s.active_projects  || 0);
+        this.stats[1].value = '$' + this._formatMoney(s.total_spent || 0);
+        this.stats[2].value = String(s.total_contracts  || 0);
+
+        // ── Jobs ───────────────────────────────────────────────
+        const jobs = res.active_jobs || [];
+        this.hasActiveJobs = jobs.length > 0;
+        this.activeJobs    = jobs.map((j: any) => ({
+          id:         j._id || j.id,
+          title:      j.title  || 'Sans titre',
+          status:     j.status || 'open',
+          date:       j.created_at ? new Date(j.created_at).toLocaleDateString('fr-FR') : '',
+          avatar:     j.avatar || '',
+          badge:      this._jobBadgeLabel(j.status),
+          badgeColor: this._jobBadgeColor(j.status),
+        }));
+
+        if (res.client) {
+          this.userAvatar = res.client.avatar || this.userAvatar;
+          localStorage.setItem('profile', JSON.stringify(res.client));
+        }
+        if (res.user) {
+          this.userName = res.user.full_name || '';
+          localStorage.setItem('user', JSON.stringify(res.user));
+        }
+      },
+      error: (err: any) => {
+        this.isLoading = false;
+        if (err.status === 401) this.navCtrl.navigateRoot(['/login']);
+      },
+    });
+  }
+
+  private _loadTopFreelancers() {
+    this.isLoadingExperts = true;
+    this.dashboardSvc.getTopFreelancers().subscribe({
+      next:  (res: any) => { this.isLoadingExperts = false; this.topExperts = this._mapFreelancers(res.talents || []); },
+      error: ()         => { this.isLoadingExperts = false; },
+    });
+  }
 
   selectCategory(cat: any) {
     this.selectedCategoryId = cat.id;
-    this.router.navigate(['/talent'], { queryParams: { category: cat.name } });
+    this.isLoadingExperts   = true;
+    const catName = this.categoryNames[cat.id] || cat.name;
+    this.dashboardSvc.getFreelancersByCategory(catName).subscribe({
+      next:  (res: any) => { this.isLoadingExperts = false; this.topExperts = this._mapFreelancers(res.talents || []); },
+      error: ()         => { this.isLoadingExperts = false; },
+    });
   }
 
-  hireExpert(event: Event, expert: any) {
-    event.stopPropagation();
-    this.router.navigate(['/hire', expert.id]);
+  private _mapFreelancers(talents: any[]): any[] {
+    return talents.map((t: any) => ({
+      id:         t.id || t._id,
+      name:       t.full_name   || 'Freelancer',
+      title:      t.title       || '',
+      avatar:     t.avatar      || '',
+      hourlyRate: t.hourly_rate || 0,
+      location:   t.location    || '',
+      rating:     t.stats?.rating       || 0,
+      reviews:    t.stats?.review_count || 0,
+      online:     t.is_available        || false,
+      topRated:   (t.stats?.rating      || 0) >= 4.5,
+    }));
   }
+
+  getStars(rating: number):      any[] { return Array(Math.min(5, Math.round(rating))); }
+  getEmptyStars(rating: number): any[] { return Array(5 - Math.min(5, Math.round(rating))); }
+
+  private _formatMoney(val: number): string {
+    if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
+    return String(val);
+  }
+  private _jobBadgeLabel(status: string): string {
+    const m: Record<string,string> = { open:'Open', in_progress:'En cours', completed:'Terminé', cancelled:'Annulé' };
+    return m[status] || status;
+  }
+  private _jobBadgeColor(status: string): string {
+    const m: Record<string,string> = { open:'success', in_progress:'warning', completed:'medium', cancelled:'danger' };
+    return m[status] || 'medium';
+  }
+
+  openProfile()          { this.navCtrl.navigateForward(['/client-profile']); }
+  openMenu()             { }
+  viewStat(stat: any)    { this.navCtrl.navigateForward([stat.route]); }
+  findTalent()           { this.navCtrl.navigateForward(['/talent']); }
+  postJob()              { this.navCtrl.navigateForward(['/post-job']); }
+  viewJob(job: any)      { this.navCtrl.navigateForward(['/job-detail', job.id]); }
+  viewAllJobs()          { this.navCtrl.navigateForward(['/jobs']); }
+  viewAllContracts()     { this.navCtrl.navigateForward(['/contracts']); }
+  browseConsultations()  { this.navCtrl.navigateForward(['/talent']); }
+  seeAllExperts()        { this.navCtrl.navigateForward(['/talent']); }
+  viewExpert(e: any)     { this.navCtrl.navigateForward(['/talent-profile', e.id]); }
+  hireExpert(ev: Event, e: any) { ev.stopPropagation(); this.navCtrl.navigateForward(['/talent-profile', e.id]); }
+  goTo(path: string)     { this.navCtrl.navigateForward([path]); }
+  toggleGuidedTour()     { this.tourExpanded = !this.tourExpanded; }
 }
