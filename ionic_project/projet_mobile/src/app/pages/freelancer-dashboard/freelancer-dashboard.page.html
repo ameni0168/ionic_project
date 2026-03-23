@@ -1,0 +1,115 @@
+<ion-content [fullscreen]="true" class="dashboard-page" [scrollEvents]="true">
+  <div class="dashboard-container safe-area-top">
+    
+    <!-- Top Header -->
+    <div class="top-header" @fadeInUp>
+      <div class="user-info" (click)="navigateToProfile()">
+        <div class="user-avatar">
+          <ion-icon name="person"></ion-icon>
+        </div>
+        <div class="user-details">
+          <span class="greeting">Welcome back! 👋</span>
+          <h2 class="user-name">{{ userName }}</h2>
+        </div>
+      </div>
+      <ion-button fill="clear" class="notification-btn" (click)="navigateToNotifications()">
+        <ion-icon slot="icon-only" name="notifications"></ion-icon>
+        <ion-badge color="danger" class="notification-badge">3</ion-badge>
+      </ion-button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-section" @fadeInUp>
+      <h3 class="section-title">Overview</h3>
+      <div class="stats-grid">
+        <div class="stat-card" *ngFor="let stat of stats" [attr.data-color]="stat.color">
+          <div class="stat-icon" [ngClass]="'bg-' + stat.color">
+            <ion-icon [name]="stat.icon"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-trend" *ngIf="stat.trend">{{ stat.trend }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section" @fadeInUp>
+      <h3 class="section-title">Quick Actions</h3>
+      <div class="quick-actions-grid">
+        <div 
+          class="action-card" 
+          *ngFor="let action of quickActions"
+          (click)="navigateTo(action.route)">
+          <div class="action-icon" [ngClass]="'bg-' + action.color">
+            <ion-icon [name]="action.icon"></ion-icon>
+            <ion-badge *ngIf="action.badge" color="danger" class="action-badge">
+              {{ action.badge }}
+            </ion-badge>
+          </div>
+          <span class="action-title">{{ action.title }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section" @fadeInUp>
+      <div class="section-header">
+        <h3 class="section-title">Recent Activity</h3>
+        <ion-button fill="clear" size="small" (click)="viewAllActivities()">
+          View All
+        </ion-button>
+      </div>
+      
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of recentActivities" (click)="onActivityClick(activity)">
+          <div class="activity-icon" [attr.data-color]="activity.color">
+            <ion-icon [name]="activity.icon"></ion-icon>
+          </div>
+          <div class="activity-content">
+            <h4 class="activity-title">{{ activity.title }}</h4>
+            <p class="activity-description">{{ activity.description }}</p>
+            <span class="activity-time">{{ activity.time }}</span>
+          </div>
+          <ion-icon name="chevron-forward" class="activity-arrow"></ion-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom spacing for custom tab bar -->
+    <div class="bottom-spacer"></div>
+
+  </div>
+</ion-content>
+
+<!-- Custom Bottom Tab Bar (Fixed) -->
+<div class="custom-bottom-tabs">
+  <div class="tab-item" [class.active]="currentTab === 'home'" (click)="onTabClick('home')">
+    <ion-icon name="home"></ion-icon>
+    <span class="tab-label">Home</span>
+  </div>
+
+  <div class="tab-item" [class.active]="currentTab === 'gigs'" (click)="onTabClick('gigs')">
+    <ion-icon name="briefcase"></ion-icon>
+    <span class="tab-label">My Gigs</span>
+  </div>
+
+  <div class="tab-item" [class.active]="currentTab === 'orders'" (click)="onTabClick('orders')">
+    <ion-icon name="document-text"></ion-icon>
+    <span class="tab-label">Orders</span>
+    <ion-badge color="danger" class="tab-badge">3</ion-badge>
+  </div>
+
+  <div class="tab-item" [class.active]="currentTab === 'messages'" (click)="onTabClick('messages')">
+    <ion-icon name="chatbubbles"></ion-icon>
+    <span class="tab-label">Messages</span>
+    <ion-badge color="primary" class="tab-badge">5</ion-badge>
+  </div>
+
+  <div class="tab-item" [class.active]="currentTab === 'profile'" (click)="onTabClick('profile')">
+    <ion-icon name="person"></ion-icon>
+    <span class="tab-label">Profile</span>
+  </div>
+</div>

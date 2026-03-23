@@ -1,0 +1,59 @@
+from flask import Blueprint, request, jsonify, current_app
+from werkzeug.security import check_password_hash
+from app.services.auth_service import register_client
+from app.services.auth_freelancer import register_freelancer
+from flask_jwt_extended import create_access_token
+import traceback
+
+auth_bp = Blueprint('auth', __name__)
+
+# Register client
+@auth_bp.route('/register/client', methods=['POST'])
+def register():
+    return register_client(request.json)
+
+
+# Register freelancer
+@auth_bp.route("/register/freelancer", methods=["POST"])
+def register_freelancer_route():
+    return register_freelancer(request.json)
+
+
+# Login
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    try:
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "Email et mot de passe requis"}), 400
+
+        # 🔹 récupération DB via current_app (important avec create_app pattern)
+        db = current_app.db
+        users_collection = db["users"]
+
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        if not check_password_hash(user["password"], password):
+            return jsonify({"error": "Mot de passe incorrect"}), 401
+
+        role = user.get("role", "client")
+
+        access_token = create_access_token(
+            identity=str(user["_id"]),
+            additional_claims={"role": role}
+        )
+
+        return jsonify({
+            "access_token": access_token,
+            "role": role,
+            "user_id": str(user["_id"])
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500

@@ -1,0 +1,47 @@
+<div class="input-field" [class.input-field--error]="hasError" [class.input-field--focused]="focused">
+  <label *ngIf="label" class="input-field__label">
+    {{ label }}
+    <span *ngIf="required" class="input-field__required">*</span>
+  </label>
+  
+  <div class="input-field__wrapper">
+    <ion-icon 
+      *ngIf="icon" 
+      [name]="icon" 
+      class="input-field__icon">
+    </ion-icon>
+    
+    <input
+      class="input-field__input"
+      [type]="inputType"
+      [placeholder]="placeholder"
+      [value]="value"
+      [disabled]="disabled"
+      [required]="required"
+      (input)="onInputChange($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      [attr.aria-label]="label"
+      [attr.aria-invalid]="hasError"
+      [attr.aria-describedby]="hasError ? 'error-message' : (hintText ? 'hint-text' : null)"
+    />
+    
+    <button
+      *ngIf="isPassword"
+      type="button"
+      class="input-field__toggle"
+      (click)="togglePasswordVisibility()"
+      [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+      tabindex="-1">
+      <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+    </button>
+  </div>
+  
+  <span *ngIf="hintText && !hasError" class="input-field__hint" id="hint-text">
+    {{ hintText }}
+  </span>
+  
+  <span *ngIf="hasError && displayError" class="input-field__error" id="error-message">
+    {{ displayError }}
+  </span>
+</div>
