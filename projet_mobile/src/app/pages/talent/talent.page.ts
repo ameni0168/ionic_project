@@ -1,210 +1,359 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+// src/app/pages/talent/talent.page.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule }   from '@angular/common';
+import { FormsModule }    from '@angular/forms';
+import { IonicModule, NavController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { TalentService } from 'src/app/services/talent.service';
 
 @Component({
-  selector: 'app-talent',
+  selector:    'app-talent',
   templateUrl: './talent.page.html',
-  styleUrls: ['./talent.page.scss'],
-  standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  styleUrls:  ['./talent.page.scss'],
+  standalone:  true,
+  imports:    [CommonModule, FormsModule, IonicModule],
 })
-export class TalentPage implements OnInit {
+export class TalentPage implements OnInit, OnDestroy {
 
-  // ── Search ──────────────────────────────────────────────────
-  searchQuery    = '';
-  discoverOpen   = false;
+  // ── Expose Math pour le template ──────────────────────────────
+  readonly Math = Math;
+
+  private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
+
+  // ── Loading states ────────────────────────────────────────────
+  isLoadingLocal    = true;
+  isLoadingTop      = true;
+  isLoadingSearch   = false;
+
+  // ── Search ────────────────────────────────────────────────────
+  searchQuery      = '';
+  isSearchMode     = false;   // true quand l'user a tapé quelque chose
+  searchResults:   any[] = [];
+  searchTotal      = 0;
+  searchPage       = 1;
+  hasMoreResults   = false;
+
+  // ── Discover dropdown ─────────────────────────────────────────
+  discoverOpen     = false;
   selectedDiscover = 'Discover';
-  discoverOptions = [
-    'Discover',
-    'Talent in my area',
-    'Top rated',
-    'Rising talents',
-    'Recently active',
-  ];
+  discoverOptions  = ['Discover', 'Talent in my area', 'Top rated', 'Rising talents', 'Recently active'];
 
-  // ── Talent local (Tunisia) ───────────────────────────────────
-  localTalents = [
-    {
-      id: 1,
-      name:        'Khalil B.',
-      title:       'Web Scraping & Big Data Analyst',
-      avatar:      'assets/talents/khalil.jpg',
-      hourlyRate:  20,
-      earned:      null,
-      jobSuccess:  null,
-      online:      false,
-      fav:         false,
-    },
-    {
-      id: 2,
-      name:        'Sana M.',
-      title:       'React & Vue.js Developer',
-      avatar:      'assets/talents/sana.jpg',
-      hourlyRate:  25,
-      earned:      '$5K+',
-      jobSuccess:  88,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 3,
-      name:        'Yassine T.',
-      title:       'Mobile Developer · Flutter',
-      avatar:      'assets/talents/yassine.jpg',
-      hourlyRate:  30,
-      earned:      '$8K+',
-      jobSuccess:  91,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 4,
-      name:        'Ines R.',
-      title:       'UI/UX Designer & Figma Expert',
-      avatar:      'assets/talents/ines.jpg',
-      hourlyRate:  22,
-      earned:      '$3K+',
-      jobSuccess:  85,
-      online:      false,
-      fav:         false,
-    },
+  // ── Filter panel ──────────────────────────────────────────────
+  showFilters      = false;
+  filters = {
+    category:       '',
+    min_rate:       null as number | null,
+    max_rate:       null as number | null,
+    available_only: false,
+    sort:           'rating' as 'rating' | 'rate_asc' | 'rate_desc' | 'newest' | 'top_success',
+  };
+  sortOptions: { value: 'rating' | 'rate_asc' | 'rate_desc' | 'newest' | 'top_success', label: string }[] = [
+    { value: 'rating',      label: 'Mieux notés'    },
+    { value: 'top_success', label: 'Top Success'    },
+    { value: 'rate_asc',    label: 'Prix croissant' },
+    { value: 'rate_desc',   label: 'Prix décroissant'},
+    { value: 'newest',      label: 'Plus récents'   },
   ];
+  activeFiltersCount = 0;
 
-  // ── Talent high Job Success ──────────────────────────────────
-  topTalents = [
-    {
-      id: 10,
-      name:        'Kareem M.',
-      title:       'Video Editor',
-      avatar:      'assets/talents/kareem.jpg',
-      hourlyRate:  20,
-      earned:      '$10K+',
-      jobSuccess:  93,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 11,
-      name:        'Sarah J.',
-      title:       'Full-Stack Developer',
-      avatar:      'assets/talents/sarah.jpg',
-      hourlyRate:  85,
-      earned:      '$50K+',
-      jobSuccess:  98,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 12,
-      name:        'Ahmed K.',
-      title:       'SEO & Digital Marketing',
-      avatar:      'assets/talents/ahmed.jpg',
-      hourlyRate:  40,
-      earned:      '$20K+',
-      jobSuccess:  96,
-      online:      false,
-      fav:         false,
-    },
-    {
-      id: 13,
-      name:        'Maria L.',
-      title:       'Copywriter & Content Strategist',
-      avatar:      'assets/talents/maria.jpg',
-      hourlyRate:  35,
-      earned:      '$15K+',
-      jobSuccess:  94,
-      online:      true,
-      fav:         false,
-    },
-  ];
+  // ── Local talents ────────────────────────────────────────────
+  localTalents: any[] = [];
 
-  // ── Browse by category ──────────────────────────────────────
+  // ── Top rated talents ────────────────────────────────────────
+  topTalents: any[] = [];
+
+  // ── Browse categories ────────────────────────────────────────
   browseCategories = [
     {
       name: 'Accounting & Consulting',
-      subs: ['Accounting', 'Bookkeeping', 'Business Analysis & Strategy', 'Career Coaching', 'Financial Planning', 'Management Consulting'],
+      subs: ['Accounting', 'Bookkeeping', 'Business Analysis & Strategy', 'Career Coaching', 'Financial Planning'],
     },
     {
       name: 'Development & IT',
-      subs: ['Web Development', 'Mobile Apps', 'DevOps & Cloud', 'Cybersecurity', 'AI & Machine Learning', 'Database Administration'],
+      subs: ['Web Development', 'Mobile Apps', 'DevOps & Cloud', 'Cybersecurity', 'AI & Machine Learning'],
     },
     {
       name: 'Design & Creative',
-      subs: ['Logo Design', 'UI/UX Design', 'Illustration', 'Video Production', 'Animation', 'Photography'],
+      subs: ['Logo Design', 'UI/UX Design', 'Illustration', 'Video Production', 'Animation'],
     },
     {
       name: 'Sales & Marketing',
-      subs: ['Digital Marketing', 'SEO / SEM', 'Social Media', 'Email Marketing', 'Influencer Marketing', 'Lead Generation'],
+      subs: ['Digital Marketing', 'SEO / SEM', 'Social Media', 'Email Marketing', 'Lead Generation'],
     },
     {
       name: 'Writing & Translation',
-      subs: ['Content Writing', 'Copywriting', 'Translation', 'Proofreading', 'Technical Writing', 'Ghost Writing'],
+      subs: ['Content Writing', 'Copywriting', 'Translation', 'Proofreading', 'Technical Writing'],
     },
     {
       name: 'Admin & Customer Support',
-      subs: ['Virtual Assistant', 'Data Entry', 'Customer Service', 'Project Management', 'Online Research'],
+      subs: ['Virtual Assistant', 'Data Entry', 'Customer Service', 'Project Management'],
     },
   ];
-  menu: any;
 
-  constructor(private router: Router) {}
+  constructor(
+    private talentSvc: TalentService,
+    private navCtrl:   NavController,
+  ) {}
 
+  // ── LIFECYCLE ─────────────────────────────────────────────────
   ngOnInit() {
-    // TODO: charger depuis vos services
-  }
-  openMenu() {
-    this.menu.open(); // ouvre le menu latéral
+    this._loadLocalTalents();
+    this._loadTopRated();
+    this._setupSearchDebounce();
   }
 
-  // ── Search ──────────────────────────────────────────────────
-  onSearch() {
-    if (!this.searchQuery.trim()) return;
-    this.router.navigate(['/talent/search'], {
-      queryParams: { q: this.searchQuery.trim() },
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── SETUP DEBOUNCE SEARCH (auto-search pendant la frappe) ────
+  private _setupSearchDebounce() {
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(q => {
+      if (q.trim().length >= 2) {
+        this.isSearchMode = true;
+        this._doSearch(q.trim(), true);
+      } else if (q.trim().length === 0) {
+        this.isSearchMode = false;
+        this.searchResults = [];
+      }
     });
   }
 
+  // ── CHARGER TALENTS LOCAUX ────────────────────────────────────
+  private _loadLocalTalents() {
+    this.isLoadingLocal = true;
+    this.talentSvc.getLocalTalents('Tunisia').subscribe({
+      next: (res: any) => {
+        this.isLoadingLocal = false;
+        this.localTalents   = this._map(res.talents || []);
+      },
+      error: () => { this.isLoadingLocal = false; },
+    });
+  }
+
+  // ── CHARGER TOP RATED ─────────────────────────────────────────
+  private _loadTopRated() {
+    this.isLoadingTop = true;
+    this.talentSvc.getTopRated().subscribe({
+      next: (res: any) => {
+        this.isLoadingTop = false;
+        this.topTalents   = this._map(res.talents || []);
+      },
+      error: () => { this.isLoadingTop = false; },
+    });
+  }
+
+  // ── SEARCH (depuis bouton ou debounce) ────────────────────────
+  onSearchInput() {
+    this.searchSubject.next(this.searchQuery);
+  }
+
+  onSearch() {
+    const q = this.searchQuery.trim();
+    if (!q) {
+      this.clearSearch();
+      return;
+    }
+    this.isSearchMode = true;
+    this._doSearch(q, true);
+  }
+
+  private _doSearch(q: string, reset = false) {
+    if (reset) {
+      this.searchPage    = 1;
+      this.searchResults = [];
+    }
+    this.isLoadingSearch = true;
+
+    this.talentSvc.searchTalents({
+      q,
+      category:       this.filters.category       || undefined,
+      min_rate:       this.filters.min_rate        || undefined,
+      max_rate:       this.filters.max_rate        || undefined,
+      available_only: this.filters.available_only  || undefined,
+      sort:           this.filters.sort,
+      page:           this.searchPage,
+      per_page:       10,
+    }).subscribe({
+      next: (res: any) => {
+        this.isLoadingSearch = false;
+        const mapped = this._map(res.talents || []);
+        this.searchResults  = reset ? mapped : [...this.searchResults, ...mapped];
+        this.searchTotal    = res.total || 0;
+        this.hasMoreResults = this.searchPage < (res.pages || 1);
+      },
+      error: () => { this.isLoadingSearch = false; },
+    });
+  }
+
+  clearSearch() {
+    this.searchQuery   = '';
+    this.isSearchMode  = false;
+    this.searchResults = [];
+    this.searchTotal   = 0;
+    this.hasMoreResults= false;
+  }
+
+  loadMore() {
+    this.searchPage++;
+    this._doSearch(this.searchQuery.trim(), false);
+  }
+
+  // ── FILTRES ───────────────────────────────────────────────────
+  toggleFilters() { this.showFilters = !this.showFilters; }
+
+  applyFilters() {
+    this.showFilters = false;
+    this._countActiveFilters();
+    if (this.searchQuery.trim()) {
+      this._doSearch(this.searchQuery.trim(), true);
+    } else {
+      // Recherche avec filtres seulement
+      this.isSearchMode = true;
+      this._doSearch('', true);
+    }
+  }
+
+  resetFilters() {
+    this.filters = { category: '', min_rate: null, max_rate: null, available_only: false, sort: 'rating' };
+    this.activeFiltersCount = 0;
+    this.showFilters = false;
+    if (this.searchQuery.trim()) {
+      this._doSearch(this.searchQuery.trim(), true);
+    } else {
+      this.clearSearch();
+    }
+  }
+
+  private _countActiveFilters() {
+    let count = 0;
+    if (this.filters.category)       count++;
+    if (this.filters.min_rate)       count++;
+    if (this.filters.max_rate)       count++;
+    if (this.filters.available_only) count++;
+    if (this.filters.sort !== 'rating') count++;
+    this.activeFiltersCount = count;
+  }
+
+  // ── DISCOVER DROPDOWN ─────────────────────────────────────────
   toggleDiscover() { this.discoverOpen = !this.discoverOpen; }
 
   selectDiscover(opt: string) {
     this.selectedDiscover = opt;
-    this.discoverOpen = false;
-    // TODO: filtrer les résultats selon opt
+    this.discoverOpen     = false;
+    switch (opt) {
+      case 'Top rated':
+        this.filters.sort = 'rating';
+        this.isSearchMode = true;
+        this._doSearch('', true);
+        break;
+      case 'Talent in my area':
+        this._loadLocalTalents();
+        this.isSearchMode = false;
+        break;
+      case 'Recently active':
+        this.filters.sort = 'newest';
+        this.isSearchMode = true;
+        this._doSearch('', true);
+        break;
+      default:
+        this.clearSearch();
+        break;
+    }
   }
 
-  // ── Navigation ───────────────────────────────────────────────
-  goTo(path: string) { this.router.navigate([path]); }
-
-
-  /**
-   * Navigue vers le profil du talent.
-   * La page de profil sera /talent-profile/:id
-   */
+  // ── NAVIGATION VERS PROFIL TALENT ────────────────────────────
   goToProfile(talent: any) {
-    this.router.navigate(['/talent-profile', talent.id], { state: { talent } });
+    // Passe les données du talent via le state de navigation
+    // La page talent-profile les récupère via router.getCurrentNavigation()
+    this.navCtrl.navigateForward(
+      ['/talent-profile', talent.id],
+      { state: { talent } }
+    );
   }
 
-  // ── Favoris ─────────────────────────────────────────────────
-  toggleFav(event: Event, talent: any) {
-    event.stopPropagation();
-    talent.fav = !talent.fav;
-    // TODO: appeler votre service favoris
-  }
-
-  // ── See more ─────────────────────────────────────────────────
-  seeMoreLocal()    { this.router.navigate(['/talent/local']);    }
-  seeMoreProfiles() { this.router.navigate(['/talent/top-rated']); }
-
-  // ── Browse category ──────────────────────────────────────────
+  // ── BROWSE BY CATEGORY ────────────────────────────────────────
   selectBrowseCategory(cat: any) {
-    this.router.navigate(['/talent'], { queryParams: { category: cat.name } });
+    this.filters.category = cat.name;
+    this.isSearchMode     = true;
+    this.searchQuery      = '';
+    this._doSearch('', true);
+    this._countActiveFilters();
+    // Scroll vers le haut
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   searchBySubCategory(sub: string) {
-    this.router.navigate(['/talent/search'], { queryParams: { q: sub } });
+    this.searchQuery  = sub;
+    this.isSearchMode = true;
+    this._doSearch(sub, true);
   }
 
+  seeMoreLocal() {
+    this.isSearchMode = true;
+    this.searchQuery  = '';
+    this.filters      = { ...this.filters, category: '' };
+    this.talentSvc.getLocalTalents('Tunisia').subscribe({
+      next: (res: any) => {
+        this.searchResults  = this._map(res.talents || []);
+        this.searchTotal    = res.total || this.searchResults.length;
+        this.hasMoreResults = false;
+        this.isLoadingSearch = false;
+      },
+    });
+  }
+
+  seeMoreProfiles() {
+    this.filters.sort = 'top_success';
+    this.isSearchMode = true;
+    this._doSearch('', true);
+  }
+
+  // ── FAVORIS ───────────────────────────────────────────────────
+  toggleFav(event: Event, talent: any) {
+    event.stopPropagation();
+    talent.fav = !talent.fav;
+    // TODO: appeler service favoris
+  }
+
+  // ── NAVIGATION TABS ───────────────────────────────────────────
+  goTo(path: string) { this.navCtrl.navigateForward([path]); }
+  openMenu() {}
+
+  // ── HELPER MAP API → UI ───────────────────────────────────────
+  private _map(talents: any[]): any[] {
+    return talents.map((t: any) => ({
+      id:         t.id || t._id,
+      name:       t.full_name    || 'Freelancer',
+      title:      t.title        || '',
+      avatar:     t.avatar       || '',
+      hourlyRate: t.hourly_rate  || 0,
+      location:   t.location     || '',
+      earned:     t.stats?.total_earned
+                    ? '$' + this._fmt(t.stats.total_earned)
+                    : null,
+      jobSuccess: t.stats?.job_success
+                    ? Math.round(t.stats.job_success)
+                    : null,
+      rating:     t.stats?.rating       || 0,
+      reviews:    t.stats?.review_count || 0,
+      online:     t.is_available        || false,
+      fav:        false,
+    }));
+  }
+
+  private _fmt(val: number): string {
+    return val >= 1000 ? (val / 1000).toFixed(0) + 'K+' : String(val);
+  }
+
+  // ── Helpers étoiles (utilisés dans le template) ───────────────
+  getStars(rating: number):      any[] { return Array(Math.min(5, Math.round(rating || 0))); }
+  getEmptyStars(rating: number): any[] { return Array(5 - Math.min(5, Math.round(rating || 0))); }
 }

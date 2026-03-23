@@ -30,76 +30,70 @@ import { ApiService } from 'src/app/services/api.service';
 })
 export class LoginPage implements OnInit {
   loginForm: FormGroup;
-  isLoading = false;
+  isLoading   = false;
   showContent = false;
 
   constructor(
     private formBuilder: FormBuilder,
     private navCtrl: NavController,
-    private api:ApiService  // ← NavController au lieu de Router
+    private api: ApiService
   ) {
     this.loginForm = this.formBuilder.group({
-      email: ['', [Validators.required, Validators.email]],
+      email:    ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.showContent = true;
-    }, 100);
+    setTimeout(() => { this.showContent = true; }, 100);
   }
 
-  get emailControl() { return this.loginForm.get('email'); }
+  get emailControl()    { return this.loginForm.get('email'); }
   get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
-  if (this.loginForm.valid) {
-    this.isLoading = true;
-    const formData = this.loginForm.value;
+    if (this.loginForm.invalid) {
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
 
-    // Appelle API
-    this.api.login(formData).subscribe({
+    this.isLoading = true;
+
+    this.api.login(this.loginForm.value).subscribe({
       next: (res: any) => {
         this.isLoading = false;
-
         console.log('Login success', res);
 
-        // Redirection selon le rôle
-        if (res.role === 'client') {
+        // ── Sauvegarder tokens + données ───────────────────────
+        localStorage.setItem('access_token',  res.access_token);
+        localStorage.setItem('refresh_token', res.refresh_token);
+        localStorage.setItem('user',          JSON.stringify(res.user));
+        localStorage.setItem('profile',       JSON.stringify(res.profile));
+
+        // ── ✅ CORRECTION : le rôle est dans res.user.role ──────
+        // ❌ AVANT : res.role         → undefined → "Rôle inconnu"
+        // ✅ APRÈS : res.user.role    → "client" ou "freelancer"
+        const role = res.user?.role;
+        localStorage.setItem('role', role);
+
+        if (role === 'client') {
           this.navCtrl.navigateRoot(['/client-dashboard']);
-        } else if (res.role === 'freelancer') {
+        } else if (role === 'freelancer') {
           this.navCtrl.navigateRoot(['/freelancer-dashboard']);
         } else {
-          alert("Rôle inconnu");
+          alert('Rôle inconnu : ' + role);
         }
       },
-      error: (err:any) => {
+      error: (err: any) => {
         this.isLoading = false;
-        alert(err.error?.error || "Erreur serveur");
+        alert(err.error?.error || 'Erreur serveur');
       }
     });
-  } else {
-    Object.keys(this.loginForm.controls).forEach(key => {
-      this.loginForm.get(key)?.markAsTouched();
-    });
-  }
-}
-
-  goBack() {
-    this.navCtrl.navigateBack('/welcome');
   }
 
-  navigateToRegister() {
-    this.navCtrl.navigateForward('/auth/client-register');
-  }
-
-  navigateToForgotPassword() {
-    // TODO : implémenter la navigation réelle
-    console.log('Navigate to forgot password');
-  }
-
-  private determineRole(email: string): 'client' | 'freelancer' {
-    return email.includes('freelancer') ? 'freelancer' : 'client';
-  }
+  goBack()                    { this.navCtrl.navigateBack('/welcome'); }
+  navigateToRegister()        { this.navCtrl.navigateForward('/auth/client-register'); }
+  navigateToForgotPassword()  { console.log('Navigate to forgot password'); }
 }

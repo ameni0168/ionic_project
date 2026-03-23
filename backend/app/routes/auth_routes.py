@@ -1,59 +1,63 @@
-from flask import Blueprint, request, jsonify, current_app
-from werkzeug.security import check_password_hash
-from app.services.auth_service import register_client
-from app.services.auth_freelancer import register_freelancer
-from flask_jwt_extended import create_access_token
-import traceback
+# app/routes/auth_routes.py
+from flask              import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
-auth_bp = Blueprint('auth', __name__)
+from app.services.auth_service import (
+    register_user,
+    login_user,
+    refresh_access_token,
+    get_current_user,
+    change_password,
+)
 
-# Register client
-@auth_bp.route('/register/client', methods=['POST'])
+auth_bp = Blueprint("auth", __name__)
+
+
+# POST /api/auth/register
+@auth_bp.route("/register", methods=["POST"])
 def register():
-    return register_client(request.json)
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Corps JSON invalide"}), 400
+    response, status = register_user(data)
+    return jsonify(response), status
 
 
-# Register freelancer
-@auth_bp.route("/register/freelancer", methods=["POST"])
-def register_freelancer_route():
-    return register_freelancer(request.json)
-
-
-# Login
+# POST /api/auth/login
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    try:
-        data = request.json
-        email = data.get("email")
-        password = data.get("password")
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Corps JSON invalide"}), 400
+    response, status = login_user(data)
+    return jsonify(response), status
 
-        if not email or not password:
-            return jsonify({"error": "Email et mot de passe requis"}), 400
 
-        # 🔹 récupération DB via current_app (important avec create_app pattern)
-        db = current_app.db
-        users_collection = db["users"]
+# POST /api/auth/refresh
+@auth_bp.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    user_id          = get_jwt_identity()
+    claims           = get_jwt()
+    role             = claims.get("role", "client")
+    data             = refresh_access_token(user_id, role)
+    return jsonify(data), 200
 
-        user = users_collection.find_one({"email": email})
-        if not user:
-            return jsonify({"error": "Utilisateur non trouvé"}), 404
 
-        if not check_password_hash(user["password"], password):
-            return jsonify({"error": "Mot de passe incorrect"}), 401
+# GET /api/auth/me
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def me():
+    user_id          = get_jwt_identity()
+    response, status = get_current_user(user_id)
+    return jsonify(response), status
 
-        role = user.get("role", "client")
 
-        access_token = create_access_token(
-            identity=str(user["_id"]),
-            additional_claims={"role": role}
-        )
-
-        return jsonify({
-            "access_token": access_token,
-            "role": role,
-            "user_id": str(user["_id"])
-        }), 200
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+# POST /api/auth/change-password
+@auth_bp.route("/change-password", methods=["POST"])
+@jwt_required()
+def change_pwd():
+    user_id          = get_jwt_identity()
+    data             = request.get_json(silent=True) or {}
+    response, status = change_password(user_id, data)
+    return jsonify(response), status
