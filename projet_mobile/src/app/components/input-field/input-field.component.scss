@@ -1,0 +1,143 @@
+// Input Field Component Styles
+// Note: Variables are available globally from global.scss
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  
+  &__label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+  }
+  
+  &__required {
+    color: var(--color-error);
+    margin-left: var(--spacing-1);
+  }
+  
+  &__wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  &__icon {
+    position: absolute;
+    left: var(--spacing-4);
+    font-size: 20px;
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+    transition: color var(--transition-fast);
+  }
+  
+  &__input {
+    width: 100%;
+    padding: var(--spacing-3) var(--spacing-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    outline: none;
+    
+    &::placeholder {
+      color: var(--color-text-tertiary);
+    }
+    
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    }
+    
+    &:disabled {
+      background: var(--color-gray-100);
+      color: var(--color-text-disabled);
+      cursor: not-allowed;
+    }
+  }
+  
+  // Adjust padding when icon is present
+  &__icon ~ &__input {
+    padding-left: calc(var(--spacing-4) + 28px);
+  }
+  
+  // Adjust padding when password toggle is present
+  &__toggle ~ &__input,
+  &__input:has(~ &__toggle) {
+    padding-right: calc(var(--spacing-4) + 32px);
+  }
+  
+  &__toggle {
+    position: absolute;
+    right: var(--spacing-3);
+    background: transparent;
+    border: none;
+    padding: var(--spacing-2);
+    cursor: pointer;
+    color: var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-base);
+    transition: all var(--transition-fast);
+    
+    ion-icon {
+      font-size: 20px;
+    }
+    
+    &:hover {
+      color: var(--color-text-secondary);
+      background: rgba(var(--color-primary-rgb), 0.05);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+  
+  &__hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+  
+  &__error {
+    font-size: var(--font-size-xs);
+    color: var(--color-error);
+    animation: slideInLeft var(--transition-fast);
+  }
+  
+  // Error state
+  &--error {
+    .input-field__input {
+      border-color: var(--color-error);
+      
+      &:focus {
+        border-color: var(--color-error);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      }
+    }
+    
+    .input-field__icon {
+      color: var(--color-error);
+    }
+  }
+  
+  // Focused state
+  &--focused {
+    .input-field__icon {
+      color: var(--color-primary);
+    }
+  }
+}
+
+// When password toggle button comes after input
+.input-field__wrapper {
+  .input-field__input:has(+ .input-field__toggle) {
+    padding-right: calc(var(--spacing-4) + 32px);
+  }
+}
