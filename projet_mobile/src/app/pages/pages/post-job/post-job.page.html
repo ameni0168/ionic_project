@@ -1,0 +1,301 @@
+<ion-header mode="ios">
+  <ion-toolbar class="custom-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()" class="back-btn">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="toolbar-title">Post a Job</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="post-job-page">
+  <div class="page-wrapper" *ngIf="showContent">
+
+    <!-- ── Hero Banner ───────────────────────── -->
+    <div class="hero-banner">
+      <div class="hero-bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <ion-icon name="flash-outline"></ion-icon>
+          New Opportunity
+        </div>
+        <h1 class="hero-title">Create a<br/><span class="hero-accent">Job Offer</span></h1>
+        <p class="hero-sub">Connect with top freelancers around the world</p>
+      </div>
+    </div>
+
+    <!-- ── Form ──────────────────────────────── -->
+    <div class="form-sheet">
+      <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+
+        <!-- ── Section: Basics ── -->
+        <div class="section-label">
+          <div class="section-dot"></div>
+          Project Basics
+        </div>
+
+        <!-- Job Title -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap indigo">
+              <ion-icon name="briefcase-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Job Title <span class="req">*</span></p>
+              <p class="field-hint">Give your job a clear, specific title</p>
+            </div>
+          </div>
+          <app-input-field
+            type="text"
+            placeholder="e.g. Build a cross-platform mobile app"
+            icon="briefcase-outline"
+            [formControlRef]="titleControl"
+            [required]="true"
+            formControlName="title">
+          </app-input-field>
+        </div>
+
+        <!-- Description -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap teal">
+              <ion-icon name="document-text-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Project Description <span class="req">*</span></p>
+              <p class="field-hint">Describe what you need in detail</p>
+            </div>
+          </div>
+          <app-input-field
+            type="textarea"
+            placeholder="Describe your project goals, requirements, and expectations..."
+            icon="document-text-outline"
+            [formControlRef]="descriptionControl"
+            [required]="true"
+            formControlName="description">
+          </app-input-field>
+        </div>
+
+        <!-- Category -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap amber">
+              <ion-icon name="layers-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Category <span class="req">*</span></p>
+              <p class="field-hint">Select the most relevant field</p>
+            </div>
+          </div>
+          <div class="custom-select-wrap">
+            <ion-icon name="layers-outline" class="select-prefix-icon"></ion-icon>
+            <ion-select
+              formControlName="category"
+              placeholder="Choose a category..."
+              interface="action-sheet"
+              class="custom-select">
+              <ion-select-option value="Development">💻 Development</ion-select-option>
+              <ion-select-option value="Design">🎨 Design</ion-select-option>
+              <ion-select-option value="Marketing">📣 Marketing</ion-select-option>
+              <ion-select-option value="Writing">✍️ Writing</ion-select-option>
+              <ion-select-option value="Video">🎬 Video & Animation</ion-select-option>
+              <ion-select-option value="Finance">💰 Finance</ion-select-option>
+              <ion-select-option value="Data">📊 Data & Analytics</ion-select-option>
+              <ion-select-option value="Other">📦 Other</ion-select-option>
+            </ion-select>
+            <ion-icon name="chevron-down-outline" class="select-suffix-icon"></ion-icon>
+          </div>
+        </div>
+
+        <!-- ── Section: Budget ── -->
+        <div class="section-label">
+          <div class="section-dot green"></div>
+          Budget & Timeline
+        </div>
+
+        <!-- Budget Type Toggle -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap green">
+              <ion-icon name="wallet-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Payment Type <span class="req">*</span></p>
+              <p class="field-hint">How would you like to pay?</p>
+            </div>
+          </div>
+          <div class="toggle-group">
+            <div class="toggle-option"
+                 [class.active]="jobForm.get('budget_type')?.value === 'fixed'"
+                 (click)="$any(this).setBudgetType('fixed')">
+              <ion-icon name="pricetag-outline"></ion-icon>
+              <span class="toggle-label">Fixed Price</span>
+              <span class="toggle-desc">One-time payment</span>
+            </div>
+            <div class="toggle-option"
+                 [class.active]="jobForm.get('budget_type')?.value === 'hourly'"
+                 (click)="$any(this).setBudgetType('hourly')">
+              <ion-icon name="time-outline"></ion-icon>
+              <span class="toggle-label">Hourly Rate</span>
+              <span class="toggle-desc">Pay per hour</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Min/Max -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap green">
+              <ion-icon name="cash-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Budget Range ($) <span class="req">*</span></p>
+              <p class="field-hint">Set your minimum and maximum budget</p>
+            </div>
+          </div>
+          <div class="budget-range-row">
+            <div class="budget-input-box">
+              <span class="currency-label">Min</span>
+              <app-input-field
+                type="number"
+                placeholder="500"
+                icon="cash-outline"
+                [formControlRef]="$any(this).budgetMinControl"
+                [required]="true"
+                formControlName="budget_min">
+              </app-input-field>
+            </div>
+            <div class="budget-divider">
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </div>
+            <div class="budget-input-box">
+              <span class="currency-label">Max</span>
+              <app-input-field
+                type="number"
+                placeholder="2000"
+                icon="cash-outline"
+                [formControlRef]="$any(this).budgetMaxControl"
+                [required]="true"
+                formControlName="budget_max">
+              </app-input-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deadline -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap rose">
+              <ion-icon name="calendar-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Deadline <span class="req">*</span></p>
+              <p class="field-hint">When do you need this completed?</p>
+            </div>
+          </div>
+          <app-input-field
+            type="date"
+            icon="calendar-outline"
+            [formControlRef]="deadlineControl"
+            [required]="true"
+            formControlName="deadline">
+          </app-input-field>
+        </div>
+
+        <!-- ── Section: Requirements ── -->
+        <div class="section-label">
+          <div class="section-dot rose"></div>
+          Requirements
+        </div>
+
+        <!-- Experience Level -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap rose">
+              <ion-icon name="trending-up-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Experience Level <span class="req">*</span></p>
+              <p class="field-hint">What level of expertise do you need?</p>
+            </div>
+          </div>
+          <div class="exp-cards">
+            <div class="exp-card"
+                 [class.active]="jobForm.get('experience_level')?.value === 'beginner'"
+                 (click)="$any(this).setExperience('beginner')">
+              <div class="exp-emoji">🌱</div>
+              <p class="exp-name">Beginner</p>
+              <p class="exp-desc">Entry level, learning</p>
+            </div>
+            <div class="exp-card"
+                 [class.active]="jobForm.get('experience_level')?.value === 'intermediate'"
+                 (click)="$any(this).setExperience('intermediate')">
+              <div class="exp-emoji">⚡</div>
+              <p class="exp-name">Intermediate</p>
+              <p class="exp-desc">Some experience</p>
+            </div>
+            <div class="exp-card"
+                 [class.active]="jobForm.get('experience_level')?.value === 'expert'"
+                 (click)="$any(this).setExperience('expert')">
+              <div class="exp-emoji">🏆</div>
+              <p class="exp-name">Expert</p>
+              <p class="exp-desc">Highly skilled</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="field-card">
+          <div class="field-header">
+            <div class="field-icon-wrap indigo">
+              <ion-icon name="code-slash-outline"></ion-icon>
+            </div>
+            <div>
+              <p class="field-title">Required Skills</p>
+              <p class="field-hint">Press Enter to add each skill</p>
+            </div>
+          </div>
+          <div class="skill-input-row">
+            <ion-icon name="add-circle-outline" class="skill-add-icon"></ion-icon>
+            <input
+              class="skill-text-input"
+              placeholder="e.g. Ionic, Python, Figma..."
+              [value]="$any(this).skillInput"
+              (input)="$any(this).skillInput = $any($event.target).value"
+              (keydown.enter)="$any(this).addSkill($event)"/>
+          </div>
+          <div class="skills-cloud" *ngIf="$any(this).skills.length > 0">
+            <div class="skill-chip" *ngFor="let skill of $any(this).skills">
+              <span>{{ skill }}</span>
+              <ion-icon name="close-circle" (click)="$any(this).removeSkill(skill)"></ion-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Submit ── -->
+        <div class="submit-section">
+          <div class="submit-info">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            Your job will be reviewed and published immediately
+          </div>
+          <app-button
+            type="submit"
+            variant="primary"
+            size="lg"
+            [fullWidth]="true"
+            [loading]="isLoading">
+            <ion-icon name="rocket-outline" slot="start"></ion-icon>
+            Publish Job Offer
+          </app-button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</ion-content>

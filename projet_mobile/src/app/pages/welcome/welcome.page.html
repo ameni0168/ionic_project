@@ -1,0 +1,54 @@
+<ion-content [fullscreen]="true" class="welcome-page">
+  <div class="welcome-container safe-area-top safe-area-bottom">
+    <!-- Header with Logo -->
+    <div class="welcome-header" @fadeIn>
+      <div class="logo-container" @scaleIn>
+        <ion-icon name="briefcase" class="logo-icon"></ion-icon>
+      </div>
+      <h1 class="welcome-title">FreelanceHub</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="welcome-content" *ngIf="showContent" @fadeIn>
+      <h2 class="content-title">One app, all of FreelanceHub</h2>
+      <p class="content-subtitle">Choose an option to get started...</p>
+
+      <!-- Option Cards -->
+      <div class="options-grid">
+        <div class="option-card" (click)="navigateToClientAuth()" @fadeIn>
+          <div class="option-card__icon-wrapper">
+            <ion-icon name="briefcase-outline" class="option-card__icon"></ion-icon>
+          </div>
+          <h3 class="option-card__title">I'm a client</h3>
+          <p class="option-card__description">
+            Looking to hire talented freelancers for your projects
+          </p>
+          <div class="option-card__arrow">
+            <ion-icon name="arrow-forward"></ion-icon>
+          </div>
+        </div>
+
+        <div class="option-card" (click)="navigateToFreelancerAuth()" @fadeIn>
+          <div class="option-card__icon-wrapper option-card__icon-wrapper--secondary">
+            <ion-icon name="person-outline" class="option-card__icon"></ion-icon>
+          </div>
+          <h3 class="option-card__title">I'm a freelancer</h3>
+          <p class="option-card__description">
+            Ready to showcase your skills and find exciting work
+          </p>
+          <div class="option-card__arrow">
+            <ion-icon name="arrow-forward"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="welcome-footer" *ngIf="showContent" @fadeIn>
+      <p class="footer-text">
+        Already have an account? 
+        <a class="footer-link" (click)="navigateToLogin()">Log in</a>
+      </p>
+    </div>
+  </div>
+</ion-content>

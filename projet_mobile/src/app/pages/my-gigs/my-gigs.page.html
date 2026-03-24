@@ -1,0 +1,200 @@
+<ion-header mode="ios">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>My Gigs</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="gigs-page">
+  <div class="gigs-container safe-area-bottom">
+
+    <!-- Header Card -->
+    <div class="header-card" @fadeInUp>
+      <div class="header-content">
+        <h1 class="page-title">My Gigs</h1>
+        <p class="page-subtitle">Manage your services</p>
+      </div>
+      <ion-button class="header-icon-btn" fill="clear">
+        <ion-icon slot="icon-only" name="briefcase-outline"></ion-icon>
+      </ion-button>
+    </div>
+
+    <!-- Create New Gig Button -->
+    <div class="create-gig-btn" (click)="openCreateModal()" @fadeInUp>
+      <div class="create-icon">
+        <ion-icon name="add-circle"></ion-icon>
+      </div>
+      <span class="create-text">Create New Gig</span>
+    </div>
+
+    <!-- Loading spinner -->
+    <div *ngIf="isLoading" style="text-align:center; padding: 40px;">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <!-- Gigs List -->
+    <div class="gigs-list" *ngIf="!isLoading">
+      <div
+        class="gig-card"
+        *ngFor="let gig of gigs; let i = index"
+        (click)="viewGigDetails(gig)"
+        [style.animation-delay]="(i * 0.1) + 's'"
+        @fadeInUp>
+
+        <!-- Color Accent Bar -->
+        <div class="gig-accent" [style.background]="gig.colorAccent"></div>
+
+        <!-- Gig Content -->
+        <div class="gig-content">
+          <h3 class="gig-title">{{ gig.title }}</h3>
+
+          <div class="gig-info">
+            <div class="gig-price">
+              <ion-icon name="cash-outline"></ion-icon>
+              <span>${{ gig.price }}</span>
+            </div>
+            <div class="gig-status" [attr.data-status]="gig.status">
+              <ion-icon [name]="getStatusIcon(gig.status)"></ion-icon>
+              <span>{{ getStatusLabel(gig.status) }}</span>
+            </div>
+          </div>
+
+          <div class="gig-footer">
+            <span class="orders-count">{{ gig.ordersCompleted }} orders completed</span>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div class="view-details-link">
+                <span>View Details</span>
+                <ion-icon name="arrow-forward"></ion-icon>
+              </div>
+              <!-- Bouton supprimer -->
+              <ion-button fill="clear" color="danger" size="small"
+                (click)="confirmDelete($event, gig)"
+                style="margin:0;">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && gigs.length === 0">
+      <ion-icon name="briefcase-outline"></ion-icon>
+      <h3>No Gigs Yet</h3>
+      <p>Create your first gig to start getting orders</p>
+      <ion-button (click)="openCreateModal()">Create Gig</ion-button>
+    </div>
+
+  </div>
+</ion-content>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL CRÉATION GIG
+════════════════════════════════════════════════ -->
+<ion-modal [isOpen]="showCreateModal" (didDismiss)="closeCreateModal()">
+  <ng-template>
+    <ion-header mode="ios">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closeCreateModal()">
+            <ion-icon slot="icon-only" name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>Create New Gig</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="submitGig()" [disabled]="isCreating" strong="true">
+            {{ isCreating ? 'Saving...' : 'Save' }}
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+
+      <!-- Titre -->
+      <ion-item>
+        <ion-label position="stacked">Title *</ion-label>
+        <ion-input
+          [(ngModel)]="newGig.title"
+          placeholder="Ex: Professional Logo Design"
+          maxlength="80">
+        </ion-input>
+      </ion-item>
+
+      <!-- Catégorie -->
+      <ion-item>
+        <ion-label position="stacked">Category *</ion-label>
+        <ion-select [(ngModel)]="newGig.category" placeholder="Select a category">
+          <ion-select-option *ngFor="let cat of categories" [value]="cat">
+            {{ cat }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- Prix -->
+      <ion-item>
+        <ion-label position="stacked">Price ($) *</ion-label>
+        <ion-input
+          [(ngModel)]="newGig.price"
+          type="number"
+          placeholder="Ex: 150"
+          min="1">
+        </ion-input>
+      </ion-item>
+
+      <!-- Délai de livraison -->
+      <ion-item>
+        <ion-label position="stacked">Delivery Time *</ion-label>
+        <ion-input
+          [(ngModel)]="newGig.deliveryTime"
+          placeholder="Ex: 3 days">
+        </ion-input>
+      </ion-item>
+
+      <!-- Description -->
+      <ion-item>
+        <ion-label position="stacked">Description *</ion-label>
+        <ion-textarea
+          [(ngModel)]="newGig.description"
+          placeholder="Describe what you'll deliver..."
+          rows="4"
+          maxlength="500">
+        </ion-textarea>
+      </ion-item>
+
+      <!-- Couleur accent -->
+      <div style="padding: 16px 20px 8px;">
+        <p style="font-size:13px; color:var(--ion-color-medium); margin-bottom:10px;">
+          Card color
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div
+            *ngFor="let c of colorOptions"
+            (click)="newGig.colorAccent = c.value"
+            [style.background]="c.value"
+            [style.border]="newGig.colorAccent === c.value ? '3px solid #000' : '3px solid transparent'"
+            style="width:32px; height:32px; border-radius:50%; cursor:pointer;">
+          </div>
+        </div>
+        <!-- Aperçu couleur sélectionnée -->
+        <div [style.background]="newGig.colorAccent"
+             style="height:4px; border-radius:2px; margin-top:12px; width:100%;">
+        </div>
+      </div>
+
+      <!-- Bouton Submit (bas de page) -->
+      <div style="padding: 20px 0 40px;">
+        <ion-button expand="block" (click)="submitGig()" [disabled]="isCreating">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          {{ isCreating ? 'Creating...' : 'Create Gig' }}
+        </ion-button>
+      </div>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
