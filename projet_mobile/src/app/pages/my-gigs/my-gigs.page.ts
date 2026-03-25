@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, NavController, ToastController, AlertController } from '@ionic/angular';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';                      // ← Router Angular, pas NavController
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ApiService } from '../../services/api.service';
 
@@ -37,7 +38,6 @@ export class MyGigsPage implements OnInit {
   gigs: Gig[] = [];
   isLoading = true;
 
-  // ── Formulaire création gig ────────────────────────────────────────────────
   showCreateModal = false;
   isCreating = false;
 
@@ -66,7 +66,7 @@ export class MyGigsPage implements OnInit {
   ];
 
   constructor(
-    private navCtrl: NavController,
+    private router: Router,                // ← Router Angular
     private api: ApiService,
     private toast: ToastController,
     private alert: AlertController
@@ -75,8 +75,6 @@ export class MyGigsPage implements OnInit {
   ngOnInit() {
     this.loadGigs();
   }
-
-  // ── Chargement ─────────────────────────────────────────────────────────────
 
   loadGigs() {
     this.isLoading = true;
@@ -93,8 +91,19 @@ export class MyGigsPage implements OnInit {
     });
   }
 
-  // ── Création gig ───────────────────────────────────────────────────────────
+  // ── Navigation vers détail ─────────────────────────────────────────────────
+  viewGigDetails(gig: Gig) {
+    // On utilise Router.navigate avec state — c'est la méthode fiable dans Angular/Ionic
+    this.router.navigate(['/gig-details', gig.id], {
+      state: { gig }          // accessible via Router.getCurrentNavigation() dans GigDetailsPage
+    });
+  }
 
+  goBack() {
+    this.router.navigate(['/freelancer-dashboard']);
+  }
+
+  // ── Création ───────────────────────────────────────────────────────────────
   openCreateModal() {
     this.newGig = { title: '', description: '', price: null, category: '', deliveryTime: '', colorAccent: '#6366f1' };
     this.showCreateModal = true;
@@ -105,7 +114,6 @@ export class MyGigsPage implements OnInit {
   }
 
   submitGig(): void {
-    // Validation
     if (!this.newGig.title.trim()) {
       this.showToast('Le titre est obligatoire', 'warning');
       return;
@@ -123,29 +131,26 @@ export class MyGigsPage implements OnInit {
       return;
     }
     if (!this.newGig.deliveryTime.trim()) {
-      this.showToast('Le délai de livraison est obligatoire', 'warning');
+      this.showToast('Le délai est obligatoire', 'warning');
       return;
     }
 
     this.isCreating = true;
     this.api.createGig(this.newGig).subscribe({
       next: (res: any) => {
-        this.gigs.unshift(res.gig);        // ajoute en tête de liste sans recharger
+        this.gigs.unshift(res.gig);
         this.showCreateModal = false;
         this.isCreating = false;
         this.showToast('Gig créé avec succès !', 'success');
       },
       error: (err: any) => {
-        console.error('Create gig error:', err);
         this.isCreating = false;
-        const msg = err?.error?.error || 'Erreur lors de la création';
-        this.showToast(msg, 'danger');
+        this.showToast(err?.error?.error || 'Erreur lors de la création', 'danger');
       }
     });
   }
 
-  // ── Suppression gig ────────────────────────────────────────────────────────
-
+  // ── Suppression ────────────────────────────────────────────────────────────
   async confirmDelete(event: Event, gig: Gig) {
     event.stopPropagation();
     const alertEl = await this.alert.create({
@@ -153,11 +158,7 @@ export class MyGigsPage implements OnInit {
       message: `"${gig.title}" sera définitivement supprimé.`,
       buttons: [
         { text: 'Annuler', role: 'cancel' },
-        {
-          text: 'Supprimer',
-          role: 'destructive',
-          handler: () => this.deleteGig(gig)
-        }
+        { text: 'Supprimer', role: 'destructive', handler: () => this.deleteGig(gig) }
       ]
     });
     await alertEl.present();
@@ -169,33 +170,17 @@ export class MyGigsPage implements OnInit {
         this.gigs = this.gigs.filter(g => g.id !== gig.id);
         this.showToast('Gig supprimé', 'success');
       },
-      error: (err: any) => {
-        console.error('Delete error:', err);
-        this.showToast('Erreur lors de la suppression', 'danger');
-      }
+      error: () => this.showToast('Erreur lors de la suppression', 'danger')
     });
   }
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
-
-  goBack() {
-    this.navCtrl.navigateBack(['/freelancer-dashboard']);
-  }
-
-  viewGigDetails(gig: Gig) {
-    this.navCtrl.navigateForward(['/gig-details.page', gig.id], { state: { gig } });
-  }
-
   // ── Helpers ────────────────────────────────────────────────────────────────
-
   getStatusLabel(status: string): string {
-    const labels: Record<string, string> = { active: 'Active', pending: 'Pending', paused: 'Paused' };
-    return labels[status] ?? status;
+    return ({ active: 'Active', pending: 'Pending', paused: 'Paused' } as any)[status] ?? status;
   }
 
   getStatusIcon(status: string): string {
-    const icons: Record<string, string> = { active: 'checkmark-circle', pending: 'time', paused: 'pause-circle' };
-    return icons[status] ?? 'ellipse';
+    return ({ active: 'checkmark-circle', pending: 'time', paused: 'pause-circle' } as any)[status] ?? 'ellipse';
   }
 
   async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {

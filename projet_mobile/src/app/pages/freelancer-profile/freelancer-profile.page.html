@@ -7,7 +7,7 @@
     </ion-buttons>
     <ion-title>Profile</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="editProfile()">
+      <ion-button (click)="openEdit()">
         <ion-icon slot="icon-only" name="create-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -15,9 +15,15 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="profile-page">
-  <div class="profile-container safe-area-bottom">
-    
-    <!-- Profile Header -->
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" style="text-align:center; padding:60px;">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading" class="profile-container safe-area-bottom">
+
+    <!-- ── En-tête profil ── -->
     <div class="profile-header" @fadeInUp>
       <div class="profile-avatar">
         <div class="avatar-placeholder">
@@ -28,10 +34,8 @@
           <span>{{ profile.rating }}</span>
         </div>
       </div>
-      
       <h1 class="profile-name">{{ profile.name }}</h1>
       <p class="profile-title">{{ profile.title }}</p>
-      
       <div class="profile-stats">
         <div class="stat-item">
           <div class="stat-value">{{ profile.completedProjects }}</div>
@@ -50,20 +54,18 @@
       </div>
     </div>
 
-    <!-- About Section -->
+    <!-- ── Bio ── -->
     <div class="section-card" @fadeInUp>
       <h2 class="section-title">About</h2>
-      <p class="bio-text">{{ profile.bio }}</p>
+      <p class="bio-text">{{ profile.bio || 'Aucune description.' }}</p>
     </div>
 
-    <!-- Contact Information -->
+    <!-- ── Contact ── -->
     <div class="section-card" @fadeInUp>
       <h2 class="section-title">Contact Information</h2>
       <div class="info-list">
         <div class="info-item" *ngFor="let info of profileInfo">
-          <div class="info-icon">
-            <ion-icon [name]="info.icon"></ion-icon>
-          </div>
+          <div class="info-icon"><ion-icon [name]="info.icon"></ion-icon></div>
           <div class="info-content">
             <div class="info-label">{{ info.label }}</div>
             <div class="info-value">{{ info.value }}</div>
@@ -72,9 +74,12 @@
       </div>
     </div>
 
-    <!-- Skills Section -->
+    <!-- ── Skills ── -->
     <div class="section-card" @fadeInUp>
       <h2 class="section-title">Skills</h2>
+      <div *ngIf="skills.length === 0" style="color:var(--ion-color-medium); font-size:14px;">
+        Aucune compétence ajoutée.
+      </div>
       <div class="skills-list">
         <div class="skill-item" *ngFor="let skill of skills">
           <div class="skill-header">
@@ -88,5 +93,135 @@
       </div>
     </div>
 
+    <!-- Bouton éditer (bas de page) -->
+    <div style="padding: 16px;">
+      <ion-button expand="block" (click)="openEdit()">
+        <ion-icon name="create-outline" slot="start"></ion-icon>
+        Edit Profile
+      </ion-button>
+    </div>
+
   </div>
 </ion-content>
+
+<!-- ═══════════════════════════════════════════
+     MODAL ÉDITION PROFIL
+════════════════════════════════════════════ -->
+<ion-modal [isOpen]="showEdit" (didDismiss)="closeEdit()">
+  <ng-template>
+    <ion-header mode="ios">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closeEdit()">
+            <ion-icon slot="icon-only" name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>Edit Profile</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="saveProfile()" [disabled]="isSaving" strong="true">
+            {{ isSaving ? 'Saving...' : 'Save' }}
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+
+      <!-- Informations de base -->
+      <ion-list-header>
+        <ion-label>Basic Info</ion-label>
+      </ion-list-header>
+
+      <ion-item>
+        <ion-label position="stacked">Full Name *</ion-label>
+        <ion-input [(ngModel)]="editForm.fullName" placeholder="Ton nom complet"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Professional Title</ion-label>
+        <ion-input [(ngModel)]="editForm.title" placeholder="Ex: Full Stack Developer"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Bio</ion-label>
+        <ion-textarea [(ngModel)]="editForm.bio" rows="4"
+          placeholder="Décris ton expérience et tes spécialités...">
+        </ion-textarea>
+      </ion-item>
+
+      <!-- Contact -->
+      <ion-list-header style="margin-top:16px;">
+        <ion-label>Contact</ion-label>
+      </ion-list-header>
+
+      <ion-item>
+        <ion-label position="stacked">Location</ion-label>
+        <ion-input [(ngModel)]="editForm.location" placeholder="Ex: Tunis, Tunisia"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Phone</ion-label>
+        <ion-input [(ngModel)]="editForm.phone" type="tel" placeholder="+216 XX XXX XXX"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Portfolio URL</ion-label>
+        <ion-input [(ngModel)]="editForm.portfolioUrl" type="url" placeholder="https://..."></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Hourly Rate ($)</ion-label>
+        <ion-input [(ngModel)]="editForm.hourlyRate" type="number" min="0" placeholder="0"></ion-input>
+      </ion-item>
+
+      <!-- Skills -->
+      <ion-list-header style="margin-top:16px;">
+        <ion-label>Skills</ion-label>
+      </ion-list-header>
+
+      <!-- Skills existants -->
+      <ion-item *ngFor="let skill of editForm.skills; let i = index">
+        <ion-label>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font-size:14px;">{{ skill.name }}</span>
+            <span style="font-size:13px; color:var(--ion-color-medium);">{{ skill.level }}%</span>
+          </div>
+          <ion-range [(ngModel)]="skill.level" min="0" max="100" step="5"
+            color="primary" style="padding: 0;">
+          </ion-range>
+        </ion-label>
+        <ion-button slot="end" fill="clear" color="danger" (click)="removeSkill(i)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+
+      <!-- Ajouter un skill -->
+      <div style="padding:12px 16px; background:var(--ion-color-light); border-radius:8px; margin:12px 0;">
+        <p style="font-size:12px; color:var(--ion-color-medium); margin:0 0 8px;">Add a skill</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <ion-input [(ngModel)]="newSkillName" placeholder="Ex: React"
+            style="flex:1; border:1px solid var(--ion-color-light-shade); border-radius:6px; padding:6px 10px; font-size:14px;">
+          </ion-input>
+          <ion-button size="small" (click)="addSkill()">
+            <ion-icon slot="icon-only" name="add"></ion-icon>
+          </ion-button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+          <span style="font-size:12px; color:var(--ion-color-medium); white-space:nowrap;">Level: {{ newSkillLevel }}%</span>
+          <ion-range [(ngModel)]="newSkillLevel" min="0" max="100" step="5"
+            color="primary" style="flex:1; padding:0;">
+          </ion-range>
+        </div>
+      </div>
+
+      <!-- Bouton Save (bas de page) -->
+      <div style="padding: 20px 0 40px;">
+        <ion-button expand="block" (click)="saveProfile()" [disabled]="isSaving">
+          <ion-icon name="save-outline" slot="start"></ion-icon>
+          {{ isSaving ? 'Saving...' : 'Save Profile' }}
+        </ion-button>
+      </div>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
