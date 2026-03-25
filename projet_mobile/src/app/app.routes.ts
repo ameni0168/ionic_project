@@ -60,7 +60,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/my-gigs/my-gigs.page').then( m => m.MyGigsPage)
   },
   {
-    path: 'gig-details',
+    path: 'gig-details/:id',
     loadComponent: () => import('./pages/gig-details/gig-details.page').then( m => m.GigDetailsPage)
 
   },
@@ -72,7 +72,8 @@ export const routes: Routes = [
   {
     path: 'accueil', 
     loadComponent: () => import("./pages/accueil/accueil.page").then( m=> m.AccueilPage)
-  },  {
+  },
+  {
     path: 'talent-profile',
     loadComponent: () => import('./pages/talent-profile/talent-profile.page').then( m => m.TalentProfilePage)
   }

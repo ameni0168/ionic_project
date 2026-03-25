@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController, ToastController, AlertController } from '@ionic/angular';
-import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { IonicModule, NavController, ToastController, AlertController } from '@ionic/angular';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 
 interface Gig {
@@ -27,28 +27,28 @@ interface Gig {
 export class GigDetailsPage implements OnInit {
 
   gig: Gig | null = null;
+  isLoading = true;
   isEditing = false;
-  isSaving = false;
+  isSaving  = false;
 
-  // Copie locale pour l'édition
   editData = {
-    title: '',
-    description: '',
-    price: 0,
-    category: '',
-    deliveryTime: '',
-    status: '' as 'active' | 'pending' | 'paused',
+    title: '', description: '', price: 0,
+    category: '', deliveryTime: '',
+    status: 'pending' as 'active' | 'pending' | 'paused',
     colorAccent: ''
   };
 
   statusOptions = [
     { value: 'active',  label: 'Active',  icon: 'checkmark-circle' },
-    { value: 'pending', label: 'Pending', icon: 'time' },
-    { value: 'paused',  label: 'Paused',  icon: 'pause-circle' }
+    { value: 'pending', label: 'Pending', icon: 'time'             },
+    { value: 'paused',  label: 'Paused',  icon: 'pause-circle'     }
   ];
+
+  colorOptions = ['#6366f1','#10b981','#f59e0b','#3b82f6','#ec4899','#ef4444'];
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,           // ← Router (pas juste NavController)
     private navCtrl: NavController,
     private api: ApiService,
     private toast: ToastController,
@@ -56,13 +56,51 @@ export class GigDetailsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Récupérer le gig passé via navigation state
-    const nav = this.navCtrl as any;
-    const state = history.state;
-    if (state?.gig) {
-      this.gig = state.gig;
+    /**
+     * Dans Ionic avec standalone + NavController.navigateForward(),
+     * le state est accessible via this.router.getCurrentNavigation()
+     * UNIQUEMENT pendant la navigation (dans le constructeur ou ngOnInit immédiat).
+     *
+     * Si getCurrentNavigation() est null (reload / accès direct),
+     * on charge via l'API avec l'id de l'URL.
+     */
+    const nav = this.router.getCurrentNavigation();
+    const stateGig = nav?.extras?.state?.['gig'] as Gig | undefined;
+
+    if (stateGig && stateGig.id) {
+      // Cas nominal : navigation depuis my-gigs
+      console.log('Gig reçu via state:', stateGig);
+      this.gig = stateGig;
       this.initEditData();
+      this.isLoading = false;
+    } else {
+      // Cas fallback : reload ou accès direct /gig-details/XXXX
+      console.log('State vide → chargement via API');
+      this.loadFromApi();
     }
+  }
+
+  loadFromApi() {
+    const gigId = this.route.snapshot.paramMap.get('id');
+    console.log('ID depuis URL:', gigId);
+
+    if (!gigId) {
+      this.isLoading = false;
+      return;
+    }
+
+    this.api.getMyGigs().subscribe({
+      next: (data: { gigs: Gig[] }) => {
+        this.gig = data.gigs.find(g => g.id === gigId) ?? null;
+        console.log('Gig trouvé via API:', this.gig);
+        if (this.gig) this.initEditData();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.showToast('Impossible de charger le gig', 'danger');
+      }
+    });
   }
 
   initEditData() {
@@ -78,81 +116,67 @@ export class GigDetailsPage implements OnInit {
     };
   }
 
+  // ── Édition ────────────────────────────────────────────────────────────────
+
   toggleEdit() {
     this.isEditing = !this.isEditing;
-    if (!this.isEditing) this.initEditData(); // annuler : reset
+    if (!this.isEditing) this.initEditData();
   }
 
   saveChanges(): void {
-    if (!this.gig) {
-      return;
-    }
-    if (!this.editData.title.trim()) {
-      this.showToast('Le titre est obligatoire', 'warning');
-      return;
-    }
-    if (this.editData.price <= 0) {
-      this.showToast('Le prix doit être positif', 'warning');
-      return;
-    }
+    if (!this.gig) { this.showToast('Gig non trouvé', 'warning'); return; }
+    if (!this.editData.title.trim()) { this.showToast('Le titre est obligatoire', 'warning'); return; }
+    if (this.editData.price <= 0) { this.showToast('Le prix doit être positif', 'warning'); return; }
 
     this.isSaving = true;
     this.api.updateGig(this.gig.id, this.editData).subscribe({
       next: () => {
-        // Mise à jour locale immédiate
-        this.gig = { ...this.gig!, ...this.editData };
+        this.gig      = { ...this.gig!, ...this.editData };
         this.isEditing = false;
-        this.isSaving = false;
+        this.isSaving  = false;
         this.showToast('Gig mis à jour !', 'success');
       },
       error: (err: any) => {
         this.isSaving = false;
-        const msg = err?.error?.error || 'Erreur lors de la mise à jour';
-        this.showToast(msg, 'danger');
+        this.showToast(err?.error?.error || 'Erreur lors de la mise à jour', 'danger');
       }
     });
   }
 
+  // ── Suppression ────────────────────────────────────────────────────────────
+
   async confirmDelete() {
     if (!this.gig) return;
-    const alertEl = await this.alert.create({
-      header: 'Supprimer ce gig ?',
+    const a = await this.alert.create({
+      header:  'Supprimer ce gig ?',
       message: `"${this.gig.title}" sera définitivement supprimé.`,
       buttons: [
         { text: 'Annuler', role: 'cancel' },
-        {
-          text: 'Supprimer',
-          role: 'destructive',
-          handler: () => {
-            this.api.deleteGig(this.gig!.id).subscribe({
-              next: () => {
-                this.showToast('Gig supprimé', 'success');
-                this.navCtrl.navigateBack(['/my-gigs']);
-              },
-              error: () => this.showToast('Erreur lors de la suppression', 'danger')
-            });
-          }
-        }
+        { text: 'Supprimer', role: 'destructive', handler: () => {
+          this.api.deleteGig(this.gig!.id).subscribe({
+            next: () => { this.showToast('Gig supprimé', 'success'); this.goBack(); },
+            error: () => this.showToast('Erreur suppression', 'danger')
+          });
+        }}
       ]
     });
-    await alertEl.present();
+    await a.present();
   }
 
-  goBack() {
-    this.navCtrl.navigateBack(['/my-gigs']);
+  // ── Navigation ─────────────────────────────────────────────────────────────
+
+  goBack() { this.navCtrl.navigateBack(['/my-gigs']); }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  getStatusColor(s: string) {
+    return ({ active:'success', pending:'warning', paused:'medium' } as any)[s] ?? 'medium';
+  }
+  getStatusIcon(s: string) {
+    return ({ active:'checkmark-circle', pending:'time', paused:'pause-circle' } as any)[s] ?? 'ellipse';
   }
 
-  getStatusColor(status: string): string {
-    const colors: Record<string, string> = { active: 'success', pending: 'warning', paused: 'medium' };
-    return colors[status] ?? 'medium';
-  }
-
-  getStatusIcon(status: string): string {
-    const icons: Record<string, string> = { active: 'checkmark-circle', pending: 'time', paused: 'pause-circle' };
-    return icons[status] ?? 'ellipse';
-  }
-
-  async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+  async showToast(message: string, color: 'success'|'danger'|'warning' = 'success') {
     const t = await this.toast.create({ message, duration: 2500, color, position: 'top' });
     await t.present();
   }
