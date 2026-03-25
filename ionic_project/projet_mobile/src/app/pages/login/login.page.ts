@@ -35,7 +35,8 @@ export class LoginPage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private api:ApiService  // ← NavController au lieu de Router
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -53,28 +54,37 @@ export class LoginPage implements OnInit {
   get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
-    if (this.loginForm.valid) {
-      this.isLoading = true;
-      const { email, password } = this.loginForm.value;
+  if (this.loginForm.valid) {
+    this.isLoading = true;
+    const formData = this.loginForm.value;
 
-      setTimeout(() => {
+    // Appelle API
+    this.api.login(formData).subscribe({
+      next: (res: any) => {
         this.isLoading = false;
 
-        // TODO : remplacer par appel API réel
-        const role = this.determineRole(email);
+        console.log('Login success', res);
 
-        if (role === 'client') {
-          this.navCtrl.navigateForward('/client-dashboard');
-        } else if (role === 'freelancer') {
-          this.navCtrl.navigateForward('/freelancer-dashboard');
+        // Redirection selon le rôle
+        if (res.role === 'client') {
+          this.navCtrl.navigateRoot(['/client-dashboard']);
+        } else if (res.role === 'freelancer') {
+          this.navCtrl.navigateRoot(['/freelancer-dashboard']);
+        } else {
+          alert("Rôle inconnu");
         }
-      }, 2000);
-    } else {
-      Object.keys(this.loginForm.controls).forEach(key => {
-        this.loginForm.get(key)?.markAsTouched();
-      });
-    }
+      },
+      error: (err:any) => {
+        this.isLoading = false;
+        alert(err.error?.error || "Erreur serveur");
+      }
+    });
+  } else {
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAsTouched();
+    });
   }
+}
 
   goBack() {
     this.navCtrl.navigateBack('/welcome');
