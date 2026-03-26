@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
@@ -14,6 +14,8 @@ import { JobService } from '../../../services/job.service';
   standalone: true,
   imports: [
     CommonModule,
+    NgIf,
+    NgForOf,
     IonicModule,
     ReactiveFormsModule,
     HttpClientModule,

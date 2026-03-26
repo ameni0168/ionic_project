@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 from app.routes.auth_routes import auth_bp
 from app.routes.job_routes import job_bp
+from app.routes.proposal_routes import proposal_bp
 from app.extension import init_db  # ton init_db existant si tu as des helpers
 
 load_dotenv()
@@ -36,5 +37,7 @@ def create_app():
     # ── Blueprints ────────────────────────────────────────────
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(job_bp, url_prefix="/api/jobs")
+    app.register_blueprint(proposal_bp, url_prefix="/api/proposals")
+   
 
     return app

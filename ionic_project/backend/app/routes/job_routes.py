@@ -1,9 +1,12 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from bson import ObjectId
-from app.extension import db                  # ← direct db connection
 from app.models.job_model import job_schema
 
 job_bp = Blueprint("job_bp", __name__)
+
+def get_db():
+    """Helper function to get database instance"""
+    return current_app.db
 
 def serialize(doc):
     if doc:
@@ -34,6 +37,7 @@ def create_job():
         skills=           data.get("skills", [])
     )
 
+    db = get_db()
     result = db.jobs.insert_one(new_job)
     new_job["_id"] = str(result.inserted_id)
     return jsonify({"message": "Job created successfully", "job": new_job}), 201
@@ -46,6 +50,7 @@ def get_all_jobs():
         if request.args.get(key):
             query[key] = request.args.get(key)
 
+    db = get_db()
     jobs = [serialize(j) for j in db.jobs.find(query).sort("created_at", -1)]
     return jsonify({"jobs": jobs, "total": len(jobs)}), 200
 
@@ -53,6 +58,7 @@ def get_all_jobs():
 @job_bp.route("/<job_id>", methods=["GET"])
 def get_job(job_id):
     try:
+        db = get_db()
         job = db.jobs.find_one({"_id": ObjectId(job_id)})
     except:
         return jsonify({"error": "Invalid job ID"}), 400
@@ -65,6 +71,7 @@ def get_job(job_id):
 
 @job_bp.route("/client/<client_id>", methods=["GET"])
 def get_jobs_by_client(client_id):
+    db = get_db()
     jobs = [serialize(j) for j in db.jobs.find({"client_id": client_id}).sort("created_at", -1)]
     return jsonify({"jobs": jobs, "total": len(jobs)}), 200
 
@@ -81,6 +88,7 @@ def update_job(job_id):
         return jsonify({"error": "No valid fields to update"}), 400
 
     try:
+        db = get_db()
         db.jobs.update_one({"_id": ObjectId(job_id)}, {"$set": update_data})
         job = db.jobs.find_one({"_id": ObjectId(job_id)})
     except:
@@ -92,6 +100,7 @@ def update_job(job_id):
 @job_bp.route("/<job_id>", methods=["DELETE"])
 def delete_job(job_id):
     try:
+        db = get_db()
         result = db.jobs.delete_one({"_id": ObjectId(job_id)})
     except:
         return jsonify({"error": "Invalid job ID"}), 400
@@ -111,6 +120,7 @@ def update_job_status(job_id):
         return jsonify({"error": "Invalid status"}), 400
 
     try:
+        db = get_db()
         result = db.jobs.update_one(
             {"_id": ObjectId(job_id)},
             {"$set": {"status": new_status}}
