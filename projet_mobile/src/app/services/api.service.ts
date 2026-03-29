@@ -13,7 +13,7 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // ── Gestion token ──────────────────────────────────────────────────────────
+  // ── Gestion token ─────────────────────────
 
   saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
@@ -33,14 +33,13 @@ export class ApiService {
 
   private authHeaders(): HttpHeaders {
     const token = this.getToken();
-    if (!token) console.warn('ApiService: aucun token trouvé');
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
   }
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
+  // ── Auth ─────────────────────────
 
   registerClient(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/auth/register/client`, data);
@@ -50,7 +49,6 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/auth/register/freelancer`, data);
   }
 
-  // Le token est sauvegardé automatiquement ici après login réussi
   login(data: { email: string; password: string }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/auth/login`, data).pipe(
       tap((res) => {
@@ -61,7 +59,7 @@ export class ApiService {
     );
   }
 
-  // ── Freelancer ─────────────────────────────────────────────────────────────
+  // ── Freelancer ─────────────────────────
 
   getFreelancerProfile(): Observable<any> {
     return this.http.get(`${this.baseUrl}/freelancer/profile`, {
@@ -81,7 +79,7 @@ export class ApiService {
     });
   }
 
-  // ── Gigs ───────────────────────────────────────────────────────────────────
+  // ── Gigs ─────────────────────────
 
   getMyGigs(): Observable<any> {
     return this.http.get(`${this.baseUrl}/gigs/`, {
@@ -103,6 +101,38 @@ export class ApiService {
 
   deleteGig(gigId: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/gigs/${gigId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  // ── Orders (freelancer) ─────────────────────────
+
+  getFreelancerOrders(status: string = ''): Observable<any> {
+    const params = status ? `?status=${status}` : '';
+    return this.http.get(`${this.baseUrl}/orders/freelancer${params}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateOrderStatus(orderId: string, status: string): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/orders/${orderId}/status`,
+      { status },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  // ── Orders (client) ─────────────────────────
+
+  getClientOrders(status: string = ''): Observable<any> {
+    const params = status ? `?status=${status}` : '';
+    return this.http.get(`${this.baseUrl}/orders/client${params}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  orderGig(gigId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/catalog/${gigId}/order`, data, {
       headers: this.authHeaders()
     });
   }

@@ -1,0 +1,54 @@
+<ion-content [fullscreen]="true" class="ion-padding">
+<div class="filter-container">
+  <div
+    *ngFor="let f of filters"
+    class="filter-card"
+    [class.active]="activeFilter === f.value"
+    (click)="setFilter(f.value)"
+  >
+    <div class="count">{{ getCount(f.value) }}</div>
+    <div class="label">{{ f.label }}</div>
+  </div>
+</div>
+<div class="order-card" *ngFor="let order of orders">
+
+  <div class="card-header">
+    <div>
+      <h3>{{ order.title }}</h3>
+      <div class="client">
+        <ion-icon name="person-outline"></ion-icon>
+        {{ order.clientName }}
+      </div>
+    </div>
+
+    <ion-badge [color]="getStatusColor(order.status)">
+      {{ order.status }}
+    </ion-badge>
+  </div>
+
+  <div class="card-meta">
+    <span class="price">${{ order.price }}</span>
+    <span class="date">{{ formatDate(order.createdAt) }}</span>
+  </div>
+
+  <div *ngIf="order.message" class="message">
+    {{ order.message }}
+  </div>
+
+  <div *ngIf="order.requirements" class="requirements">
+    {{ order.requirements }}
+  </div>
+
+
+  <div class="actions" *ngIf="getActions(order).length > 0">
+    <ion-button
+      *ngFor="let action of getActions(order)"
+      [color]="action.color"
+      (click)="confirmAction(order, action)"
+    >
+      {{ action.label }}
+    </ion-button>
+  </div>
+
+</div>
+</ion-content>
