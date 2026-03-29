@@ -73,7 +73,23 @@ export const routes: Routes = [
   {
     path: 'client-profile',
     loadComponent: () => import('./pages/client-profile/client-profile.page').then( m => m.ClientProfilePage)
-  }
+  },
+  {
+    path: 'cataloge',
+    loadComponent: () => import('./pages/cataloge/cataloge.page').then( m => m.CatalogPage)
+  },
+  {
+    path: 'service-details',
+    loadComponent: () => import('./pages/service-details/service-details.page').then( m => m.ServiceDetailsPage)
+  },
+  {
+  path: 'service-details/:id',
+  loadComponent: () =>
+    import('./pages/service-details/service-details.page')
+      .then(m => m.ServiceDetailsPage)
+}
+
+
 
 
 ];

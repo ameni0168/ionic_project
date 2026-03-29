@@ -26,7 +26,7 @@ export class DashboardService {
   // GET /api/talents/?sort=rating&per_page=5 → top freelancers
   getTopFreelancers(): Observable<any> {
     return this.http.get(
-      `${this.API}/talents/?sort=rating&per_page=5`,
+      `${this.API}/freelancer/?sort=rating&per_page=5`,
       { headers: this.headers() }
     );
   }
@@ -34,7 +34,7 @@ export class DashboardService {
   // GET /api/talents/local?location=Tunisia → freelancers locaux
   getLocalFreelancers(location: string = 'Tunisia'): Observable<any> {
     return this.http.get(
-      `${this.API}/talents/local?location=${location}`,
+      `${this.API}/freelancer/local?location=${location}`,
       { headers: this.headers() }
     );
   }
@@ -42,7 +42,7 @@ export class DashboardService {
   // GET /api/talents/?category=...&sort=rating → par catégorie
   getFreelancersByCategory(category: string): Observable<any> {
     return this.http.get(
-      `${this.API}/talents/?category=${encodeURIComponent(category)}&sort=rating&per_page=5`,
+      `${this.API}/freelancer/?category=${encodeURIComponent(category)}&sort=rating&per_page=5`,
       { headers: this.headers() }
     );
   }

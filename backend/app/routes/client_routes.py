@@ -13,7 +13,6 @@ client_bp = Blueprint("client", __name__)
 
 
 def _check_client_role():
-    """Retourne une erreur 403 si l'utilisateur n'est pas un client."""
     claims = get_jwt()
     if claims.get("role") != "client":
         return jsonify({"error": "Acces reserve aux clients"}), 403
