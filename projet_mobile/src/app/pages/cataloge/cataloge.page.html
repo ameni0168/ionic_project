@@ -1,0 +1,231 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="catalog-toolbar">
+    <ion-title class="catalog-title">Services</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="toggleFilters()" class="filter-btn">
+        <ion-icon slot="icon-only" name="options-outline"></ion-icon>
+        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="catalog-content">
+
+  <!-- ══ SEARCH ═══════════════════════════════════════════════ -->
+  <div class="search-section">
+    <div class="search-row">
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search for a service..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchInput()"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="search-btn" (click)="onSearch()" *ngIf="!searchQuery">
+        <ion-icon name="search-outline"></ion-icon>
+      </button>
+      <button class="search-btn clear-btn" (click)="clearSearch()" *ngIf="searchQuery">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ FILTER PANEL ══════════════════════════════════════════ -->
+  <div class="filter-panel" *ngIf="showFilters">
+    <div class="filter-header">
+      <h3>Filters</h3>
+      <button class="reset-link" (click)="resetFilters()">Reset</button>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-lbl">Category</label>
+      <select class="filter-select" [(ngModel)]="filters.category">
+        <option value="">All</option>
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-lbl">Price ($)</label>
+      <div class="price-row">
+        <input class="filter-input" type="number" [(ngModel)]="filters.min_price" placeholder="Min" />
+        <span class="price-sep">—</span>
+        <input class="filter-input" type="number" [(ngModel)]="filters.max_price" placeholder="Max" />
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-lbl">Sort by</label>
+      <div class="sort-chips">
+        <div
+          class="sort-chip"
+          *ngFor="let s of sortOptions"
+          (click)="filters.sort = s.value"
+          [class.active]="filters.sort === s.value"
+        >{{ s.label }}</div>
+      </div>
+    </div>
+
+    <button class="apply-btn" (click)="applyFilters()">
+      <ion-icon name="checkmark-outline"></ion-icon> Apply
+    </button>
+  </div>
+
+  <!-- ══ SEARCH MODE ════════════════════════════════════════ -->
+  <div *ngIf="isSearchMode">
+    <div class="results-header">
+      <span *ngIf="!isLoadingSearch" class="results-count">
+        {{ searchTotal }} service{{ searchTotal > 1 ? 's' : '' }}
+        <span *ngIf="searchQuery"> for "{{ searchQuery }}"</span>
+        <span *ngIf="filters.category"> · {{ filters.category }}</span>
+      </span>
+      <ion-spinner *ngIf="isLoadingSearch" name="crescent" class="inline-spinner"></ion-spinner>
+    </div>
+
+    <!-- Skeleton -->
+    <div class="gig-grid" *ngIf="isLoadingSearch && searchResults.length === 0">
+      <div class="gig-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+        <ion-skeleton-text animated class="sk-img"></ion-skeleton-text>
+        <div class="sk-body">
+          <ion-skeleton-text animated class="sk-name"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-title"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-price"></ion-skeleton-text>
+        </div>
+      </div>
+    </div>
+
+    <!-- No results -->
+    <div class="no-results" *ngIf="!isLoadingSearch && searchResults.length === 0">
+      <ion-icon name="search-outline"></ion-icon>
+      <p>No services found</p>
+      <span>Try different keywords or filters</span>
+    </div>
+
+    <!-- Results grid -->
+    <div class="gig-grid" *ngIf="searchResults.length > 0">
+      <div class="gig-card" *ngFor="let gig of searchResults" (click)="viewGig(gig)">
+        <ng-container *ngTemplateOutlet="gigCardTpl; context: { gig: gig }"></ng-container>
+      </div>
+    </div>
+
+    <!-- Load more -->
+    <button class="load-more-btn" *ngIf="hasMore && !isLoadingSearch" (click)="loadMore()">
+      Load more
+    </button>
+  </div>
+
+  <!-- ══ DISCOVERY MODE ═══════════════════════════════════════ -->
+  <div *ngIf="!isSearchMode">
+
+    <!-- Categories -->
+    <div class="cat-section">
+      <h2 class="section-title">Browse by category</h2>
+      <div class="cat-chips">
+        <div class="cat-chip" *ngFor="let c of categories" (click)="selectCategory(c)">
+          {{ c }}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-divider"></div>
+
+    <!-- Featured -->
+    <div class="featured-section">
+      <div class="section-header">
+        <h2 class="section-title">Popular Services</h2>
+        <a class="see-all" (click)="isSearchMode = true; _doSearch(true)">See all</a>
+      </div>
+
+      <!-- Skeleton -->
+      <div class="gig-grid" *ngIf="isLoadingFeatured">
+        <div class="gig-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+          <ion-skeleton-text animated class="sk-img"></ion-skeleton-text>
+          <div class="sk-body">
+            <ion-skeleton-text animated class="sk-name"></ion-skeleton-text>
+            <ion-skeleton-text animated class="sk-title"></ion-skeleton-text>
+            <ion-skeleton-text animated class="sk-price"></ion-skeleton-text>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="gig-grid" *ngIf="!isLoadingFeatured">
+        <div class="gig-card" *ngFor="let gig of featuredGigs" (click)="viewGig(gig)">
+          <ng-container *ngTemplateOutlet="gigCardTpl; context: { gig: gig }"></ng-container>
+        </div>
+
+        <div class="no-results" *ngIf="featuredGigs.length === 0">
+          <ion-icon name="briefcase-outline"></ion-icon>
+          <p>No services available</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ GIG TEMPLATE ════════════════════════════════════ -->
+  <ng-template #gigCardTpl let-gig="gig">
+    <div class="gig-thumb" [style.background]="gig.color_accent || '#6366f1'">
+      <img *ngIf="gig.images?.[0]" [src]="gig.images[0]" [alt]="gig.title"
+           onerror="this.style.display='none'" />
+      <span class="gig-category-badge">{{ gig.category }}</span>
+    </div>
+
+    <div class="gig-body">
+      <div class="freelancer-row" *ngIf="gig.freelancer">
+        <img class="fl-avatar"
+          [src]="gig.freelancer.avatar || 'assets/default-avatar.png'"
+          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+        />
+        <span class="fl-name">{{ gig.freelancer.full_name }}</span>
+      </div>
+
+      <p class="gig-title">{{ gig.title }}</p>
+
+      <div class="gig-stars" *ngIf="gig.rating > 0">
+        <ion-icon name="star" class="star-y" *ngFor="let s of getStars(gig.rating)"></ion-icon>
+        <span class="gig-rating">{{ gig.rating | number:'1.1-1' }}</span>
+        <span class="gig-reviews">({{ gig.review_count }})</span>
+      </div>
+
+      <div class="gig-footer">
+        <span class="gig-price">From <strong>${{ gig.price }}</strong></span>
+        <span class="gig-delivery" *ngIf="gig.delivery_time">
+          <ion-icon name="time-outline"></ion-icon> {{ gig.delivery_time }}
+        </span>
+      </div>
+    </div>
+  </ng-template>
+
+  <div style="height: 80px;"></div>
+</ion-content>
+
+<!-- TAB BAR -->
+<ion-tab-bar slot="bottom" class="custom-tab-bar">
+  <ion-tab-button class="tab-btn" (click)="goTo('/client-dashboard')">
+    <ion-icon name="briefcase-outline"></ion-icon>
+    <ion-label>Dashboard</ion-label>
+  </ion-tab-button>
+
+  <ion-tab-button class="tab-btn" (click)="goTo('/talent')">
+    <ion-icon name="people-outline"></ion-icon>
+    <ion-label>Talent</ion-label>
+  </ion-tab-button>
+
+  <ion-tab-button class="tab-btn tab-active">
+    <ion-icon name="albums"></ion-icon>
+    <ion-label>Catalog</ion-label>
+  </ion-tab-button>
+
+  <ion-tab-button class="tab-btn" (click)="goTo('/messages')">
+    <ion-icon name="chatbubble-outline"></ion-icon>
+    <ion-label>Messages</ion-label>
+  </ion-tab-button>
+
+  <ion-tab-button class="tab-btn" (click)="goTo('/alerts')">
+    <ion-icon name="notifications-outline"></ion-icon>
+    <ion-label>Alerts</ion-label>
+  </ion-tab-button>
+</ion-tab-bar>
