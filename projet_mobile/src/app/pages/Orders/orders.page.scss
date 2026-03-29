@@ -1,0 +1,244 @@
+// ─────────────────────────────────────────
+// VARIABLES (Design System)
+// ─────────────────────────────────────────
+
+:host {
+    --radius: 18px;
+    --shadow-soft: 0 6px 20px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.12);
+  }
+  
+  // ─────────────────────────────────────────
+  // FILTER CARDS (TOP DASHBOARD STYLE)
+  // ─────────────────────────────────────────
+  
+  .filter-container {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    overflow-x: auto;
+  
+    .filter-card {
+      flex-shrink: 0;
+      min-width: 90px;
+      padding: 14px;
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+  
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.9),
+        rgba(245, 245, 245, 0.8)
+      );
+  
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+  
+      transition: all 0.25s ease;
+  
+      box-shadow: var(--shadow-soft);
+  
+      &:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: var(--shadow-hover);
+      }
+  
+      &.active {
+        border: 2px solid var(--ion-color-primary);
+        background: rgba(var(--ion-color-primary-rgb), 0.08);
+      }
+  
+      .count {
+        font-size: 22px;
+        font-weight: 700;
+      }
+  
+      .label {
+        font-size: 11px;
+        color: var(--ion-color-medium);
+        letter-spacing: 0.5px;
+      }
+    }
+  }
+  
+  // ─────────────────────────────────────────
+  // ORDER CARD (MAIN COMPONENT)
+  // ─────────────────────────────────────────
+  
+  .order-card {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(248, 248, 248, 0.9)
+    );
+  
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-soft);
+  
+    transition: all 0.3s ease;
+  
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+  
+    // HEADER
+    .card-header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+  
+      h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+  
+      .client {
+        font-size: 13px;
+        color: var(--ion-color-medium);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+    }
+  
+    // PRICE + DATE
+    .card-meta {
+      padding: 0 16px 12px;
+      display: flex;
+      justify-content: space-between;
+  
+      .price {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ion-color-success);
+      }
+  
+      .date {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+      }
+    }
+  
+    // MESSAGE BLOCK
+    .message,
+    .requirements {
+      margin: 0 16px 10px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+  
+      background: rgba(0, 0, 0, 0.04);
+  
+      transition: all 0.2s ease;
+  
+      &:hover {
+        background: rgba(0, 0, 0, 0.06);
+      }
+    }
+  
+    // ACTION BUTTONS
+    .actions {
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+  
+      ion-button {
+        flex: 1;
+        font-size: 13px;
+        border-radius: 12px;
+  
+        --box-shadow: none;
+  
+        transition: all 0.2s ease;
+  
+        &:hover {
+          transform: scale(1.03);
+        }
+      }
+    }
+  
+    // COMPLETED BADGE
+    .completed {
+      padding: 10px 16px 14px;
+      font-size: 12px;
+      color: var(--ion-color-success);
+  
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  }
+  
+  // ─────────────────────────────────────────
+  // EMPTY STATE (CLEAN UX)
+  // ─────────────────────────────────────────
+  
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  
+    ion-icon {
+      font-size: 64px;
+      opacity: 0.6;
+    }
+  
+    h3 {
+      margin-top: 12px;
+      font-weight: 600;
+    }
+  
+    p {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+    }
+  }
+  
+  // ─────────────────────────────────────────
+  // LOADING
+  // ─────────────────────────────────────────
+  
+  .loading {
+    text-align: center;
+    padding: 80px;
+  }
+  
+  // ─────────────────────────────────────────
+  // SCROLLBAR MODERNE
+  // ─────────────────────────────────────────
+  
+  ::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+  }
+  
+  // ─────────────────────────────────────────
+  // DARK MODE AUTO 🌙
+  // ─────────────────────────────────────────
+  
+  @media (prefers-color-scheme: dark) {
+  
+    .order-card {
+      background: rgba(30, 30, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  
+    .filter-card {
+      background: rgba(40, 40, 40, 0.7);
+    }
+  
+    .message,
+    .requirements {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
