@@ -1,7 +1,7 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="talent-toolbar">
     <ion-buttons slot="start">
-      <ion-avatar class="avatar-btn" (click)="goTo('/client-profile')">
+      <ion-avatar class="avatar-btn" (click)="goTo('/profile')">
         <img
           src="assets/default-avatar.png"
           onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
@@ -11,10 +11,8 @@
     </ion-buttons>
     <ion-title class="talent-title">Talent</ion-title>
     <ion-buttons slot="end">
-      <!-- Badge filtre actif -->
-      <ion-button fill="clear" (click)="toggleFilters()" class="filter-btn">
-        <ion-icon slot="icon-only" name="options-outline"></ion-icon>
-        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+      <ion-button fill="clear" (click)="openMenu()">
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -22,22 +20,18 @@
 
 <ion-content class="talent-content">
 
-  <!-- ══ SEARCH BAR ═══════════════════════════════════════════ -->
+  <!-- ========== SEARCH BAR ========== -->
   <div class="search-section">
     <div class="search-bar-row">
       <input
         class="search-input"
         type="text"
-        placeholder="Search talents, skills..."
+        placeholder="Search"
         [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchInput()"
         (keyup.enter)="onSearch()"
       />
-      <button class="search-btn" (click)="onSearch()" *ngIf="!isSearchMode || !searchQuery">
+      <button class="search-btn" (click)="onSearch()">
         <ion-icon name="search-outline"></ion-icon>
-      </button>
-      <button class="search-btn clear-btn" (click)="clearSearch()" *ngIf="isSearchMode && searchQuery">
-        <ion-icon name="close-outline"></ion-icon>
       </button>
     </div>
 
@@ -56,284 +50,130 @@
     </div>
   </div>
 
-  <!-- ══ FILTER PANEL ══════════════════════════════════════════ -->
-  <div class="filter-panel" *ngIf="showFilters">
-    <div class="filter-panel-header">
-      <h3>Filtres</h3>
-      <button class="reset-btn" (click)="resetFilters()">Réinitialiser</button>
-    </div>
+  <div class="page-divider"></div>
 
-    <!-- Catégorie -->
-    <div class="filter-group">
-      <label class="filter-lbl">Catégorie</label>
-      <select class="filter-select" [(ngModel)]="filters.category">
-        <option value="">Toutes les catégories</option>
-        <option *ngFor="let cat of browseCategories" [value]="cat.name">{{ cat.name }}</option>
-      </select>
-    </div>
+  <!-- ========== TALENT IN TUNISIA ========== -->
+  <div class="talent-block">
+    <h2 class="block-title">Talent in Tunisia</h2>
 
-    <!-- Taux horaire -->
-    <div class="filter-group">
-      <label class="filter-lbl">Taux horaire ($)</label>
-      <div class="rate-row">
-        <input class="filter-input" type="number" [(ngModel)]="filters.min_rate" placeholder="Min" />
-        <span class="rate-sep">—</span>
-        <input class="filter-input" type="number" [(ngModel)]="filters.max_rate" placeholder="Max" />
-      </div>
-    </div>
-
-    <!-- Tri -->
-    <div class="filter-group">
-      <label class="filter-lbl">Trier par</label>
-      <div class="sort-chips">
-        <div
-          class="sort-chip"
-          *ngFor="let s of sortOptions"
-          (click)="filters.sort = s.value"
-          [class.active]="filters.sort === s.value"
-        >{{ s.label }}</div>
-      </div>
-    </div>
-
-    <!-- Disponible seulement -->
-    <div class="filter-group filter-toggle">
-      <label class="filter-lbl">Disponibles uniquement</label>
-      <div
-        class="toggle-pill"
-        (click)="filters.available_only = !filters.available_only"
-        [class.on]="filters.available_only"
-      >
-        <div class="toggle-thumb"></div>
-      </div>
-    </div>
-
-    <button class="apply-btn" (click)="applyFilters()">
-      <ion-icon name="checkmark-outline"></ion-icon>
-      Appliquer les filtres
+    <button class="see-more-btn" (click)="seeMoreLocal()">
+      <ion-icon name="search-outline" class="see-more-icon"></ion-icon>
+      <span>See more from this area</span>
     </button>
-  </div>
 
-  <!-- ══ MODE RECHERCHE ════════════════════════════════════════ -->
-  <div *ngIf="isSearchMode">
-
-    <!-- Header résultats -->
-    <div class="search-results-header">
-      <span class="results-count" *ngIf="!isLoadingSearch">
-        {{ searchTotal }} résultat{{ searchTotal > 1 ? 's' : '' }}
-        <span *ngIf="searchQuery"> pour "{{ searchQuery }}"</span>
-        <span *ngIf="filters.category"> · {{ filters.category }}</span>
-      </span>
-      <ion-spinner *ngIf="isLoadingSearch" name="crescent" class="inline-spinner"></ion-spinner>
-    </div>
-
-    <!-- Skeleton search -->
-    <div *ngIf="isLoadingSearch && searchResults.length === 0" class="skeleton-list">
-      <div class="talent-card-row skeleton-row" *ngFor="let i of [1,2,3,4,5]">
-        <ion-skeleton-text animated class="sk-avatar-round"></ion-skeleton-text>
-        <div class="sk-lines">
-          <ion-skeleton-text animated style="height:12px; width:60%;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="height:10px; width:40%; margin-top:6px;"></ion-skeleton-text>
-        </div>
-      </div>
-    </div>
-
-    <!-- Aucun résultat -->
-    <div class="no-results" *ngIf="!isLoadingSearch && searchResults.length === 0">
-      <ion-icon name="search-outline"></ion-icon>
-      <p>Aucun talent trouvé</p>
-      <span>Essayez d'autres mots-clés ou filtres</span>
-    </div>
-
-    <!-- Liste résultats -->
-    <div class="results-list" *ngIf="searchResults.length > 0">
+    <div class="talent-scroll">
       <div
-        class="talent-card-row"
-        *ngFor="let t of searchResults"
+        class="talent-card"
+        *ngFor="let t of localTalents"
         (click)="goToProfile(t)"
       >
-        <div class="row-avatar-wrap">
-          <img
-            class="row-avatar"
-            [src]="t.avatar || 'assets/default-avatar.png'"
-            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
-          />
-          <span class="dot" [class.dot-on]="t.online" [class.dot-off]="!t.online"></span>
+        <div class="card-top-row">
+          <div class="card-avatar-wrap">
+            <img
+              class="card-avatar"
+              [src]="t.avatar"
+              onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+            />
+            <span class="online-dot" [class.online]="t.online" [class.offline]="!t.online"></span>
+          </div>
+          <div class="card-info">
+            <span class="card-name">{{ t.name }}</span>
+            <p class="card-job">{{ t.title }}</p>
+          </div>
+          <button class="fav-btn" (click)="toggleFav($event, t)">
+            <ion-icon [name]="t.fav ? 'heart' : 'heart-outline'" [class.fav-active]="t.fav"></ion-icon>
+          </button>
         </div>
-        <div class="row-info">
-          <div class="row-top">
-            <span class="row-name">{{ t.name }}</span>
-            <span class="row-rate">${{ t.hourlyRate }}/hr</span>
-          </div>
-          <p class="row-title">{{ t.title }}</p>
-          <div class="row-bottom">
-            <span class="row-stars">
-              <ion-icon name="star" class="star-y" *ngFor="let s of getStars(t.rating)"></ion-icon>
-              <span class="row-rating">{{ t.rating | number:'1.1-1' }}</span>
-              <span class="row-reviews">({{ t.reviews }})</span>
-            </span>
-            <span class="row-success" *ngIf="t.jobSuccess">
-              {{ t.jobSuccess }}% Success
-            </span>
-          </div>
-          <div class="row-loc" *ngIf="t.location">
-            <ion-icon name="location-outline"></ion-icon> {{ t.location }}
-          </div>
+        <div class="card-stats">
+          <span class="stat-rate">${{ t.hourlyRate }}/hr</span>
+          <span class="stat-earned" *ngIf="t.earned">{{ t.earned }} earned</span>
         </div>
-        <div class="row-fav" (click)="toggleFav($event, t)">
-          <ion-icon [name]="t.fav ? 'heart' : 'heart-outline'" [class.fav-on]="t.fav"></ion-icon>
+        <div class="card-success" *ngIf="t.jobSuccess">
+          <span class="success-pct">{{ t.jobSuccess }}% Job Success</span>
         </div>
       </div>
-
-      <!-- Load more -->
-      <button class="load-more-btn" *ngIf="hasMoreResults" (click)="loadMore()">
-        <ion-spinner *ngIf="isLoadingSearch" name="crescent" style="width:18px;height:18px;"></ion-spinner>
-        <span *ngIf="!isLoadingSearch">Charger plus</span>
-      </button>
     </div>
   </div>
 
-  <!-- ══ MODE DÉCOUVERTE (pas de recherche) ════════════════════ -->
-  <div *ngIf="!isSearchMode">
+  <div class="page-divider"></div>
 
-    <div class="page-divider"></div>
+  <!-- ========== TALENT WITH HIGH JOB SUCCESS ========== -->
+  <div class="talent-block">
+    <h2 class="block-title">Talent with high Job Success<br />Scores</h2>
 
-    <!-- ── TALENT IN TUNISIA ─────────────────────────────────── -->
-    <div class="talent-block">
-      <h2 class="block-title">Talent in Tunisia</h2>
+    <button class="see-more-btn" (click)="seeMoreProfiles()">
+      <ion-icon name="search-outline" class="see-more-icon"></ion-icon>
+      <span>See more profiles</span>
+    </button>
 
-      <button class="see-more-btn" (click)="seeMoreLocal()">
-        <ion-icon name="search-outline" class="see-more-icon"></ion-icon>
-        <span>See more from this area</span>
-      </button>
-
-      <!-- Skeleton local -->
-      <div class="talent-scroll" *ngIf="isLoadingLocal">
-        <div class="talent-card skeleton-card" *ngFor="let i of [1,2,3]">
-          <ion-skeleton-text animated style="width:52px;height:52px;border-radius:50%;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="height:12px;width:80%;margin-top:10px;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="height:10px;width:60%;margin-top:6px;"></ion-skeleton-text>
+    <div class="talent-scroll">
+      <div
+        class="talent-card"
+        *ngFor="let t of topTalents"
+        (click)="goToProfile(t)"
+      >
+        <div class="card-top-row">
+          <div class="card-avatar-wrap">
+            <img
+              class="card-avatar"
+              [src]="t.avatar"
+              onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+            />
+            <span class="online-dot" [class.online]="t.online" [class.offline]="!t.online"></span>
+          </div>
+          <div class="card-info">
+            <span class="card-name">{{ t.name }}</span>
+            <p class="card-job">{{ t.title }}</p>
+          </div>
+          <button class="fav-btn" (click)="toggleFav($event, t)">
+            <ion-icon [name]="t.fav ? 'heart' : 'heart-outline'" [class.fav-active]="t.fav"></ion-icon>
+          </button>
         </div>
-      </div>
-
-      <!-- Cards locaux -->
-      <div class="talent-scroll" *ngIf="!isLoadingLocal">
-        <div
-          class="talent-card"
-          *ngFor="let t of localTalents"
-          (click)="goToProfile(t)"
-        >
-          <div class="card-top-row">
-            <div class="card-avatar-wrap">
-              <img class="card-avatar" [src]="t.avatar || 'assets/default-avatar.png'"
-                onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'" />
-              <span class="online-dot" [class.online]="t.online" [class.offline]="!t.online"></span>
-            </div>
-            <div class="card-info">
-              <span class="card-name">{{ t.name }}</span>
-              <p class="card-job">{{ t.title }}</p>
-            </div>
-            <button class="fav-btn" (click)="toggleFav($event, t)">
-              <ion-icon [name]="t.fav ? 'heart' : 'heart-outline'" [class.fav-active]="t.fav"></ion-icon>
-            </button>
-          </div>
-          <div class="card-stats">
-            <span class="stat-rate">${{ t.hourlyRate }}/hr</span>
-            <span class="stat-earned" *ngIf="t.earned">{{ t.earned }} earned</span>
-          </div>
-          <div class="card-success" *ngIf="t.jobSuccess">
-            <span class="success-pct">{{ t.jobSuccess }}% Job Success</span>
-          </div>
+        <div class="card-stats">
+          <span class="stat-rate">${{ t.hourlyRate }}/hr</span>
+          <span class="stat-earned" *ngIf="t.earned">{{ t.earned }} earned</span>
         </div>
-
-        <!-- Empty state -->
-        <div class="empty-scroll" *ngIf="localTalents.length === 0">
-          <p>Aucun talent local trouvé</p>
+        <div class="card-success" *ngIf="t.jobSuccess">
+          <span class="success-pct">{{ t.jobSuccess }}% Job Success</span>
         </div>
       </div>
     </div>
-
-    <div class="page-divider"></div>
-
-    <!-- ── TALENT WITH HIGH JOB SUCCESS ──────────────────────── -->
-    <div class="talent-block">
-      <h2 class="block-title">Talent with high Job Success<br />Scores</h2>
-
-      <button class="see-more-btn" (click)="seeMoreProfiles()">
-        <ion-icon name="search-outline" class="see-more-icon"></ion-icon>
-        <span>See more profiles</span>
-      </button>
-
-      <!-- Skeleton top -->
-      <div class="talent-scroll" *ngIf="isLoadingTop">
-        <div class="talent-card skeleton-card" *ngFor="let i of [1,2,3]">
-          <ion-skeleton-text animated style="width:52px;height:52px;border-radius:50%;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="height:12px;width:80%;margin-top:10px;"></ion-skeleton-text>
-          <ion-skeleton-text animated style="height:10px;width:60%;margin-top:6px;"></ion-skeleton-text>
-        </div>
-      </div>
-
-      <!-- Cards top -->
-      <div class="talent-scroll" *ngIf="!isLoadingTop">
-        <div
-          class="talent-card"
-          *ngFor="let t of topTalents"
-          (click)="goToProfile(t)"
-        >
-          <div class="card-top-row">
-            <div class="card-avatar-wrap">
-              <img class="card-avatar" [src]="t.avatar || 'assets/default-avatar.png'"
-                onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'" />
-              <span class="online-dot" [class.online]="t.online" [class.offline]="!t.online"></span>
-            </div>
-            <div class="card-info">
-              <span class="card-name">{{ t.name }}</span>
-              <p class="card-job">{{ t.title }}</p>
-            </div>
-            <button class="fav-btn" (click)="toggleFav($event, t)">
-              <ion-icon [name]="t.fav ? 'heart' : 'heart-outline'" [class.fav-active]="t.fav"></ion-icon>
-            </button>
-          </div>
-          <div class="card-stats">
-            <span class="stat-rate">${{ t.hourlyRate }}/hr</span>
-            <span class="stat-earned" *ngIf="t.earned">{{ t.earned }} earned</span>
-          </div>
-          <div class="card-success" *ngIf="t.jobSuccess">
-            <span class="success-pct">{{ t.jobSuccess }}% Job Success</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="page-divider"></div>
-
-    <!-- ── BROWSE BY CATEGORY ────────────────────────────────── -->
-    <div class="browse-block">
-      <h2 class="block-title">Browse by category</h2>
-      <div *ngFor="let cat of browseCategories" class="browse-category">
-        <h3 class="cat-name" (click)="selectBrowseCategory(cat)">{{ cat.name }}</h3>
-        <div class="chips-wrap">
-          <div class="chip" *ngFor="let sub of cat.subs" (click)="searchBySubCategory(sub)">{{ sub }}</div>
-        </div>
-        <div class="cat-divider"></div>
-      </div>
-    </div>
-
   </div>
 
-  <div style="height: 80px;"></div>
+  <div class="page-divider"></div>
+
+  <!-- ========== BROWSE BY CATEGORY ========== -->
+  <div class="browse-block">
+    <h2 class="block-title">Browse by category</h2>
+
+    <div *ngFor="let cat of browseCategories" class="browse-category">
+      <h3 class="cat-name" (click)="selectBrowseCategory(cat)">{{ cat.name }}</h3>
+      <div class="chips-wrap">
+        <div
+          class="chip"
+          *ngFor="let sub of cat.subs"
+          (click)="searchBySubCategory(sub)"
+        >{{ sub }}</div>
+      </div>
+      <div class="cat-divider"></div>
+    </div>
+  </div>
+
+  <div style="height: 20px;"></div>
 </ion-content>
 
-<!-- TAB BAR -->
+
+<!-- ========== TAB BAR ========== -->
 <ion-tab-bar slot="bottom" class="custom-tab-bar">
-  <ion-tab-button class="tab-btn" (click)="goTo('/client-dashboard')">
-    <ion-icon name="briefcase-outline"></ion-icon>
+  <ion-tab-button class="tab-btn tab-active" (click)="goTo('/client-dashboard')">
+    <ion-icon name="briefcase"></ion-icon>
     <ion-label>Dashboard</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn tab-active">
-    <ion-icon name="people"></ion-icon>
+  <ion-tab-button class="tab-btn" (click)="goTo('/talent')">
+    <ion-icon name="people-outline"></ion-icon>
     <ion-label>Talent</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/cataloge')">
+  <ion-tab-button class="tab-btn" (click)="goTo('/catalog')">
     <ion-icon name="albums-outline"></ion-icon>
     <ion-label>Catalog</ion-label>
   </ion-tab-button>
