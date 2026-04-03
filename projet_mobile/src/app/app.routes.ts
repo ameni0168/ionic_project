@@ -88,8 +88,4 @@ export const routes: Routes = [
     import('./pages/service-details/service-details.page')
       .then(m => m.ServiceDetailsPage)
 }
-
-
-
-
 ];
