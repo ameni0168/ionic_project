@@ -1,13 +1,141 @@
-<ion-header [translucent]="true">
+<ion-header mode="ios">
   <ion-toolbar>
-    <ion-title>gig-details</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Gig Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="gig && !isEditing" (click)="toggleEdit()">
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+      <ion-button *ngIf="isEditing" (click)="toggleEdit()" color="medium">
+        Cancel
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">gig-details</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" style="text-align:center; padding:60px;">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Gig introuvable -->
+  <div *ngIf="!isLoading && !gig" style="text-align:center; padding:60px 20px;">
+    <ion-icon name="alert-circle-outline" style="font-size:48px; color:var(--ion-color-medium);"></ion-icon>
+    <p style="color:var(--ion-color-medium); margin:12px 0;">Gig introuvable.</p>
+    <ion-button (click)="goBack()">← Retour</ion-button>
+  </div>
+
+  <!-- Contenu -->
+  <div *ngIf="!isLoading && gig">
+
+    <!-- Barre couleur accent -->
+    <div [style.background]="isEditing ? editData.colorAccent : gig.colorAccent"
+         style="height:6px; border-radius:3px; margin-bottom:20px; transition:background .3s;"></div>
+
+    <!-- ══ MODE LECTURE ══════════════════════════════ -->
+    <ng-container *ngIf="!isEditing">
+
+      <div style="margin-bottom:16px;">
+        <h1 style="font-size:22px; font-weight:600; margin:0 0 8px;">{{ gig.title }}</h1>
+        <ion-badge [color]="getStatusColor(gig.status)" style="font-size:13px; padding:4px 10px;">
+          <ion-icon [name]="getStatusIcon(gig.status)" style="margin-right:4px; vertical-align:middle;"></ion-icon>
+          {{ gig.status | titlecase }}
+        </ion-badge>
+      </div>
+
+      <ion-list lines="none" style="border-radius:12px; overflow:hidden; margin-bottom:16px;">
+        <ion-item>
+          <ion-icon name="pricetag-outline" slot="start" color="primary"></ion-icon>
+          <ion-label><p>Price</p><h3>${{ gig.price }}</h3></ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="grid-outline" slot="start" color="tertiary"></ion-icon>
+          <ion-label><p>Category</p><h3>{{ gig.category }}</h3></ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="time-outline" slot="start" color="warning"></ion-icon>
+          <ion-label><p>Delivery Time</p><h3>{{ gig.deliveryTime }}</h3></ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="checkmark-done-outline" slot="start" color="success"></ion-icon>
+          <ion-label><p>Orders Completed</p><h3>{{ gig.ordersCompleted }}</h3></ion-label>
+        </ion-item>
+      </ion-list>
+
+      <div style="background:var(--ion-color-light); border-radius:12px; padding:16px; margin-bottom:20px;">
+        <h3 style="font-size:14px; font-weight:600; margin:0 0 8px; color:var(--ion-color-medium);">DESCRIPTION</h3>
+        <p style="margin:0; line-height:1.6; font-size:15px;">{{ gig.description }}</p>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <ion-button expand="block" style="flex:1;" (click)="toggleEdit()">
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          Edit
+        </ion-button>
+        <ion-button expand="block" color="danger" style="flex:1;" (click)="confirmDelete()">
+          <ion-icon name="trash-outline" slot="start"></ion-icon>
+          Delete
+        </ion-button>
+      </div>
+
+    </ng-container>
+
+    <!-- ══ MODE ÉDITION ══════════════════════════════ -->
+    <ng-container *ngIf="isEditing">
+
+      <ion-item>
+        <ion-label position="stacked">Title *</ion-label>
+        <ion-input [(ngModel)]="editData.title"></ion-input>
+      </ion-item>
+
+      <ion-item style="margin-top:8px;">
+        <ion-label position="stacked">Price ($) *</ion-label>
+        <ion-input [(ngModel)]="editData.price" type="number" min="1"></ion-input>
+      </ion-item>
+
+      <ion-item style="margin-top:8px;">
+        <ion-label position="stacked">Delivery Time</ion-label>
+        <ion-input [(ngModel)]="editData.deliveryTime" placeholder="Ex: 3 days"></ion-input>
+      </ion-item>
+
+      <ion-item style="margin-top:8px;">
+        <ion-label position="stacked">Status</ion-label>
+        <ion-select [(ngModel)]="editData.status">
+          <ion-select-option *ngFor="let s of statusOptions" [value]="s.value">
+            {{ s.label }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item style="margin-top:8px;">
+        <ion-label position="stacked">Description</ion-label>
+        <ion-textarea [(ngModel)]="editData.description" rows="4"></ion-textarea>
+      </ion-item>
+
+      <!-- Couleur -->
+      <div style="padding:16px 0 8px;">
+        <p style="font-size:13px; color:var(--ion-color-medium); margin-bottom:10px;">Card color</p>
+        <div style="display:flex; gap:10px;">
+          <div *ngFor="let c of colorOptions"
+               (click)="editData.colorAccent = c"
+               [style.background]="c"
+               [style.border]="editData.colorAccent === c ? '3px solid #000' : '3px solid transparent'"
+               style="width:32px; height:32px; border-radius:50%; cursor:pointer;">
+          </div>
+        </div>
+      </div>
+
+      <ion-button expand="block" style="margin-top:24px;" (click)="saveChanges()" [disabled]="isSaving">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </ion-button>
+
+    </ng-container>
+  </div>
 </ion-content>

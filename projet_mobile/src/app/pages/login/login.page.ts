@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
-
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
 import { ApiService } from 'src/app/services/api.service';
@@ -30,7 +29,6 @@ import { ApiService } from 'src/app/services/api.service';
   ]
 })
 export class LoginPage implements OnInit {
-
   loginForm: FormGroup;
   isLoading = false;
   showContent = false;
@@ -38,7 +36,7 @@ export class LoginPage implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private navCtrl: NavController,
-    private api: ApiService
+    private api:ApiService  // ← NavController au lieu de Router
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -56,57 +54,37 @@ export class LoginPage implements OnInit {
   get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
-
-    if (this.loginForm.invalid) {
-      Object.keys(this.loginForm.controls).forEach(key => {
-        this.loginForm.get(key)?.markAsTouched();
-      });
-      return;
-    }
-
+  if (this.loginForm.valid) {
     this.isLoading = true;
+    const formData = this.loginForm.value;
 
-    this.api.login(this.loginForm.value).subscribe({
+    // Appelle API
+    this.api.login(formData).subscribe({
       next: (res: any) => {
-
         this.isLoading = false;
 
-        console.log('Login success:', res);
+        console.log('Login success', res);
 
-        // ==============================
-        // SAVE AUTH DATA (ONLY REAL FIELDS)
-        // ==============================
-        localStorage.setItem('access_token', res.access_token);
-        localStorage.setItem('role', res.role);
-        localStorage.setItem('user_id', res.user_id);
-
-        const role = res.role;
-
-        // ==============================
-        // REDIRECT BY ROLE
-        // ==============================
-        if (role === 'client') {
+        // Redirection selon le rôle
+        if (res.role === 'client') {
           this.navCtrl.navigateRoot(['/client-dashboard']);
-        }
-
-        else if (role === 'freelancer') {
+        } else if (res.role === 'freelancer') {
           this.navCtrl.navigateRoot(['/freelancer-dashboard']);
+        } else {
+          alert("Rôle inconnu");
         }
-
-        else {
-          alert('Rôle inconnu : ' + role);
-          console.error('Invalid role:', role);
-        }
-
       },
-
-      error: (err: any) => {
+      error: (err:any) => {
         this.isLoading = false;
-        console.error('Login error:', err);
-        alert(err.error?.error || 'Erreur serveur');
+        alert(err.error?.error || "Erreur serveur");
       }
     });
+  } else {
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAsTouched();
+    });
   }
+}
 
   goBack() {
     this.navCtrl.navigateBack('/welcome');
@@ -117,6 +95,11 @@ export class LoginPage implements OnInit {
   }
 
   navigateToForgotPassword() {
-    console.log('Forgot password clicked');
+    // TODO : implémenter la navigation réelle
+    console.log('Navigate to forgot password');
+  }
+
+  private determineRole(email: string): 'client' | 'freelancer' {
+    return email.includes('freelancer') ? 'freelancer' : 'client';
   }
 }

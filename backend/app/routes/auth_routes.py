@@ -1,33 +1,25 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
-from app.extension import db
+from flask import Blueprint, request, jsonify, current_app
+from werkzeug.security import check_password_hash
 from app.services.auth_service import register_client
 from app.services.auth_freelancer import register_freelancer
-from werkzeug.security import check_password_hash
+from flask_jwt_extended import create_access_token
 import traceback
 
-auth_bp = Blueprint("auth", __name__)
+auth_bp = Blueprint('auth', __name__)
 
-
-# =========================
-# REGISTER CLIENT
-# =========================
-@auth_bp.route("/register/client", methods=["POST"])
+# Register client
+@auth_bp.route('/register/client', methods=['POST'])
 def register():
     return register_client(request.json)
 
 
-# =========================
-# REGISTER FREELANCER
-# =========================
+# Register freelancer
 @auth_bp.route("/register/freelancer", methods=["POST"])
 def register_freelancer_route():
     return register_freelancer(request.json)
 
 
-# =========================
-# LOGIN
-# =========================
+# Login
 @auth_bp.route("/login", methods=["POST"])
 def login():
     try:
@@ -38,30 +30,26 @@ def login():
         if not email or not password:
             return jsonify({"error": "Email et mot de passe requis"}), 400
 
+        # 🔹 récupération DB via current_app (important avec create_app pattern)
+        db = current_app.db
         users_collection = db["users"]
-        user = users_collection.find_one({"email": email})
 
+        user = users_collection.find_one({"email": email})
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
 
-        # safe password check
-        password_hash = user.get("password_hash")
-
-        if not password_hash:
-            return jsonify({"error": "Password not set"}), 500
-
-        if not check_password_hash(password_hash, password):
+        if not check_password_hash(user["password"], password):
             return jsonify({"error": "Mot de passe incorrect"}), 401
 
         role = user.get("role", "client")
 
-        token = create_access_token(
+        access_token = create_access_token(
             identity=str(user["_id"]),
             additional_claims={"role": role}
         )
 
         return jsonify({
-            "access_token": token,
+            "access_token": access_token,
             "role": role,
             "user_id": str(user["_id"])
         }), 200

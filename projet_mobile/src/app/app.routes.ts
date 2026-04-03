@@ -30,7 +30,14 @@ export const routes: Routes = [
       }
     ]
   },
-
+  {
+    path: 'freelancer-dashboard',
+    loadComponent: () => import('./pages/freelancer-dashboard/freelancer-dashboard.page').then( m => m.FreelancerDashboardPage)
+  },
+  {
+    path: 'freelancer-profile',
+    loadComponent: () => import('./pages/freelancer-profile/freelancer-profile.page').then( m => m.FreelancerProfilePage)
+  },
   {
     path: 'freelancer-dashboard',
     loadComponent: () => import('./pages/freelancer-dashboard/freelancer-dashboard.page').then(m => m.FreelancerDashboardPage)
@@ -53,7 +60,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/my-gigs/my-gigs.page').then( m => m.MyGigsPage)
   },
   {
-    path: 'gig-details',
+    path: 'gig-details/:id',
     loadComponent: () => import('./pages/gig-details/gig-details.page').then( m => m.GigDetailsPage)
 
   },
@@ -67,25 +74,14 @@ export const routes: Routes = [
     loadComponent: () => import("./pages/accueil/accueil.page").then( m=> m.AccueilPage)
   },
   {
-    path: 'talent-profile/:id',
+    path: 'talent-profile',
     loadComponent: () => import('./pages/talent-profile/talent-profile.page').then( m => m.TalentProfilePage)
   },
   {
-    path: 'client-profile',
-    loadComponent: () => import('./pages/client-profile/client-profile.page').then( m => m.ClientProfilePage)
-  },
-  {
-    path: 'cataloge',
-    loadComponent: () => import('./pages/cataloge/cataloge.page').then( m => m.CatalogPage)
-  },
-  {
-    path: 'service-details',
-    loadComponent: () => import('./pages/service-details/service-details.page').then( m => m.ServiceDetailsPage)
-  },
-  {
-  path: 'service-details/:id',
-  loadComponent: () =>
-    import('./pages/service-details/service-details.page')
-      .then(m => m.ServiceDetailsPage)
-}
+    path: 'orders',
+    loadComponent: () => import('./pages/orders/orders.page').then( m => m.OrdersPage)
+  }
+
+
+
 ];
