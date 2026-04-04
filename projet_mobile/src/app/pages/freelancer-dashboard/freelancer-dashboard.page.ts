@@ -1,36 +1,8 @@
-// src/app/pages/freelancer-dashboard/freelancer-dashboard.page.ts
-// VERSION MODIFIÉE avec intégration API
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController, LoadingController, ToastController } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { ApiService } from '../../services/api.service';  // ← AJOUT
-
-interface StatCard {
-  icon: string;
-  value: string;
-  label: string;
-  color: string;
-  trend?: string;
-}
-
-interface QuickAction {
-  icon: string;
-  title: string;
-  route: string;
-  color: string;
-  badge?: number;
-}
-
-interface RecentActivity {
-  type: 'order' | 'message' | 'payment' | 'review';
-  title: string;
-  description: string;
-  time: string;
-  icon: string;
-  color: string;
-}
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-freelancer-dashboard',
@@ -48,179 +20,61 @@ interface RecentActivity {
   ]
 })
 export class FreelancerDashboardPage implements OnInit {
-  userName = 'Loading...';  // ← MODIFIÉ: Sera chargé depuis l'API
-  profileImage = 'assets/avatar.jpg';
+
+  userName = '';
   currentTab = 'home';
-  isLoading = true;  // ← AJOUT: Pour afficher un loading
-  
-  stats: StatCard[] = [
-    {
-      icon: 'briefcase',
-      value: '...',  // ← MODIFIÉ: Sera chargé depuis l'API
-      label: 'Active Gigs',
-      color: 'primary',
-      trend: '...'
-    },
-    {
-      icon: 'cash',
-      value: '$...',
-      label: 'This Month',
-      color: 'success',
-      trend: '...'
-    },
-    {
-      icon: 'star',
-      value: '...',
-      label: 'Rating',
-      color: 'warning',
-      trend: '...'
-    },
-    {
-      icon: 'checkmark-done',
-      value: '...',
-      label: 'Completed',
-      color: 'tertiary',
-      trend: '...'
-    }
+  isLoading = true;
+
+  stats = [
+    { icon: 'briefcase',      value: '0',   label: 'Active Gigs',  color: 'primary',  trend: '' },
+    { icon: 'cash',           value: '$0',  label: 'This Month',   color: 'success',  trend: '' },
+    { icon: 'star',           value: '0',   label: 'Rating',       color: 'warning',  trend: '' },
+    { icon: 'checkmark-done', value: '0',   label: 'Completed',    color: 'tertiary', trend: 'All time' }
   ];
 
-  quickActions: QuickAction[] = [
-    {
-      icon: 'add-circle',
-      title: 'Create Gig',
-      route: '/create-gig',
-      color: 'primary'
-    },
-    {
-      icon: 'document-text',
-      title: 'My Orders',
-      route: '/orders',
-      color: 'secondary',
-      badge: 0  // ← MODIFIÉ: Sera chargé depuis l'API
-    },
-    {
-      icon: 'chatbubbles',
-      title: 'Messages',
-      route: '/messages',
-      color: 'tertiary',
-      badge: 0
-    },
-    {
-      icon: 'wallet',
-      title: 'Earnings',
-      route: '/wallet',
-      color: 'success'
-    }
+  quickActions = [
+    { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',      color: 'success' },
+    { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',  color: 'primary' },
+    { icon: 'document-text', title: 'Mes Commandes',      route: '/orders',     color: 'secondary', badge: 0 },
+    { icon: 'chatbubbles',   title: 'Messages',           route: '/messages',   color: 'tertiary',  badge: 0 }
   ];
 
-  recentActivities: RecentActivity[] = [];  // ← MODIFIÉ: Sera chargé depuis l'API
+  recentActivities: any[] = [];
 
-  // ← AJOUT: Injection du service API
   constructor(
     private navCtrl: NavController,
-    private api: ApiService,
-    private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private api: ApiService
   ) {}
 
   ngOnInit() {
-    this.loadDashboardData();  // ← AJOUT: Charger les données au démarrage
+    this.loadDashboard();
   }
 
-  // ← AJOUT: Nouvelle fonction pour charger les données
-  async loadDashboardData() {
-    const loading = await this.loadingCtrl.create({
-      message: 'Loading dashboard...',
-      spinner: 'crescent'
-    });
-    await loading.present();
+  loadDashboard() {
+    this.isLoading = true;
+    this.api.getFreelancerDashboard().subscribe({
+      next: (data: { userName: string; stats: any; recentActivities: any[]; }) => {
+        this.userName = data.userName;
 
-    try {
-      // 1. Charger le compte freelancer
-      const accountResponse = await this.api.getFreelancerAccount().toPromise();
-      const profile = accountResponse.profile;
-      const profileStats = profile.stats;
+        const s = data.stats;
+        this.stats[0].value = String(s.activeGigs);
+        this.stats[1].value = `$${s.monthlyEarnings}`;
+        this.stats[1].trend = '';
+        this.stats[2].value = String(s.rating);
+        this.stats[2].trend = `${s.reviews} reviews`;
+        this.stats[3].value = String(s.totalCompleted);
 
-      // Mettre à jour le nom d'utilisateur
-      this.userName = profile.fullName || 'Freelancer';
-      
-      // 2. Charger les statistiques des gigs
-      const gigsStatsResponse = await this.api.getGigsStats().toPromise();
-
-      // 3. Mettre à jour les stats cards
-      this.stats[0].value = gigsStatsResponse.activeGigs.toString();
-      this.stats[0].trend = `Total: ${gigsStatsResponse.totalGigs}`;
-
-      // Pour le moment, This Month = $0 (à implémenter avec wallet)
-      this.stats[1].value = '$0';
-      this.stats[1].trend = '+0%';
-
-      this.stats[2].value = profileStats.rating ? profileStats.rating.toFixed(1) : '0.0';
-      this.stats[2].trend = `${profileStats.totalReviews || 0} reviews`;
-
-      this.stats[3].value = (profileStats.completedProjects || 0).toString();
-      this.stats[3].trend = 'All time';
-
-      // 4. Charger les activités récentes (mock pour l'instant)
-      this.loadRecentActivities();
-
-      this.isLoading = false;
-      await loading.dismiss();
-
-    } catch (error: any) {
-      console.error('Error loading dashboard:', error);
-      this.isLoading = false;
-      await loading.dismiss();
-
-      // Afficher un toast d'erreur
-      const toast = await this.toastCtrl.create({
-        message: error.error?.error || 'Error loading dashboard data',
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-
-      // Valeurs par défaut en cas d'erreur
-      this.userName = 'Freelancer';
-      this.stats[0].value = '0';
-      this.stats[1].value = '$0';
-      this.stats[2].value = '0.0';
-      this.stats[3].value = '0';
-    }
-  }
-
-  // ← AJOUT: Charger les activités récentes (mock pour l'instant)
-  loadRecentActivities() {
-    // TODO: Remplacer par un vrai call API quand le backend sera prêt
-    this.recentActivities = [
-      {
-        type: 'order',
-        title: 'New Order Received',
-        description: 'Logo Design from John Doe',
-        time: '2 min ago',
-        icon: 'bag-check',
-        color: 'success'
+        this.recentActivities = data.recentActivities;
+        this.isLoading = false;
       },
-      {
-        type: 'message',
-        title: 'New Message',
-        description: 'Jane Smith sent you a message',
-        time: '1 hour ago',
-        icon: 'chatbubble-ellipses',
-        color: 'primary'
+      error: (err: any) => {
+        console.error('Dashboard error:', err);
+        this.isLoading = false;
       }
-    ];
-  }
-
-  // ← MODIFIÉ: Refresh manuel
-  async doRefresh(event: any) {
-    await this.loadDashboardData();
-    event.target.complete();
+    });
   }
 
   navigateTo(route: string) {
-    console.log('Navigating to:', route);
     this.navCtrl.navigateForward([route]);
   }
 
@@ -236,45 +90,27 @@ export class FreelancerDashboardPage implements OnInit {
     this.navCtrl.navigateForward(['/activities']);
   }
 
-  onActivityClick(activity: RecentActivity) {
-    switch(activity.type) {
-      case 'order':
-        this.navCtrl.navigateForward(['/orders']);
-        break;
-      case 'message':
-        this.navCtrl.navigateForward(['/messages']);
-        break;
-      case 'payment':
-        this.navCtrl.navigateForward(['/wallet']);
-        break;
-      case 'review':
-        this.navCtrl.navigateForward(['/reviews']);
-        break;
+  onActivityClick(activity: any) {
+    switch (activity.type) {
+      case 'order':   this.navCtrl.navigateForward(['/orders']);   break;
+      case 'message': this.navCtrl.navigateForward(['/messages']); break;
+      case 'payment': this.navCtrl.navigateForward(['/wallet']);   break;
+      case 'review':  this.navCtrl.navigateForward(['/reviews']);  break;
+      default:        this.navCtrl.navigateForward(['/my-gigs']);  break;
     }
   }
 
   onTabClick(tab: string) {
     this.currentTab = tab;
-    
-    switch(tab) {
+    switch (tab) {
       case 'home':
         const content = document.querySelector('ion-content');
-        if (content) {
-          content.scrollToTop(300);
-        }
+        if (content) content.scrollToTop(300);
         break;
-      case 'gigs':
-        this.navCtrl.navigateForward(['/my-gigs']);
-        break;
-      case 'orders':
-        this.navCtrl.navigateForward(['/orders']);
-        break;
-      case 'messages':
-        this.navCtrl.navigateForward(['/messages']);
-        break;
-      case 'profile':
-        this.navCtrl.navigateForward(['/freelancer-profile']);
-        break;
+      case 'gigs':     this.navCtrl.navigateForward(['/my-gigs']);             break;
+      case 'orders':   this.navCtrl.navigateForward(['/orders']);              break;
+      case 'messages': this.navCtrl.navigateForward(['/messages']);            break;
+      case 'profile':  this.navCtrl.navigateForward(['/freelancer-profile']); break;
     }
   }
 }

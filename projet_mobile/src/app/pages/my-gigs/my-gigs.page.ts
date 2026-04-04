@@ -1,313 +1,198 @@
-// src/app/pages/my-gigs/my-gigs.page.ts
-// VERSION MODIFIÉE avec intégration API
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController, LoadingController, ToastController, AlertController } from '@ionic/angular';
-import { ApiService } from '../../services/api.service';  // ← AJOUT
+import { FormsModule } from '@angular/forms';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';                      // ← Router Angular, pas NavController
+import { trigger, transition, style, animate } from '@angular/animations';
+import { ApiService } from '../../services/api.service';
+
+interface Gig {
+  id: string;
+  title: string;
+  price: number;
+  status: 'active' | 'pending' | 'paused';
+  ordersCompleted: number;
+  category: string;
+  description: string;
+  deliveryTime: string;
+  colorAccent: string;
+}
 
 @Component({
   selector: 'app-my-gigs',
   templateUrl: './my-gigs.page.html',
   styleUrls: ['./my-gigs.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule]
+  imports: [CommonModule, IonicModule, FormsModule],
+  animations: [
+    trigger('fadeInUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(20px)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ]
 })
 export class MyGigsPage implements OnInit {
-  gigs: any[] = [];  // ← Les gigs seront chargés depuis l'API
-  loading = true;
-  selectedFilter: string = 'all';  // ← AJOUT: Filtrer par statut
 
-  // ← AJOUT: Injection des services
+  gigs: Gig[] = [];
+  isLoading = true;
+
+  showCreateModal = false;
+  isCreating = false;
+
+  newGig = {
+    title: '',
+    description: '',
+    price: null as number | null,
+    category: '',
+    deliveryTime: '',
+    colorAccent: '#6366f1'
+  };
+
+  categories = [
+    'Graphic Design', 'Web Development', 'Mobile Development',
+    'Digital Marketing', 'Writing', 'Video & Animation',
+    'Music & Audio', 'Photography', 'Data & Analytics', 'Other'
+  ];
+
+  colorOptions = [
+    { label: 'Violet',  value: '#6366f1' },
+    { label: 'Vert',    value: '#10b981' },
+    { label: 'Orange',  value: '#f59e0b' },
+    { label: 'Bleu',    value: '#3b82f6' },
+    { label: 'Rose',    value: '#ec4899' },
+    { label: 'Rouge',   value: '#ef4444' },
+  ];
+
   constructor(
-    private navCtrl: NavController,
+    private router: Router,                // ← Router Angular
     private api: ApiService,
-    private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController,
-    private alertCtrl: AlertController
+    private toast: ToastController,
+    private alert: AlertController
   ) {}
 
   ngOnInit() {
-    this.loadGigs();  // ← Charger les gigs au démarrage
+    this.loadGigs();
   }
 
-  // ← AJOUT: Charger les gigs depuis l'API
-  async loadGigs(status?: string) {
-    const loading = await this.loadingCtrl.create({
-      message: 'Loading gigs...',
-      spinner: 'crescent'
-    });
-    await loading.present();
-
-    try {
-      const response = await this.api.getMyGigs(status).toPromise();
-      this.gigs = response.gigs;
-      this.loading = false;
-      await loading.dismiss();
-
-      console.log('Gigs loaded:', this.gigs);
-
-      // Si aucun gig
-      if (this.gigs.length === 0) {
-        const toast = await this.toastCtrl.create({
-          message: 'No gigs found. Create your first gig!',
-          duration: 2000,
-          color: 'warning',
-          position: 'top'
-        });
-        await toast.present();
+  loadGigs() {
+    this.isLoading = true;
+    this.api.getMyGigs().subscribe({
+      next: (data: { gigs: Gig[] }) => {
+        this.gigs = data.gigs;
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error('Gigs error:', err);
+        this.isLoading = false;
+        this.showToast('Erreur lors du chargement des gigs', 'danger');
       }
-
-    } catch (error: any) {
-      console.error('Error loading gigs:', error);
-      this.loading = false;
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: this.api.getErrorMessage(error),
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    }
-  }
-
-  // ← AJOUT: Refresh manuel
-  async doRefresh(event: any) {
-    await this.loadGigs(this.selectedFilter === 'all' ? undefined : this.selectedFilter);
-    event.target.complete();
-  }
-
-  // ← AJOUT: Filtrer les gigs
-  async filterGigs(filter: string) {
-    this.selectedFilter = filter;
-    const status = filter === 'all' ? undefined : filter;
-    await this.loadGigs(status);
-  }
-
-  // ← MODIFIÉ: Voir les détails d'un gig
-  viewGigDetails(gig: any) {
-    this.navCtrl.navigateForward(['/gig-details', gig._id], {
-      state: { gig }
     });
   }
 
-  // ← AJOUT: Changer le statut d'un gig
-  async toggleGigStatus(gig: any, event: Event) {
-    event.stopPropagation();  // Empêcher la navigation
-
-    const newStatus = gig.status === 'active' ? 'paused' : 'active';
-    const statusText = newStatus === 'active' ? 'activate' : 'pause';
-
-    const alert = await this.alertCtrl.create({
-      header: `${statusText.charAt(0).toUpperCase() + statusText.slice(1)} Gig?`,
-      message: `Are you sure you want to ${statusText} this gig?`,
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: statusText.charAt(0).toUpperCase() + statusText.slice(1),
-          handler: async () => {
-            await this.changeStatus(gig, newStatus);
-          }
-        }
-      ]
+  // ── Navigation vers détail ─────────────────────────────────────────────────
+  viewGigDetails(gig: Gig) {
+    // On utilise Router.navigate avec state — c'est la méthode fiable dans Angular/Ionic
+    this.router.navigate(['/gig-details', gig.id], {
+      state: { gig }          // accessible via Router.getCurrentNavigation() dans GigDetailsPage
     });
-
-    await alert.present();
-  }
-
-  // ← AJOUT: Changer le statut (API)
-  async changeStatus(gig: any, newStatus: 'active' | 'paused') {
-    const loading = await this.loadingCtrl.create({
-      message: 'Updating status...'
-    });
-    await loading.present();
-
-    try {
-      await this.api.changeGigStatus(gig._id, newStatus).toPromise();
-      
-      // Mettre à jour localement
-      gig.status = newStatus;
-
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: `Gig ${newStatus === 'active' ? 'activated' : 'paused'} successfully`,
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-
-    } catch (error: any) {
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: this.api.getErrorMessage(error),
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    }
-  }
-
-  // ← AJOUT: Dupliquer un gig
-  async duplicateGig(gig: any, event: Event) {
-    event.stopPropagation();
-
-    const alert = await this.alertCtrl.create({
-      header: 'Duplicate Gig?',
-      message: 'This will create a copy of this gig.',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Duplicate',
-          handler: async () => {
-            await this.performDuplicate(gig);
-          }
-        }
-      ]
-    });
-
-    await alert.present();
-  }
-
-  // ← AJOUT: Effectuer la duplication (API)
-  async performDuplicate(gig: any) {
-    const loading = await this.loadingCtrl.create({
-      message: 'Duplicating gig...'
-    });
-    await loading.present();
-
-    try {
-      await this.api.duplicateGig(gig._id).toPromise();
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: 'Gig duplicated successfully',
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-
-      // Recharger la liste
-      await this.loadGigs();
-
-    } catch (error: any) {
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: this.api.getErrorMessage(error),
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    }
-  }
-
-  // ← AJOUT: Supprimer un gig
-  async deleteGig(gig: any, event: Event) {
-    event.stopPropagation();
-
-    const alert = await this.alertCtrl.create({
-      header: 'Delete Gig?',
-      message: 'Are you sure? This action cannot be undone.',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Delete',
-          role: 'destructive',
-          handler: async () => {
-            await this.performDelete(gig);
-          }
-        }
-      ]
-    });
-
-    await alert.present();
-  }
-
-  // ← AJOUT: Effectuer la suppression (API)
-  async performDelete(gig: any) {
-    const loading = await this.loadingCtrl.create({
-      message: 'Deleting gig...'
-    });
-    await loading.present();
-
-    try {
-      await this.api.deleteGig(gig._id).toPromise();
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: 'Gig deleted successfully',
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-
-      // Recharger la liste
-      await this.loadGigs();
-
-    } catch (error: any) {
-      await loading.dismiss();
-
-      const toast = await this.toastCtrl.create({
-        message: this.api.getErrorMessage(error),
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    }
-  }
-
-  createNewGig() {
-    this.navCtrl.navigateForward(['/create-gig']);
   }
 
   goBack() {
-    this.navCtrl.navigateBack(['/freelancer-dashboard']);
+    this.router.navigate(['/freelancer-dashboard']);
   }
 
-  // ← AJOUT: Helpers pour l'affichage
+  // ── Création ───────────────────────────────────────────────────────────────
+  openCreateModal() {
+    this.newGig = { title: '', description: '', price: null, category: '', deliveryTime: '', colorAccent: '#6366f1' };
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal() {
+    this.showCreateModal = false;
+  }
+
+  submitGig(): void {
+    if (!this.newGig.title.trim()) {
+      this.showToast('Le titre est obligatoire', 'warning');
+      return;
+    }
+    if (!this.newGig.description.trim()) {
+      this.showToast('La description est obligatoire', 'warning');
+      return;
+    }
+    if (!this.newGig.price || this.newGig.price <= 0) {
+      this.showToast('Le prix doit être positif', 'warning');
+      return;
+    }
+    if (!this.newGig.category) {
+      this.showToast('Choisis une catégorie', 'warning');
+      return;
+    }
+    if (!this.newGig.deliveryTime.trim()) {
+      this.showToast('Le délai est obligatoire', 'warning');
+      return;
+    }
+
+    this.isCreating = true;
+    this.api.createGig(this.newGig).subscribe({
+      next: (res: any) => {
+        this.gigs.unshift(res.gig);
+        this.showCreateModal = false;
+        this.isCreating = false;
+        this.showToast('Gig créé avec succès !', 'success');
+      },
+      error: (err: any) => {
+        this.isCreating = false;
+        this.showToast(err?.error?.error || 'Erreur lors de la création', 'danger');
+      }
+    });
+  }
+
+  // ── Suppression ────────────────────────────────────────────────────────────
+  async confirmDelete(event: Event, gig: Gig) {
+    event.stopPropagation();
+    const alertEl = await this.alert.create({
+      header: 'Supprimer ce gig ?',
+      message: `"${gig.title}" sera définitivement supprimé.`,
+      buttons: [
+        { text: 'Annuler', role: 'cancel' },
+        { text: 'Supprimer', role: 'destructive', handler: () => this.deleteGig(gig) }
+      ]
+    });
+    await alertEl.present();
+  }
+
+  deleteGig(gig: Gig) {
+    this.api.deleteGig(gig.id).subscribe({
+      next: () => {
+        this.gigs = this.gigs.filter(g => g.id !== gig.id);
+        this.showToast('Gig supprimé', 'success');
+      },
+      error: () => this.showToast('Erreur lors de la suppression', 'danger')
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   getStatusLabel(status: string): string {
-    const labels: any = {
-      'active': 'Active',
-      'pending': 'Pending',
-      'paused': 'Paused'
-    };
-    return labels[status] || status;
-  }
-
-  getStatusColor(status: string): string {
-    const colors: any = {
-      'active': 'success',
-      'pending': 'warning',
-      'paused': 'medium'
-    };
-    return colors[status] || 'medium';
+    return ({ active: 'Active', pending: 'Pending', paused: 'Paused' } as any)[status] ?? status;
   }
 
   getStatusIcon(status: string): string {
-    const icons: any = {
-      'active': 'checkmark-circle',
-      'pending': 'time',
-      'paused': 'pause-circle'
-    };
-    return icons[status] || 'ellipse';
+    return ({ active: 'checkmark-circle', pending: 'time', paused: 'pause-circle' } as any)[status] ?? 'ellipse';
+  }
+
+  getActiveCount(): number {
+    return this.gigs.filter(g => g.status === 'active').length;
+  }
+
+  getTotalOrders(): number {
+    return this.gigs.reduce((sum, g) => sum + (g.ordersCompleted || 0), 0);
+  }
+
+  async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+    const t = await this.toast.create({ message, duration: 2500, color, position: 'top' });
+    await t.present();
   }
 }

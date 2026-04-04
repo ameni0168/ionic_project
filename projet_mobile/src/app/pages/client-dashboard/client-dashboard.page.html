@@ -187,7 +187,7 @@
 
 <!-- ========== TAB BAR ========== -->
 <ion-tab-bar slot="bottom" class="custom-tab-bar">
-  <ion-tab-button class="tab-btn tab-active" (click)="goTo('/dashboard')">
+  <ion-tab-button class="tab-btn tab-active" (click)="goTo('/client-dashboard')">
     <ion-icon name="briefcase"></ion-icon>
     <ion-label>Dashboard</ion-label>
   </ion-tab-button>
@@ -195,16 +195,16 @@
     <ion-icon name="people-outline"></ion-icon>
     <ion-label>Talent</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/catalog')">
+  <ion-tab-button class="tab-btn" (click)="goTo('/cataloge')">
     <ion-icon name="albums-outline"></ion-icon>
     <ion-label>Catalog</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/messages')">
+  <ion-tab-button class="tab-btn" (click)="goTo('/orders')">
     <ion-icon name="chatbubble-outline"></ion-icon>
-    <ion-label>Messages</ion-label>
+    <ion-label>Orders</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/alerts')">
-    <ion-icon name="notifications-outline"></ion-icon>
-    <ion-label>Alerts</ion-label>
+  <ion-tab-button class="tab-btn" (click)="goTo('/client-profile')">
+    <ion-icon name="person-outline"></ion-icon>
+    <ion-label>Profil</ion-label>
   </ion-tab-button>
 </ion-tab-bar>

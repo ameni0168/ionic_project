@@ -1,59 +1,64 @@
 from flask import Blueprint, request, jsonify, current_app
-from app.services.auth_service import register_client, register_freelancer, authenticate_user
+from werkzeug.security import check_password_hash
+from app.services.auth_service import register_client
+from app.services.auth_freelancer import register_freelancer
+from flask_jwt_extended import create_access_token
+import traceback
 
-auth_bp = Blueprint("auth_bp", __name__)
+auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route("/register/clients", methods=["POST"])
-def register_client_route():
-    data = request.json
-    mongo = current_app.mongo
+# Register client
+@auth_bp.route('/register/client', methods=['POST'])
+def register():
+    return register_client(request.json)
 
-    user_id, error = register_client(
-        mongo,
-        name=data.get("name"),
-        email=data.get("email"),
-        password=data.get("password"),
-        phone=data.get("phone")
-    )
 
-    if error:
-        return jsonify({"error": error}), 400
-
-    return jsonify({"message": "Client inscrit avec succès", "user_id": str(user_id)}), 201
-
+# Register freelancer
 @auth_bp.route("/register/freelancer", methods=["POST"])
 def register_freelancer_route():
-    data = request.json
-    mongo = current_app.mongo
+    return register_freelancer(request.json)
 
-    user_id, error = register_freelancer(
-        mongo,
-        name=data.get("name"),
-        email=data.get("email"),
-        password=data.get("password"),
-        phone=data.get("phone")
-    )
 
-    if error:
-        return jsonify({"error": error}), 400
-
-    return jsonify({"message": "Freelancer inscrit avec succès", "user_id": str(user_id)}), 201
-
+# Login
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    mongo = current_app.mongo
+    try:
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
 
-    email = data.get("email")
-    password = data.get("password")
+        if not email or not password:
+            return jsonify({"error": "Email et mot de passe requis"}), 400
 
-    user = authenticate_user(mongo, email, password)
-    if not user:
-        return jsonify({"error": "Email ou mot de passe incorrect"}), 401
+        # 🔹 récupération DB via current_app (important avec create_app pattern)
+        db = current_app.db
+        users_collection = db["users"]
 
-    return jsonify({"message": "Login successful", "user_id": str(user["_id"]), "role": user["role"]}), 200
-    
-    if user["role"] == "freelancer":
-        return redirect("/freelancer-dashboard")
-    else:
-        return redirect("/client-dashboard")
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        # Enregistrement client/freelancer utilise password_hash (Werkzeug)
+        password_hash = user.get("password_hash") or user.get("password")
+        if not password_hash:
+            return jsonify({"error": "Mot de passe non configuré pour ce compte"}), 500
+
+        if not check_password_hash(password_hash, password):
+            return jsonify({"error": "Mot de passe incorrect"}), 401
+
+        role = user.get("role", "client")
+
+        access_token = create_access_token(
+            identity=str(user["_id"]),
+            additional_claims={"role": role}
+        )
+
+        return jsonify({
+            "access_token": access_token,
+            "role": role,
+            "user_id": str(user["_id"])
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
