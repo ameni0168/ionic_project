@@ -33,7 +33,7 @@ export class FreelancerDashboardPage implements OnInit {
   ];
 
   quickActions = [
-    { icon: 'add-circle',    title: 'Create Gig', route: '/create-gig',  color: 'primary' },
+    { icon: 'add-circle',    title: 'Create Gig', route: '/my-gigs',  color: 'primary' },
     { icon: 'document-text', title: 'My Orders',  route: '/orders',      color: 'secondary', badge: 0 },
     { icon: 'chatbubbles',   title: 'Messages',   route: '/messages',    color: 'tertiary',  badge: 0 },
     { icon: 'wallet',        title: 'Earnings',   route: '/wallet',      color: 'success' }

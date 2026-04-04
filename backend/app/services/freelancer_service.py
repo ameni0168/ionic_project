@@ -1,60 +1,188 @@
+from datetime import datetime, timezone
+
+from bson import ObjectId
+
 from app.models.freelancer_model import get_freelancers_collection
 from app.models.users_model import get_users_collection
 from app.models.gig_model import get_gigs_collection
 from app.models.order_model import get_orders_collection
-from bson import ObjectId
-from datetime import datetime, timezone
 
 
-def _serialize_freelancer(freelancer, user):
+def _user_for_freelancer(f):
+    uid = f.get("userId")
+    if not uid:
+        return None
+    return get_users_collection().find_one({"_id": uid})
+
+
+def serialize_talent_card(f):
+    """Liste / recherche (page Talent, dashboard client)."""
+    user = _user_for_freelancer(f)
+    rating = f.get("rating", 0) or 0
+    reviews = f.get("reviews", 0) or 0
     return {
-        "id":               str(freelancer["_id"]),
-        "fullName":         freelancer.get("fullName", ""),
-        "title":            freelancer.get("title", ""),
-        "bio":              freelancer.get("bio", ""),
-        "portfolioUrl":     freelancer.get("portfolioUrl", ""),
-        "location":         freelancer.get("location", ""),
-        "phone":            freelancer.get("phone", ""),
-        "hourlyRate":       freelancer.get("hourlyRate", 0),
-        "skills":           freelancer.get("skills", []),
-        "rating":           freelancer.get("rating", 0.0),
-        "reviews":          freelancer.get("reviews", 0),
-        "completedProjects":freelancer.get("completedProjects", 0),
-        "email":            user.get("email", ""),
-        "createdAt":        freelancer.get("createdAt", datetime.utcnow()).isoformat()
+        "id": str(f.get("_id")),
+        "full_name": f.get("fullName", ""),
+        "title": f.get("title", ""),
+        "bio": f.get("bio", ""),
+        "location": f.get("location", ""),
+        "skills": f.get("skills", []),
+        "hourly_rate": f.get("hourlyRate", 0),
+        "avatar": f.get("avatar", ""),
+        "is_available": f.get("isAvailable", False),
+        "stats": {
+            "rating": rating,
+            "review_count": reviews,
+            "job_success": f.get("jobSuccess", 0),
+            "total_earned": f.get("earned", 0),
+        },
+        "email": user.get("email", "") if user else "",
     }
 
 
-# ── Profil ─────────────────────────────────────────────────────────────────────
+def serialize_freelancer_profile(freelancer, user):
+    u = user or {}
+    created = freelancer.get("createdAt", datetime.utcnow())
+    created_str = created.isoformat() if hasattr(created, "isoformat") else str(created)
+    return {
+        "id": str(freelancer["_id"]),
+        "fullName": freelancer.get("fullName", ""),
+        "title": freelancer.get("title", ""),
+        "bio": freelancer.get("bio", ""),
+        "portfolioUrl": freelancer.get("portfolioUrl", ""),
+        "location": freelancer.get("location", ""),
+        "phone": freelancer.get("phone", ""),
+        "hourlyRate": freelancer.get("hourlyRate", 0),
+        "skills": freelancer.get("skills", []),
+        "rating": freelancer.get("rating", 0.0),
+        "reviews": freelancer.get("reviews", 0),
+        "completedProjects": freelancer.get("completedProjects", 0),
+        "email": u.get("email", ""),
+        "createdAt": created_str,
+    }
+
+
+def get_top_rated_freelancers(limit=10):
+    col = get_freelancers_collection()
+    return list(col.find().sort("rating", -1).limit(limit))
+
+
+def service_get_top_rated(limit=10):
+    items = get_top_rated_freelancers(limit)
+    return {
+        "freelancers": [serialize_talent_card(f) for f in items],
+        "total": len(items),
+    }
+
+
+def get_local_freelancers(location, limit=10):
+    col = get_freelancers_collection()
+    return list(
+        col.find({"location": {"$regex": location, "$options": "i"}}).limit(limit)
+    )
+
+
+def service_get_local(location, limit=10):
+    items = get_local_freelancers(location, limit)
+    return {
+        "freelancers": [serialize_talent_card(f) for f in items],
+        "total": len(items),
+        "location": location,
+    }
+
+
+def service_search_freelancers(filters, page, per_page):
+    col = get_freelancers_collection()
+    query = {}
+
+    if filters.get("location"):
+        query["location"] = {"$regex": filters["location"], "$options": "i"}
+
+    if filters.get("category"):
+        query["skills"] = {"$in": [filters["category"]]}
+
+    if filters.get("min_rate") is not None:
+        query.setdefault("hourlyRate", {})
+        query["hourlyRate"]["$gte"] = filters["min_rate"]
+
+    if filters.get("max_rate") is not None:
+        query.setdefault("hourlyRate", {})
+        query["hourlyRate"]["$lte"] = filters["max_rate"]
+
+    if filters.get("available_only"):
+        query["isAvailable"] = True
+
+    q_text = (filters.get("q") or "").strip()
+    if q_text:
+        query["$or"] = [
+            {"fullName": {"$regex": q_text, "$options": "i"}},
+            {"title": {"$regex": q_text, "$options": "i"}},
+            {"bio": {"$regex": q_text, "$options": "i"}},
+        ]
+
+    sort_map = {
+        "rating": [("rating", -1)],
+        "rate_asc": [("hourlyRate", 1)],
+        "rate_desc": [("hourlyRate", -1)],
+        "newest": [("_id", -1)],
+        "top_success": [("jobSuccess", -1)],
+    }
+    sort = sort_map.get(filters.get("sort", "rating"), [("rating", -1)])
+
+    skip = (page - 1) * per_page
+
+    items = list(col.find(query).sort(sort).skip(skip).limit(per_page))
+    total = col.count_documents(query)
+
+    return {
+        "freelancers": [serialize_talent_card(f) for f in items],
+        "total": total,
+        "page": page,
+        "pages": max(1, (total + per_page - 1) // per_page),
+    }
+
 
 def get_freelancer_profile(user_id):
-    freelancers = get_freelancers_collection()
-    users       = get_users_collection()
+    try:
+        obj_id = ObjectId(user_id)
+    except Exception:
+        return {"error": "Invalid ID"}, 400
 
-    freelancer = freelancers.find_one({"userId": ObjectId(user_id)})
+    freelancers = get_freelancers_collection()
+    users = get_users_collection()
+
+    freelancer = freelancers.find_one({"userId": obj_id})
+    if not freelancer:
+        freelancer = freelancers.find_one({"_id": obj_id})
+
     if not freelancer:
         return {"error": "Profil freelancer introuvable"}, 404
 
-    user = users.find_one({"_id": ObjectId(user_id)})
+    uid = freelancer.get("userId")
+    user = users.find_one({"_id": uid}) if uid else None
     if not user:
-        return {"error": "Utilisateur introuvable"}, 404
+        user = users.find_one({"_id": obj_id})
+    if not user:
+        user = {}
 
-    return _serialize_freelancer(freelancer, user), 200
+    return serialize_freelancer_profile(freelancer, user), 200
 
 
 def update_freelancer_profile(user_id, data):
-    """
-    Champs modifiables :
-      fullName, title, bio, portfolioUrl, location, phone, hourlyRate
-      skills : liste de { name: str, level: int 0-100 }
-    """
     freelancers = get_freelancers_collection()
 
-    allowed = ["fullName", "title", "bio", "portfolioUrl",
-               "location", "phone", "hourlyRate", "skills"]
+    allowed = [
+        "fullName",
+        "title",
+        "bio",
+        "portfolioUrl",
+        "location",
+        "phone",
+        "hourlyRate",
+        "skills",
+    ]
     update_data = {k: v for k, v in data.items() if k in allowed}
 
-    # Validation skills
     if "skills" in update_data:
         if not isinstance(update_data["skills"], list):
             return {"error": "skills doit être une liste"}, 400
@@ -68,7 +196,6 @@ def update_freelancer_profile(user_id, data):
             except (ValueError, TypeError):
                 return {"error": "level doit être entre 0 et 100"}, 400
 
-    # Validation hourlyRate
     if "hourlyRate" in update_data:
         try:
             update_data["hourlyRate"] = float(update_data["hourlyRate"])
@@ -83,7 +210,7 @@ def update_freelancer_profile(user_id, data):
     update_data["updatedAt"] = datetime.utcnow()
     result = freelancers.update_one(
         {"userId": ObjectId(user_id)},
-        {"$set": update_data}
+        {"$set": update_data},
     )
     if result.matched_count == 0:
         return {"error": "Profil introuvable"}, 404
@@ -91,12 +218,10 @@ def update_freelancer_profile(user_id, data):
     return {"message": "Profil mis à jour avec succès"}, 200
 
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
-
 def get_dashboard_stats(user_id):
     freelancers = get_freelancers_collection()
-    gigs_col    = get_gigs_collection()
-    orders_col  = get_orders_collection()
+    gigs_col = get_gigs_collection()
+    orders_col = get_orders_collection()
 
     freelancer = freelancers.find_one({"userId": ObjectId(user_id)})
     if not freelancer:
@@ -104,68 +229,75 @@ def get_dashboard_stats(user_id):
 
     freelancer_id = freelancer["_id"]
 
-    # Tous les gigs du freelancer
-    all_gigs    = list(gigs_col.find({"freelancerId": freelancer_id}))
+    all_gigs = list(gigs_col.find({"freelancerId": freelancer_id}))
     active_gigs = [g for g in all_gigs if g.get("status") == "active"]
-    gig_ids     = [g["_id"] for g in all_gigs]
+    gig_ids = [g["_id"] for g in all_gigs]
 
-    # Earnings du mois en cours : commandes "completed" depuis le 1er du mois
-    now            = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
     first_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
-    monthly_orders = list(orders_col.find({
-        "gigId":       {"$in": gig_ids},
-        "status":      "completed",
-        "completedAt": {"$gte": first_of_month}
-    }))
-    monthly_earnings = round(sum(o.get("amount", 0) for o in monthly_orders), 2)
+    monthly_orders = list(
+        orders_col.find(
+            {
+                "gigId": {"$in": gig_ids},
+                "status": "completed",
+                "completedAt": {"$gte": first_of_month},
+            }
+        )
+    )
+    monthly_earnings = round(
+        sum(float(o.get("price", o.get("amount", 0)) or 0) for o in monthly_orders), 2
+    )
 
-    # Total commandes complétées (tous mois confondus)
-    total_completed = orders_col.count_documents({
-        "gigId":  {"$in": gig_ids},
-        "status": "completed"
-    })
+    total_completed = orders_col.count_documents(
+        {"gigId": {"$in": gig_ids}, "status": "completed"}
+    )
 
-    # Activités récentes : 5 dernières commandes
     recent_orders = list(
         orders_col.find({"gigId": {"$in": gig_ids}})
-                  .sort("createdAt", -1)
-                  .limit(5)
+        .sort("createdAt", -1)
+        .limit(5)
     )
     gig_titles = {str(g["_id"]): g.get("title", "") for g in all_gigs}
 
     recent_activities = []
     for o in recent_orders:
         status = o.get("status", "pending")
-        recent_activities.append({
-            "type":        "order",
-            "title":       f"Order — {gig_titles.get(str(o.get('gigId','')), '')}",
-            "description": f"${o.get('amount', 0)} · {o.get('clientName', 'Client')}",
-            "time":        o.get("createdAt", datetime.utcnow()).isoformat(),
-            "icon":        "bag-check" if status == "completed" else "time",
-            "color":       "success"   if status == "completed" else "warning"
-        })
+        recent_activities.append(
+            {
+                "type": "order",
+                "title": f"Order — {gig_titles.get(str(o.get('gigId','')), '')}",
+                "description": f"${o.get('price', o.get('amount', 0))} · {o.get('clientName', 'Client')}",
+                "time": o.get("createdAt", datetime.utcnow()).isoformat(),
+                "icon": "bag-check" if status == "completed" else "time",
+                "color": "success" if status == "completed" else "warning",
+            }
+        )
 
-    # Fallback : si pas encore de commandes → afficher les gigs récents
     if not recent_activities:
-        for g in list(gigs_col.find({"freelancerId": freelancer_id})
-                               .sort("createdAt", -1).limit(4)):
-            recent_activities.append({
-                "type":        "gig",
-                "title":       g.get("title", ""),
-                "description": f"Gig — {g.get('category', '')}",
-                "time":        g.get("createdAt", datetime.utcnow()).isoformat(),
-                "icon":        "briefcase",
-                "color":       "primary"
-            })
+        for g in list(
+            gigs_col.find({"freelancerId": freelancer_id})
+            .sort("createdAt", -1)
+            .limit(4)
+        ):
+            recent_activities.append(
+                {
+                    "type": "gig",
+                    "title": g.get("title", ""),
+                    "description": f"Gig — {g.get('category', '')}",
+                    "time": g.get("createdAt", datetime.utcnow()).isoformat(),
+                    "icon": "briefcase",
+                    "color": "primary",
+                }
+            )
 
     return {
         "userName": freelancer.get("fullName", ""),
         "stats": {
-            "activeGigs":      len(active_gigs),
-            "totalCompleted":  total_completed,
-            "rating":          freelancer.get("rating", 0.0),
-            "reviews":         freelancer.get("reviews", 0),
-            "monthlyEarnings": monthly_earnings
+            "activeGigs": len(active_gigs),
+            "totalCompleted": total_completed,
+            "rating": freelancer.get("rating", 0.0),
+            "reviews": freelancer.get("reviews", 0),
+            "monthlyEarnings": monthly_earnings,
         },
-        "recentActivities": recent_activities
+        "recentActivities": recent_activities,
     }, 200

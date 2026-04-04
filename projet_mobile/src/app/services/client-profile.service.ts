@@ -2,6 +2,7 @@
 import { Injectable }              from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable }              from 'rxjs';
+import { environment }             from 'src/environments/environment';
 
 export interface UserData {
   id:          string;
@@ -41,8 +42,7 @@ export interface ClientProfile {
 @Injectable({ providedIn: 'root' })
 export class ClientProfileService {
 
-  // ✅ URL directe — pas besoin d'environment.apiUrl
-  private API = 'http://localhost:5000/api';
+  private readonly API = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

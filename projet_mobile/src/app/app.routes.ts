@@ -66,7 +66,12 @@ export const routes: Routes = [
   },
   {
     path: 'post-job', 
-    loadComponent: () => import("./pages/pages/post-job/post-job.page").then( m=> m.PostJobPage)
+    loadComponent: () => import("./pages/post-job/post-job.page").then( m=> m.PostJobPage)
+
+  },
+   {
+    path: 'proposal', 
+    loadComponent: () => import("./pages/proposal/proposal.page").then( m=> m.ProposalPage)
 
   },
   {
@@ -74,13 +79,32 @@ export const routes: Routes = [
     loadComponent: () => import("./pages/accueil/accueil.page").then( m=> m.AccueilPage)
   },
   {
-    path: 'talent-profile',
+    path: 'talent-profile/:id',
     loadComponent: () => import('./pages/talent-profile/talent-profile.page').then( m => m.TalentProfilePage)
   },
+  
   {
     path: 'orders',
     loadComponent: () => import('./pages/orders/orders.page').then( m => m.OrdersPage)
-  }
+  },
+ {
+    path: 'client-profile',
+    loadComponent: () => import('./pages/client-profile/client-profile.page').then( m => m.ClientProfilePage)
+  },
+  {
+    path: 'cataloge',
+    loadComponent: () => import('./pages/cataloge/cataloge.page').then( m => m.CatalogPage)
+  },
+  {
+    path: 'service-details',
+    loadComponent: () => import('./pages/service-details/service-details.page').then( m => m.ServiceDetailsPage)
+  },
+  {
+  path: 'service-details/:id',
+  loadComponent: () =>
+    import('./pages/service-details/service-details.page')
+      .then(m => m.ServiceDetailsPage)
+},
 
 
 

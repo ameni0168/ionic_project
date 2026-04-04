@@ -38,7 +38,12 @@ def login():
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
 
-        if not check_password_hash(user["password"], password):
+        # Enregistrement client/freelancer utilise password_hash (Werkzeug)
+        password_hash = user.get("password_hash") or user.get("password")
+        if not password_hash:
+            return jsonify({"error": "Mot de passe non configuré pour ce compte"}), 500
+
+        if not check_password_hash(password_hash, password):
             return jsonify({"error": "Mot de passe incorrect"}), 401
 
         role = user.get("role", "client")

@@ -8,8 +8,12 @@ from dotenv import load_dotenv
 
 from app.routes.auth_routes       import auth_bp
 from app.routes.freelancer_routes import freelancer_bp
+from app.routes.client_routes import client_bp
 from app.routes.gig_routes        import gig_bp
 from app.routes.order_routes      import order_bp, catalog_bp
+from app.routes.job_routes        import job_bp
+from app.routes.proposal_routes        import proposal_bp
+
 
 load_dotenv()
 
@@ -17,9 +21,12 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app,
+     resources={r"/*": {"origins": "*"}},
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
-    app.config["JWT_SECRET_KEY"]           = os.getenv("JWT_SECRET_KEY")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
     jwt.init_app(app)
 
@@ -33,5 +40,9 @@ def create_app():
     app.register_blueprint(gig_bp,        url_prefix="/api/gigs")
     app.register_blueprint(order_bp,      url_prefix="/api/orders")
     app.register_blueprint(catalog_bp,    url_prefix="/api/catalog")
+    app.register_blueprint(client_bp,        url_prefix="/api/client")
+    app.register_blueprint(job_bp,           url_prefix="/api/jobs")
+    app.register_blueprint(proposal_bp,           url_prefix="/api/proposals")
+
 
     return app

@@ -61,7 +61,7 @@ export class ClientProfilePage implements OnInit {
       error: (err: { status: number; }) => {
         this.isLoading = false;
         if (err.status === 401) {
-          this.navCtrl.navigateRoot(['/login']);
+          this.navCtrl.navigateRoot(['/auth/login']);
         } else {
           this.showToast('Erreur chargement du profil', 'danger');
         }
@@ -176,7 +176,7 @@ export class ClientProfilePage implements OnInit {
   // ── DÉCONNEXION ───────────────────────────────────────────────
   logout() {
     localStorage.clear();
-    this.navCtrl.navigateRoot(['/login']);
+    this.navCtrl.navigateRoot(['/auth/login']);
   }
 
   // ── RETOUR ────────────────────────────────────────────────────
