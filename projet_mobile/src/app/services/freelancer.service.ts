@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface TalentFilters {
   q?: string;
@@ -20,7 +21,7 @@ export interface TalentFilters {
 })
 export class FreelancerService {
 
-  private API = 'http://localhost:5000/api';
+  private readonly API = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

@@ -1,8 +1,18 @@
+# app/extension.py
 from pymongo import MongoClient
+from flask_jwt_extended import JWTManager
+from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = MongoClient(os.getenv("MONGO_URI"))  #deja importe depuis .env
-db = client["freelancerDB"]
+# ── MongoDB direct (ton style) ────────────────────────────────────
+client = MongoClient(os.getenv("MONGO_URI"))
+db     = client["freelancerDB"]
+
+# ── Extensions Flask ──────────────────────────────────────────────
+jwt    = JWTManager()
+bcrypt = Bcrypt()
+cors   = CORS()

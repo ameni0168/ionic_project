@@ -1,7 +1,7 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="talent-toolbar">
     <ion-buttons slot="start">
-      <ion-avatar class="avatar-btn" (click)="goTo('/profile')">
+      <ion-avatar class="avatar-btn" (click)="goTo('/client-profile')">
         <img
           src="assets/default-avatar.png"
           onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
@@ -52,8 +52,53 @@
 
   <div class="page-divider"></div>
 
+  <!-- ========== RÉSULTATS RECHERCHE / SEE MORE ========== -->
+  <div class="search-results-wrap" *ngIf="isSearchMode">
+    <div class="results-toolbar">
+      <button type="button" class="back-results-btn" (click)="clearSearch()">← Retour</button>
+      <span class="results-count" *ngIf="!isLoadingSearch">{{ searchTotal }} résultat(s)</span>
+    </div>
+    <ion-spinner *ngIf="isLoadingSearch" name="crescent" class="results-spinner"></ion-spinner>
+    <p class="empty-hint" *ngIf="!isLoadingSearch && searchResults.length === 0">
+      Aucun profil à afficher pour cette sélection.
+    </p>
+    <div class="talent-scroll vertical-list" *ngIf="searchResults.length > 0">
+      <div
+        class="talent-card"
+        *ngFor="let t of searchResults"
+        (click)="goToProfile(t)"
+      >
+        <div class="card-top-row">
+          <div class="card-avatar-wrap">
+            <img
+              class="card-avatar"
+              [src]="t.avatar"
+              onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+            />
+            <span class="online-dot" [class.online]="t.online" [class.offline]="!t.online"></span>
+          </div>
+          <div class="card-info">
+            <span class="card-name">{{ t.name }}</span>
+            <p class="card-job">{{ t.title }}</p>
+          </div>
+        </div>
+        <div class="card-stats">
+          <span class="stat-rate">${{ t.hourlyRate }}/hr</span>
+        </div>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="see-more-btn load-more-btn"
+      *ngIf="hasMoreResults && !isLoadingSearch && searchResults.length > 0"
+      (click)="loadMore()"
+    >
+      <span>Charger plus</span>
+    </button>
+  </div>
+
   <!-- ========== TALENT IN TUNISIA ========== -->
-  <div class="talent-block">
+  <div class="talent-block" *ngIf="!isSearchMode">
     <h2 class="block-title">Talent in Tunisia</h2>
 
     <button class="see-more-btn" (click)="seeMoreLocal()">
@@ -95,10 +140,10 @@
     </div>
   </div>
 
-  <div class="page-divider"></div>
+  <div class="page-divider" *ngIf="!isSearchMode"></div>
 
   <!-- ========== TALENT WITH HIGH JOB SUCCESS ========== -->
-  <div class="talent-block">
+  <div class="talent-block" *ngIf="!isSearchMode">
     <h2 class="block-title">Talent with high Job Success<br />Scores</h2>
 
     <button class="see-more-btn" (click)="seeMoreProfiles()">
@@ -140,10 +185,10 @@
     </div>
   </div>
 
-  <div class="page-divider"></div>
+  <div class="page-divider" *ngIf="!isSearchMode"></div>
 
   <!-- ========== BROWSE BY CATEGORY ========== -->
-  <div class="browse-block">
+  <div class="browse-block" *ngIf="!isSearchMode">
     <h2 class="block-title">Browse by category</h2>
 
     <div *ngFor="let cat of browseCategories" class="browse-category">
@@ -173,7 +218,7 @@
     <ion-icon name="people-outline"></ion-icon>
     <ion-label>Talent</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/catalog')">
+  <ion-tab-button class="tab-btn" (click)="goTo('/cataloge')">
     <ion-icon name="albums-outline"></ion-icon>
     <ion-label>Catalog</ion-label>
   </ion-tab-button>

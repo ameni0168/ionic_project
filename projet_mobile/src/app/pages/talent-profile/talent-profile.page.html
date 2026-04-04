@@ -1,3 +1,4 @@
+<!-- talent-profile.page.html -->
 <ion-header class="ion-no-border">
   <ion-toolbar class="profile-toolbar">
     <ion-buttons slot="start">
@@ -5,8 +6,14 @@
         <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title class="profile-toolbar-title">Profile</ion-title>
+    <ion-title class="toolbar-title">Profil Talent</ion-title>
     <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="toggleFav()">
+        <ion-icon slot="icon-only"
+          [name]="isFav ? 'heart' : 'heart-outline'"
+          [style.color]="isFav ? '#ef4444' : '#8b95a8'">
+        </ion-icon>
+      </ion-button>
       <ion-button fill="clear" (click)="shareProfile()">
         <ion-icon slot="icon-only" name="share-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
@@ -14,276 +21,178 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="profile-content" *ngIf="talent">
+<ion-content class="profile-content">
 
-  <!-- ========== HERO SECTION ========== -->
-  <div class="hero-section">
-    <div class="hero-avatar-wrap">
-      <div class="avatar-ring">
-        <img
-          class="hero-avatar"
-          [src]="talent.avatar"
-          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
-        />
-      </div>
-      <div class="rating-chip">
-        <ion-icon name="star" class="star-chip-icon"></ion-icon>
-        <span>{{ talent.rating || '4.9' }}</span>
-      </div>
+  <!-- ══ SKELETON LOADING ══════════════════════════════════════ -->
+  <div *ngIf="isLoading" class="loading-wrap">
+    <div class="hero-section">
+      <ion-skeleton-text animated class="sk-avatar"></ion-skeleton-text>
+      <ion-skeleton-text animated class="sk-name"></ion-skeleton-text>
+      <ion-skeleton-text animated class="sk-title"></ion-skeleton-text>
     </div>
-    <h1 class="hero-name">{{ talent.name }}</h1>
-    <p class="hero-job-title">{{ talent.title }}</p>
-
-    <div class="hero-tags">
-      <span class="tag online-tag" *ngIf="talent.online">
-        <span class="dot-green"></span> Online
-      </span>
-      <span class="tag loc-tag">
-        <ion-icon name="location-outline"></ion-icon> {{ talent.location || 'Tunisia' }}
-      </span>
-      <span class="tag rate-tag">
-        <ion-icon name="cash-outline"></ion-icon> ${{ talent.hourlyRate }}/hr
-      </span>
+    <div class="stats-strip sk-strip">
+      <ion-skeleton-text animated *ngFor="let i of [1,2,3]" style="height:40px;flex:1;border-radius:8px;"></ion-skeleton-text>
     </div>
   </div>
 
-  <!-- ========== STATS STRIP ========== -->
-  <div class="stats-strip">
-    <div class="strip-item">
-      <span class="strip-val accent">{{ talent.jobs || 47 }}</span>
-      <span class="strip-lbl">PROJECTS</span>
-    </div>
-    <div class="strip-divider"></div>
-    <div class="strip-item">
-      <span class="strip-val accent">{{ talent.rating || '4.9' }}</span>
-      <span class="strip-lbl">RATING</span>
-    </div>
-    <div class="strip-divider"></div>
-    <div class="strip-item">
-      <span class="strip-val accent">{{ talent.reviews || 38 }}</span>
-      <span class="strip-lbl">REVIEWS</span>
-    </div>
-  </div>
+  <!-- ══ CONTENU ═══════════════════════════════════════════════ -->
+  <div *ngIf="!isLoading && talent">
 
-  <!-- ========== ACTION BUTTONS ========== -->
-  <div class="action-row">
-    <ion-button class="btn-hire" expand="block" (click)="hireNow()">
-      <ion-icon slot="start" name="briefcase-outline"></ion-icon>
-      Hire Now
-    </ion-button>
-    <ion-button class="btn-message" expand="block" fill="outline" (click)="sendMessage()">
-      <ion-icon slot="start" name="chatbubble-outline"></ion-icon>
-      Message
-    </ion-button>
-  </div>
-
-  <!-- ========== ABOUT ========== -->
-  <div class="profile-card">
-    <h3 class="card-title">About</h3>
-    <p class="about-text">{{ talent.about || 'Experienced full-stack developer with 5+ years of expertise in web and mobile applications. Specialized in React, Angular, Node.js, and cloud solutions.' }}</p>
-  </div>
-
-  <!-- ========== CONTACT INFORMATION ========== -->
-  <div class="profile-card">
-    <h3 class="card-title">Contact Information</h3>
-    <div class="contact-list">
-      <div class="contact-item">
-        <div class="contact-icon-box">
-          <ion-icon name="mail-outline"></ion-icon>
-        </div>
-        <div class="contact-info">
-          <span class="contact-label">Email</span>
-          <span class="contact-value">{{ talent.email || 'sarah.johnson@email.com' }}</span>
-        </div>
-      </div>
-      <div class="contact-item">
-        <div class="contact-icon-box">
-          <ion-icon name="call-outline"></ion-icon>
-        </div>
-        <div class="contact-info">
-          <span class="contact-label">Phone</span>
-          <span class="contact-value">{{ talent.phone || '+1 (555) 123-4567' }}</span>
-        </div>
-      </div>
-      <div class="contact-item">
-        <div class="contact-icon-box">
-          <ion-icon name="location-outline"></ion-icon>
-        </div>
-        <div class="contact-info">
-          <span class="contact-label">Location</span>
-          <span class="contact-value">{{ talent.location || 'San Francisco, CA' }}</span>
-        </div>
-      </div>
-      <div class="contact-item">
-        <div class="contact-icon-box">
-          <ion-icon name="cash-outline"></ion-icon>
-        </div>
-        <div class="contact-info">
-          <span class="contact-label">Hourly Rate</span>
-          <span class="contact-value">${{ talent.hourlyRate || 85 }}/hour</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== SKILLS WITH PROGRESS BARS ========== -->
-  <div class="profile-card">
-    <h3 class="card-title">Skills</h3>
-    <div class="skill-bar-list">
-      <div class="skill-bar-item" *ngFor="let skill of (talent.skillBars || defaultSkillBars)">
-        <div class="skill-bar-header">
-          <span class="skill-name">{{ skill.name }}</span>
-          <span class="skill-pct">{{ skill.level }}%</span>
-        </div>
-        <div class="skill-bar-track">
-          <div
-            class="skill-bar-fill"
-            [style.width.%]="skill.level"
-            [style.background]="skill.color || 'linear-gradient(90deg, #4f6ef7, #8b5cf6)'"
-          ></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== CV / RÉSUMÉ ========== -->
-  <div class="profile-card">
-    <div class="card-header-row">
-      <h3 class="card-title">CV / Résumé</h3>
-      <a class="download-link" (click)="downloadCV()">
-        <ion-icon name="download-outline"></ion-icon> Download
-      </a>
-    </div>
-
-    <!-- Expérience professionnelle -->
-    <h4 class="sub-section-title">
-      <ion-icon name="briefcase-outline" class="sub-icon"></ion-icon>
-      Work Experience
-    </h4>
-    <div class="timeline">
-      <div class="timeline-item" *ngFor="let exp of (talent.experience || defaultExperience)">
-        <div class="timeline-dot"></div>
-        <div class="timeline-line"></div>
-        <div class="timeline-content">
-          <div class="tl-header">
-            <span class="tl-role">{{ exp.role }}</span>
-            <span class="tl-date">{{ exp.period }}</span>
-          </div>
-          <span class="tl-company">{{ exp.company }}</span>
-          <p class="tl-desc">{{ exp.desc }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Formation -->
-    <h4 class="sub-section-title" style="margin-top: 18px;">
-      <ion-icon name="school-outline" class="sub-icon"></ion-icon>
-      Education
-    </h4>
-    <div class="timeline">
-      <div class="timeline-item" *ngFor="let edu of (talent.education || defaultEducation)">
-        <div class="timeline-dot edu-dot"></div>
-        <div class="timeline-line"></div>
-        <div class="timeline-content">
-          <div class="tl-header">
-            <span class="tl-role">{{ edu.degree }}</span>
-            <span class="tl-date">{{ edu.period }}</span>
-          </div>
-          <span class="tl-company">{{ edu.school }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Certifications -->
-    <h4 class="sub-section-title" style="margin-top: 18px;">
-      <ion-icon name="ribbon-outline" class="sub-icon"></ion-icon>
-      Certifications
-    </h4>
-    <div class="cert-list">
-      <div class="cert-item" *ngFor="let cert of (talent.certifications || defaultCertifications)">
-        <div class="cert-icon-box">
-          <ion-icon name="checkmark-circle" class="cert-check"></ion-icon>
-        </div>
-        <div class="cert-info">
-          <span class="cert-name">{{ cert.name }}</span>
-          <span class="cert-issuer">{{ cert.issuer }} · {{ cert.year }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== PORTFOLIO ========== -->
-  <div class="profile-card">
-    <div class="card-header-row">
-      <h3 class="card-title">Portfolio</h3>
-      <a class="see-all-link" (click)="seeAllPortfolio()">See all</a>
-    </div>
-
-    <!-- Grille projets -->
-    <div class="portfolio-grid">
-      <div
-        class="portfolio-item"
-        *ngFor="let project of (talent.portfolio || defaultPortfolio)"
-        (click)="viewProject(project)"
-      >
-        <div class="portfolio-thumb">
+    <!-- ── HERO ────────────────────────────────────────────────── -->
+    <div class="hero-section">
+      <div class="avatar-wrap">
+        <div class="avatar-ring">
           <img
-            [src]="project.image"
-            onerror="this.style.display='none'"
-            [alt]="project.title"
+            class="hero-avatar"
+            [src]="talent.avatar || 'assets/default-avatar.png'"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
           />
-          <div class="portfolio-overlay">
-            <ion-icon name="eye-outline"></ion-icon>
-          </div>
-          <span class="portfolio-type-badge">{{ project.type }}</span>
         </div>
-        <div class="portfolio-info">
-          <span class="portfolio-title">{{ project.title }}</span>
-          <div class="portfolio-tags">
-            <span class="p-tag" *ngFor="let tag of project.tags">{{ tag }}</span>
+        <div class="online-badge" *ngIf="talent.isAvailable">
+          <span class="dot-green"></span> Disponible
+        </div>
+      </div>
+
+      <h1 class="hero-name">{{ talent.name }}</h1>
+      <p class="hero-title">{{ talent.title }}</p>
+
+      <div class="hero-tags">
+        <span class="tag tag-rate">
+          <ion-icon name="cash-outline"></ion-icon> ${{ talent.hourlyRate }}/hr
+        </span>
+        <span class="tag tag-loc" *ngIf="talent.location">
+          <ion-icon name="location-outline"></ion-icon> {{ talent.location }}
+        </span>
+        <span class="tag tag-cat" *ngIf="talent.category">
+          <ion-icon name="briefcase-outline"></ion-icon> {{ talent.category }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── STATS STRIP ─────────────────────────────────────────── -->
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="stat-val">{{ talent.totalJobs }}</span>
+        <span class="stat-lbl">PROJETS</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val">{{ talent.rating | number:'1.1-1' }}</span>
+        <span class="stat-lbl">NOTE</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val">{{ talent.reviews }}</span>
+        <span class="stat-lbl">AVIS</span>
+      </div>
+      <div class="stat-sep" *ngIf="talent.jobSuccess > 0"></div>
+      <div class="stat-item" *ngIf="talent.jobSuccess > 0">
+        <span class="stat-val">{{ talent.jobSuccess }}%</span>
+        <span class="stat-lbl">SUCCESS</span>
+      </div>
+    </div>
+
+    <!-- ── ACTIONS ─────────────────────────────────────────────── -->
+    <div class="action-row">
+      <ion-button class="btn-hire" expand="block" (click)="hireNow()">
+        <ion-icon slot="start" name="briefcase-outline"></ion-icon>
+        Recruter
+      </ion-button>
+      <ion-button class="btn-msg" expand="block" fill="outline" (click)="sendMessage()">
+        <ion-icon slot="start" name="chatbubble-outline"></ion-icon>
+        Message
+      </ion-button>
+    </div>
+
+    <!-- ── ABOUT ────────────────────────────────────────────────── -->
+    <div class="profile-card" *ngIf="talent.bio">
+      <h3 class="card-title">
+        <ion-icon name="person-outline" class="card-icon"></ion-icon> À propos
+      </h3>
+      <p class="bio-text">{{ talent.bio }}</p>
+    </div>
+
+    <!-- ── SKILLS AVEC BARRES ───────────────────────────────────── -->
+    <div class="profile-card" *ngIf="talent.skillBars?.length > 0">
+      <h3 class="card-title">
+        <ion-icon name="code-slash-outline" class="card-icon"></ion-icon> Compétences
+      </h3>
+      <div class="skill-bar-list">
+        <div class="skill-bar-item" *ngFor="let skill of talent.skillBars">
+          <div class="skill-bar-header">
+            <span class="skill-name">{{ skill.name }}</span>
+            <span class="skill-pct">{{ skill.level }}%</span>
+          </div>
+          <div class="skill-bar-track">
+            <div
+              class="skill-bar-fill"
+              [style.width.%]="skill.level"
+              [style.background]="skill.color || 'linear-gradient(90deg,#4f6ef7,#8b5cf6)'"
+            ></div>
           </div>
         </div>
       </div>
+
+      <!-- Chips compétences supplémentaires -->
+      <div class="skills-chips" *ngIf="talent.skills?.length > talent.skillBars?.length">
+        <span class="skill-chip" *ngFor="let s of talent.skills.slice(talent.skillBars.length)">{{ s }}</span>
+      </div>
     </div>
+
+    <!-- ── REVIEWS ──────────────────────────────────────────────── -->
+    <div class="profile-card">
+      <div class="card-header-row">
+        <h3 class="card-title">
+          <ion-icon name="star-outline" class="card-icon"></ion-icon> Avis
+        </h3>
+        <div class="rating-pill" *ngIf="talent.rating > 0">
+          <ion-icon name="star" class="star-y"></ion-icon>
+          <span>{{ talent.rating | number:'1.1-1' }} ({{ talent.reviews }})</span>
+        </div>
+      </div>
+
+      <!-- Skeleton reviews -->
+      <div *ngIf="reviews.length === 0 && isLoading">
+        <div *ngFor="let i of [1,2]" class="review-item">
+          <ion-skeleton-text animated style="height:10px;width:60%;margin-bottom:6px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="height:10px;width:90%;"></ion-skeleton-text>
+        </div>
+      </div>
+
+      <!-- Aucun avis -->
+      <p class="no-reviews" *ngIf="!isLoading && reviews.length === 0">
+        Aucun avis pour le moment.
+      </p>
+
+      <!-- Liste avis -->
+      <div class="review-item" *ngFor="let r of reviews">
+        <div class="review-top">
+          <img class="review-avatar"
+            [src]="r.client_avatar || 'assets/default-avatar.png'"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+          />
+          <div class="review-info">
+            <span class="review-name">{{ r.client_name || 'Client' }}</span>
+            <span class="review-date">{{ r.created_at | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="review-stars">
+            <ion-icon name="star" class="star-y" *ngFor="let s of getStars(r.rating)"></ion-icon>
+            <ion-icon name="star-outline" class="star-e" *ngFor="let s of getEmptyStars(r.rating)"></ion-icon>
+          </div>
+        </div>
+        <p class="review-text">{{ r.comment }}</p>
+      </div>
+    </div>
+
+    <div style="height:100px;"></div>
   </div>
 
-  <!-- ========== REVIEWS ========== -->
-  <div class="profile-card">
-    <div class="card-header-row">
-      <h3 class="card-title">Reviews</h3>
-      <div class="rating-pill">
-        <ion-icon name="star" class="star-pill"></ion-icon>
-        <span>{{ talent.rating || '4.9' }} ({{ talent.reviews || 38 }})</span>
-      </div>
-    </div>
-
-    <div class="review-item" *ngFor="let r of sampleReviews">
-      <div class="review-top">
-        <img
-          class="reviewer-avatar"
-          [src]="r.avatar"
-          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
-        />
-        <div class="reviewer-info">
-          <span class="reviewer-name">{{ r.name }}</span>
-          <span class="review-date">{{ r.date }}</span>
-        </div>
-        <div class="review-stars">
-          <ion-icon name="star" class="star-r" *ngFor="let s of getStars(r.rating)"></ion-icon>
-          <ion-icon name="star-outline" class="star-r empty" *ngFor="let s of getEmptyStars(r.rating)"></ion-icon>
-        </div>
-      </div>
-      <p class="review-text">{{ r.text }}</p>
-    </div>
-  </div>
-
-  <div style="height: 100px;"></div>
 </ion-content>
 
-<!-- ========== BOTTOM CTA ========== -->
-<div class="bottom-cta" *ngIf="talent">
-  <ion-button class="cta-hire-btn" expand="block" (click)="hireNow()">
+<!-- ══ BOTTOM CTA ════════════════════════════════════════════════ -->
+<div class="bottom-cta" *ngIf="!isLoading && talent">
+  <ion-button class="cta-btn" expand="block" (click)="hireNow()">
     <ion-icon slot="start" name="briefcase-outline"></ion-icon>
-    Hire {{ talent.name }}
+    Recruter {{ talent.name }}
   </ion-button>
 </div>
