@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  /** Même machine : localhost. Émulateur Android : http://10.0.2.2:5000/api */
+  apiUrl: 'http://localhost:5000/api',
 };
 
 /*

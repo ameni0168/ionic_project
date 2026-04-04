@@ -1,0 +1,188 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="detail-toolbar">
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="toolbar-title">Service Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="detail-content">
+
+  <!-- ── SKELETON ────────────────────────────────────────────── -->
+  <div *ngIf="isLoading" class="skeleton-wrap">
+    <ion-skeleton-text animated style="height:200px;border-radius:0;"></ion-skeleton-text>
+    <div style="padding:16px;">
+      <ion-skeleton-text animated style="height:16px;width:70%;margin-bottom:10px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="height:12px;width:90%;margin-bottom:6px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="height:12px;width:80%;"></ion-skeleton-text>
+    </div>
+  </div>
+
+  <!-- ── CONTENT ─────────────────────────────────────────────── -->
+  <div *ngIf="!isLoading && gig">
+
+    <!-- Hero image -->
+    <div class="gig-hero" [style.background]="gig.color_accent || '#6366f1'">
+      <img *ngIf="gig.images?.[0]" [src]="gig.images[0]" [alt]="gig.title"
+           class="hero-img" onerror="this.style.display='none'" />
+      <span class="hero-category">{{ gig.category }}</span>
+    </div>
+
+    <!-- Title + stats -->
+    <div class="gig-header-card">
+      <h1 class="gig-title">{{ gig.title }}</h1>
+
+      <div class="gig-meta">
+        <div class="meta-stat" *ngIf="gig.rating > 0">
+          <ion-icon name="star" class="star-y"></ion-icon>
+          <span class="meta-val">{{ gig.rating | number:'1.1-1' }}</span>
+          <span class="meta-lbl">({{ gig.review_count }} reviews)</span>
+        </div>
+
+        <div class="meta-stat">
+          <ion-icon name="checkmark-circle-outline" class="meta-icon"></ion-icon>
+          <span class="meta-val">{{ gig.orders_completed }}</span>
+          <span class="meta-lbl">orders</span>
+        </div>
+
+        <div class="meta-stat" *ngIf="gig.delivery_time">
+          <ion-icon name="time-outline" class="meta-icon"></ion-icon>
+          <span class="meta-val">{{ gig.delivery_time }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Freelancer info -->
+    <div class="profile-card" *ngIf="gig.freelancer">
+      <div class="fl-row" (click)="navCtrl.navigateForward(['/talent-profile', gig.freelancer.id])">
+        <img class="fl-avatar"
+          [src]="gig.freelancer.avatar || 'assets/default-avatar.png'"
+          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+        />
+        <div class="fl-info">
+          <span class="fl-name">{{ gig.freelancer.full_name }}</span>
+          <span class="fl-title">{{ gig.freelancer.title }}</span>
+          <span class="fl-loc" *ngIf="gig.freelancer.location">
+            <ion-icon name="location-outline"></ion-icon> {{ gig.freelancer.location }}
+          </span>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="fl-chevron"></ion-icon>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="profile-card">
+      <h3 class="card-title">
+        <ion-icon name="document-text-outline" class="card-icon"></ion-icon> Description
+      </h3>
+      <p class="desc-text">{{ gig.description }}</p>
+
+      <!-- Tags -->
+      <div class="tags-wrap" *ngIf="gig.tags?.length > 0">
+        <span class="tag-chip" *ngFor="let t of gig.tags">{{ t }}</span>
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="profile-card" *ngIf="reviews.length > 0">
+      <div class="card-header-row">
+        <h3 class="card-title">
+          <ion-icon name="star-outline" class="card-icon"></ion-icon> Reviews
+        </h3>
+
+        <div class="rating-pill" *ngIf="gig.rating > 0">
+          <ion-icon name="star" class="star-y"></ion-icon>
+          <span>{{ gig.rating | number:'1.1-1' }} ({{ gig.review_count }})</span>
+        </div>
+      </div>
+
+      <div class="review-item" *ngFor="let r of reviews">
+        <div class="review-top">
+          <img class="review-avatar"
+            [src]="r.client_avatar || 'assets/default-avatar.png'"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+          />
+          <div class="review-info">
+            <span class="review-name">{{ r.client_name || 'Client' }}</span>
+            <span class="review-date">{{ r.created_at | date:'dd MMM yyyy' }}</span>
+          </div>
+
+          <div class="review-stars">
+            <ion-icon name="star" class="star-y" *ngFor="let s of getStars(r.rating)"></ion-icon>
+            <ion-icon name="star-outline" class="star-e" *ngFor="let s of getEmptyStars(r.rating)"></ion-icon>
+          </div>
+        </div>
+
+        <p class="review-text">{{ r.comment }}</p>
+      </div>
+    </div>
+
+    <div style="height:100px;"></div>
+  </div>
+
+  <!-- ── ORDER MODAL ────────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-top">
+        <h3>Order this service</h3>
+        <ion-button fill="clear" (click)="closeOrderModal()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="modal-price">
+        <ion-icon name="cash-outline"></ion-icon>
+        <span>Total: <strong>${{ gig?.price }}</strong></span>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Message to freelancer</label>
+          <textarea class="field-input field-textarea"
+            [(ngModel)]="orderForm.message"
+            placeholder="Describe your request..."
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="modal-field">
+          <label>Specific requirements (optional)</label>
+          <textarea class="field-input field-textarea"
+            [(ngModel)]="orderForm.requirements"
+            placeholder="Details, files, instructions..."
+            rows="2"
+          ></textarea>
+        </div>
+
+        <p class="modal-error" *ngIf="orderError">{{ orderError }}</p>
+      </div>
+
+      <ion-button expand="block" class="order-confirm-btn"
+        (click)="submitOrder()" [disabled]="isOrdering">
+
+        <ion-spinner *ngIf="isOrdering" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isOrdering" name="checkmark-outline" slot="start"></ion-icon>
+
+        {{ isOrdering ? 'Processing...' : 'Confirm Order' }}
+      </ion-button>
+    </div>
+  </div>
+
+</ion-content>
+
+<!-- ── BOTTOM CTA ────────────────────────────────────────────── -->
+<div class="bottom-cta" *ngIf="!isLoading && gig">
+  <div class="cta-price">
+    <span class="cta-from">Starting from</span>
+    <span class="cta-amount">${{ gig.price }}</span>
+  </div>
+
+  <ion-button class="cta-order-btn" (click)="openOrderModal()">
+    <ion-icon slot="start" name="cart-outline"></ion-icon>
+    Order Now
+  </ion-button>
+</div>

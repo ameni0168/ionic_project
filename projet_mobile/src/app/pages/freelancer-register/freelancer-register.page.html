@@ -26,7 +26,7 @@
       
       <div class="form-group">
         <app-input-field
-          label="Full Name"
+          label="Family Name"
           type="text"
           placeholder="John Doe"
           icon="person-outline"
@@ -35,6 +35,18 @@
           formControlName="fullName">
         </app-input-field>
       </div>
+      <div class="form-group">
+        <app-input-field
+          label="Name"
+          type="text"
+          placeholder="John Doe"
+          icon="person-outline"
+          [formControlRef]="fullNameControl"
+          [required]="true"
+          formControlName="fullName">
+        </app-input-field>
+      </div>
+
 
       <div class="form-group">
         <app-input-field

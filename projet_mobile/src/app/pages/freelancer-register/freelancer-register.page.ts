@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, 
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
+import { ApiService } from '../../services/api.service';
 
 interface UploadedFile {
   name: string;
@@ -49,7 +50,8 @@ export class FreelancerRegisterPage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController  // ← NavController
+    private navCtrl: NavController, // ← NavController
+    private api: ApiService
   ) {
     this.registerForm = this.formBuilder.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -181,26 +183,32 @@ export class FreelancerRegisterPage implements OnInit {
   }
 
   async onRegister() {
-    if (this.registerForm.valid) {
-      this.isLoading = true;
-      
-      setTimeout(() => {
-        this.isLoading = false;
-        console.log('Freelancer registration successful', {
-          ...this.registerForm.value,
-          cvFile: this.cvFile,
-          portfolioFiles: this.portfolioFiles
-        });
-        // Navigate to success or dashboard
-        // this.navCtrl.navigateRoot(['/dashboard']);
-      }, 2000);
-    } else {
-      Object.keys(this.registerForm.controls).forEach(key => {
-        this.registerForm.get(key)?.markAsTouched();
-      });
-    }
-  }
+  if (this.registerForm.valid) {
 
+    this.isLoading = true;
+
+    const formData = this.registerForm.value;
+
+    this.api.registerFreelancer(formData).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        console.log("Freelancer created", res);
+
+        this.navCtrl.navigateRoot(['/auth/login']);
+      },
+      error: (err:any) => {
+        this.isLoading = false;
+        console.error(err);
+        alert(err.error?.error || "Erreur serveur");
+      }
+    });
+
+  } else {
+    Object.keys(this.registerForm.controls).forEach(key => {
+      this.registerForm.get(key)?.markAsTouched();
+    });
+  }
+}
   goBack() {
     this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
   }

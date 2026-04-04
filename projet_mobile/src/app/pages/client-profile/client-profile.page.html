@@ -1,0 +1,287 @@
+<!-- client-profile.page.html -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="profile-toolbar">
+
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <ion-title class="toolbar-title">Mon Profil</ion-title>
+
+    <ion-buttons slot="end">
+      <!-- Bouton éditer -->
+      <ion-button fill="clear" (click)="startEdit()" *ngIf="!isEditing && !isLoading">
+        <ion-icon slot="icon-only" name="create-outline" class="toolbar-icon"></ion-icon>
+      </ion-button>
+      <!-- Bouton sauvegarder -->
+      <ion-button fill="clear" (click)="saveProfile()" *ngIf="isEditing" [disabled]="isSaving">
+        <ion-icon slot="icon-only" name="checkmark-outline" class="toolbar-icon accent-icon"></ion-icon>
+      </ion-button>
+      <!-- Bouton annuler -->
+      <ion-button fill="clear" (click)="cancelEdit()" *ngIf="isEditing">
+        <ion-icon slot="icon-only" name="close-outline" class="toolbar-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="profile-content">
+
+  <!-- ══ LOADING ══════════════════════════════════════════════ -->
+  <div class="loading-wrap" *ngIf="isLoading">
+    <ion-spinner name="crescent" class="spinner"></ion-spinner>
+    <p class="loading-text">Chargement du profil...</p>
+  </div>
+
+  <!-- ══ CONTENU ══════════════════════════════════════════════ -->
+  <div *ngIf="!isLoading && profile">
+
+    <!-- ── HERO ──────────────────────────────────────────────── -->
+    <div class="hero-section">
+
+      <!-- Avatar -->
+      <div class="avatar-wrap">
+        <div class="avatar-ring">
+          <img
+            class="avatar-img"
+            [src]="avatarSrc"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+            alt="avatar"
+          />
+        </div>
+        <!-- Badge caméra en mode édition -->
+        <div class="avatar-camera-badge" *ngIf="isEditing">
+          <ion-icon name="camera-outline"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Nom + badge rôle -->
+      <h1 class="hero-name">{{ profile.user.full_name }}</h1>
+
+      <div class="hero-badges">
+        <span class="badge badge-role">
+          <ion-icon name="briefcase-outline"></ion-icon> Client
+        </span>
+        <span class="badge badge-verified" *ngIf="profile.user.is_verified">
+          <ion-icon name="checkmark-circle"></ion-icon> Vérifié
+        </span>
+        <span class="badge badge-pending" *ngIf="!profile.user.is_verified">
+          <ion-icon name="time-outline"></ion-icon> Non vérifié
+        </span>
+      </div>
+
+      <p class="hero-sub" *ngIf="profile.client.company">
+        <ion-icon name="business-outline"></ion-icon>
+        {{ profile.client.company }}
+      </p>
+      <p class="hero-sub" *ngIf="profile.client.location">
+        <ion-icon name="location-outline"></ion-icon>
+        {{ profile.client.location }}
+      </p>
+
+    </div>
+
+    <!-- ── STATS ──────────────────────────────────────────────── -->
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="stat-val">{{ profile.client.stats.active_projects || 0 }}</span>
+        <span class="stat-lbl">PROJETS</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val">${{ profile.client.stats.total_spent || 0 }}</span>
+        <span class="stat-lbl">DÉPENSÉ</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val">{{ profile.client.stats.total_contracts || 0 }}</span>
+        <span class="stat-lbl">CONTRATS</span>
+      </div>
+    </div>
+
+    <!-- ── INFORMATIONS PERSONNELLES ─────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <ion-icon name="person-outline" class="card-icon"></ion-icon>
+        <h3 class="card-title">Informations personnelles</h3>
+      </div>
+
+      <!-- Nom complet -->
+      <div class="field">
+        <div class="field-icon"><ion-icon name="person-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Nom complet</span>
+          <input *ngIf="isEditing" class="field-input" [(ngModel)]="editForm.full_name" placeholder="Nom complet" />
+          <span *ngIf="!isEditing" class="field-val">{{ profile.user.full_name || '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Email (non modifiable) -->
+      <div class="field">
+        <div class="field-icon"><ion-icon name="mail-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Email</span>
+          <span class="field-val muted">{{ profile.user.email }}</span>
+        </div>
+      </div>
+
+      <!-- Téléphone -->
+      <div class="field">
+        <div class="field-icon"><ion-icon name="call-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Téléphone</span>
+          <input *ngIf="isEditing" class="field-input" [(ngModel)]="editForm.phone" placeholder="+216 XX XXX XXX" type="tel" />
+          <span *ngIf="!isEditing" class="field-val">{{ profile.client.phone || '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Localisation -->
+      <div class="field last">
+        <div class="field-icon"><ion-icon name="location-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Localisation</span>
+          <input *ngIf="isEditing" class="field-input" [(ngModel)]="editForm.location" placeholder="Tunis, Tunisia" />
+          <span *ngIf="!isEditing" class="field-val">{{ profile.client.location || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ENTREPRISE ─────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <ion-icon name="business-outline" class="card-icon"></ion-icon>
+        <h3 class="card-title">Entreprise</h3>
+      </div>
+
+      <!-- Entreprise -->
+      <div class="field">
+        <div class="field-icon"><ion-icon name="business-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Nom de l'entreprise</span>
+          <input *ngIf="isEditing" class="field-input" [(ngModel)]="editForm.company" placeholder="MyStartup" />
+          <span *ngIf="!isEditing" class="field-val">{{ profile.client.company || '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Site web -->
+      <div class="field">
+        <div class="field-icon"><ion-icon name="globe-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Site web</span>
+          <input *ngIf="isEditing" class="field-input" [(ngModel)]="editForm.website" placeholder="https://monsite.com" type="url" />
+          <a *ngIf="!isEditing && profile.client.website" class="field-val field-link" [href]="profile.client.website" target="_blank">
+            {{ profile.client.website }}
+          </a>
+          <span *ngIf="!isEditing && !profile.client.website" class="field-val">—</span>
+        </div>
+      </div>
+
+      <!-- Avatar URL (en mode édition seulement) -->
+      <div class="field" *ngIf="isEditing">
+        <div class="field-icon"><ion-icon name="image-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">URL de la photo</span>
+          <input class="field-input" [(ngModel)]="editForm.avatar" placeholder="https://cdn.../photo.jpg" />
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="field last">
+        <div class="field-icon"><ion-icon name="document-text-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Bio</span>
+          <textarea *ngIf="isEditing" class="field-input field-textarea" [(ngModel)]="editForm.bio" placeholder="Décrivez votre activité..." rows="3"></textarea>
+          <span *ngIf="!isEditing" class="field-val bio-val">{{ profile.client.bio || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SÉCURITÉ ───────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <ion-icon name="shield-checkmark-outline" class="card-icon"></ion-icon>
+        <h3 class="card-title">Sécurité</h3>
+      </div>
+
+      <!-- Changer mot de passe -->
+      <div class="field field-tappable" (click)="openPwModal()">
+        <div class="field-icon"><ion-icon name="lock-closed-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Mot de passe</span>
+          <span class="field-val">••••••••</span>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="field-chevron"></ion-icon>
+      </div>
+
+      <!-- Membre depuis -->
+      <div class="field last">
+        <div class="field-icon"><ion-icon name="calendar-outline"></ion-icon></div>
+        <div class="field-body">
+          <span class="field-lbl">Membre depuis</span>
+          <span class="field-val">{{ profile.user.created_at | date:'dd MMM yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOUTON SAVING ──────────────────────────────────────── -->
+    <div class="save-section" *ngIf="isEditing">
+      <ion-button expand="block" class="save-btn" (click)="saveProfile()" [disabled]="isSaving">
+        <ion-spinner *ngIf="isSaving" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSaving" name="checkmark-outline" slot="start"></ion-icon>
+        {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder les modifications' }}
+      </ion-button>
+      <ion-button expand="block" fill="outline" class="cancel-btn" (click)="cancelEdit()">
+        Annuler
+      </ion-button>
+    </div>
+
+    <!-- ── DÉCONNEXION ────────────────────────────────────────── -->
+    <div class="logout-section" *ngIf="!isEditing">
+      <ion-button expand="block" fill="outline" class="logout-btn" (click)="logout()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        Se déconnecter
+      </ion-button>
+    </div>
+
+  </div>
+
+  <!-- ══ MODAL CHANGER MOT DE PASSE ═══════════════════════════ -->
+  <div class="modal-overlay" *ngIf="showPwModal" (click)="closePwModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-top">
+        <h3 class="modal-title">Changer le mot de passe</h3>
+        <ion-button fill="clear" (click)="closePwModal()">
+          <ion-icon name="close-outline" class="toolbar-icon"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field">
+          <label class="modal-lbl">Ancien mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.old_password" type="password" placeholder="••••••" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-lbl">Nouveau mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.new_password" type="password" placeholder="••••••" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-lbl">Confirmer le mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.confirm_password" type="password" placeholder="••••••" />
+        </div>
+        <p class="modal-error" *ngIf="pwError">{{ pwError }}</p>
+      </div>
+
+      <ion-button expand="block" class="modal-save-btn" (click)="submitChangePassword()" [disabled]="pwSaving">
+        <ion-spinner *ngIf="pwSaving" name="crescent" slot="start"></ion-spinner>
+        {{ pwSaving ? 'Modification...' : 'Modifier le mot de passe' }}
+      </ion-button>
+
+    </div>
+  </div>
+
+  <div style="height: 50px;"></div>
+</ion-content>
