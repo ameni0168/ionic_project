@@ -58,7 +58,7 @@ export class LoginPage implements OnInit {
     this.isLoading = true;
     const formData = this.loginForm.value;
 
-    // Appelle ton API
+    // Appelle API
     this.api.login(formData).subscribe({
       next: (res: any) => {
         this.isLoading = false;
