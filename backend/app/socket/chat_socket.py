@@ -1,7 +1,10 @@
 from flask_socketio import emit, join_room
-from app import socketio
-from app.services.mesaage_service import create_message
+from app.extension import socketio
+from app.services.message_service import create_message
 
+@socketio.on("connect")
+def handle_connect():
+    print("✅ client connected")
 @socketio.on("join")
 def handle_join(data):
     join_room(data["conversationId"])
