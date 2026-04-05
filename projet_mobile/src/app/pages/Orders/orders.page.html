@@ -1,0 +1,174 @@
+<ion-header mode="ios">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>My Orders</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleSort($event)">
+        <ion-icon slot="icon-only" name="swap-vertical-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Barre de recherche -->
+  <ion-toolbar class="search-toolbar">
+    <div class="search-wrapper">
+      <ion-icon name="search-outline" class="search-icon"></ion-icon>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by title, client, message..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+      />
+      <ion-button
+        *ngIf="searchQuery"
+        fill="clear"
+        size="small"
+        class="clear-btn"
+        (click)="clearSearch()">
+        <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <!-- ── Sort menu (hors header, position calculée par JS) ── -->
+  <div class="sort-overlay" *ngIf="showSortMenu" (click)="showSortMenu=false"></div>
+  <div class="sort-menu"
+       *ngIf="showSortMenu"
+       @fadeIn
+       [style.top.px]="sortMenuY"
+       [style.right.px]="sortMenuRight">
+    <div class="sort-title">Sort by</div>
+    <div *ngFor="let s of sortOptions"
+         class="sort-item"
+         [class.sort-active]="sortBy === s.value"
+         (click)="setSort(s.value)">
+      <ion-icon *ngIf="sortBy === s.value" name="checkmark" class="sort-check"></ion-icon>
+      {{ s.label }}
+    </div>
+  </div>
+
+  <!-- ── Filtres statut (cartes compteurs) ── -->
+  <div class="filter-container">
+    <div
+      *ngFor="let f of filters"
+      class="filter-card"
+      [class.active]="activeFilter === f.value"
+      [attr.data-color]="f.color"
+      (click)="setFilter(f.value)">
+      <ion-icon [name]="f.icon" class="filter-icon" [color]="activeFilter === f.value ? f.color : 'medium'"></ion-icon>
+      <div class="count" [style.color]="activeFilter === f.value ? 'var(--ion-color-' + f.color + ')' : ''">
+        {{ getCount(f.value) }}
+      </div>
+      <div class="label">{{ f.label }}</div>
+    </div>
+  </div>
+
+  <!-- ── Résumé recherche active ── -->
+  <div class="search-summary" *ngIf="searchQuery || activeFilter" @fadeIn>
+    <span>
+      {{ orders.length }} result{{ orders.length !== 1 ? 's' : '' }}
+      <span *ngIf="activeFilter"> · {{ getStatusLabel(activeFilter) }}</span>
+      <span *ngIf="searchQuery"> · "{{ searchQuery }}"</span>
+    </span>
+    <ion-button fill="clear" size="small" (click)="clearSearch(); setFilter('')">
+      Clear all
+    </ion-button>
+  </div>
+
+  <!-- ── Loading ── -->
+  <div class="loading" *ngIf="isLoading">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- ── Empty state ── -->
+  <div class="empty-state" *ngIf="!isLoading && orders.length === 0" @fadeIn>
+    <ion-icon name="{{ searchQuery ? 'search-outline' : 'document-text-outline' }}"></ion-icon>
+    <h3>{{ searchQuery ? 'No results found' : 'No orders yet' }}</h3>
+    <p>{{ searchQuery ? 'Try different keywords.' : 'Orders from clients will appear here.' }}</p>
+    <ion-button *ngIf="searchQuery || activeFilter" fill="outline" size="small"
+                (click)="clearSearch(); setFilter('')">
+      Clear filters
+    </ion-button>
+  </div>
+
+  <!-- ── Liste commandes ── -->
+  <div class="orders-list" *ngIf="!isLoading && orders.length > 0">
+    <div class="order-card" *ngFor="let order of orders" @fadeInUp>
+
+      <!-- Bande statut (côté gauche) -->
+      <div class="status-stripe" [attr.data-status]="order.status"></div>
+
+      <div class="card-body">
+
+        <!-- Header -->
+        <div class="card-header">
+          <div class="card-title-block">
+            <h3>{{ order.title }}</h3>
+            <div class="client">
+              <ion-icon name="person-circle-outline"></ion-icon>
+              {{ order.clientName }}
+            </div>
+          </div>
+          <div class="status-badge-wrap">
+            <ion-badge [color]="getStatusColor(order.status)" class="status-badge">
+              <ion-icon [name]="getStatusIcon(order.status)"></ion-icon>
+              {{ getStatusLabel(order.status) }}
+            </ion-badge>
+          </div>
+        </div>
+
+        <!-- Prix + date -->
+        <div class="card-meta">
+          <span class="price">${{ order.price }}</span>
+          <span class="date">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ formatDate(order.createdAt) }}
+          </span>
+        </div>
+
+        <!-- Message client -->
+        <div *ngIf="order.message" class="message">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+          <span>{{ order.message }}</span>
+        </div>
+
+        <!-- Requirements -->
+        <div *ngIf="order.requirements" class="requirements">
+          <ion-icon name="list-outline"></ion-icon>
+          <span>{{ order.requirements }}</span>
+        </div>
+
+        <!-- Date de complétion -->
+        <div *ngIf="order.status === 'completed' && order.completedAt" class="completed">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          Delivered {{ formatDate(order.completedAt!) }}
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="actions" *ngIf="getActions(order).length > 0">
+          <ion-button
+            *ngFor="let action of getActions(order)"
+            [color]="action.color"
+            (click)="confirmAction(order, action)"
+            expand="block">
+            <ion-icon [name]="action.icon" slot="start"></ion-icon>
+            {{ action.label }}
+          </ion-button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Padding bas de page -->
+  <div style="height: 40px;"></div>
+
+</ion-content>

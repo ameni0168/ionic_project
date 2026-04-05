@@ -19,7 +19,7 @@
   .navbar-logo {
     font-size: 20px;
     font-weight: 700;
-    color: #0a0f1e;
+    color: var(--color-secondary-dark);
     letter-spacing: -0.5px;
   }
 
@@ -36,10 +36,10 @@
   }
 
   .nav-signup-btn {
-    --background: #14a800;
-    --background-hover: #0d7a00;
+    --background: var(--color-primary);
+    --background-hover: var(--color-primary-dark);
     --border-radius: 8px;
-    --color: #ffffff;
+    --color: var(--color-white);
     font-size: 13px;
     font-weight: 600;
     height: 36px;
@@ -79,15 +79,15 @@
   ion-icon { font-size: 15px; }
 
   &.active {
-    background: #14a800;
-    border-color: #14a800;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
     color: white;
   }
 }
 
 // ── HERO ─────────────────────────────────────
 .hero {
-  background: #0a0f1e;
+  background: var(--color-secondary-dark);
   padding: 36px 20px 40px;
   position: relative;
   overflow: hidden;
@@ -98,7 +98,7 @@
   position: absolute;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(20,168,0,0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 70%);
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
@@ -110,9 +110,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(20,168,0,0.15);
-  border: 1px solid rgba(20,168,0,0.3);
-  color: #4ade80;
+  background: rgba(var(--color-primary-rgb), 0.15);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+  color: #4dd899;
   font-size: 12px;
   font-weight: 600;
   padding: 5px 14px;
@@ -123,7 +123,7 @@
   .badge-dot {
     width: 7px;
     height: 7px;
-    background: #4ade80;
+    background: #4dd899;
     border-radius: 50%;
     animation: pulse 2s infinite;
   }
@@ -144,7 +144,7 @@
 }
 
 .hero-accent {
-  color: #14a800;
+  color: var(--color-primary);
 }
 
 .hero-sub {
@@ -187,7 +187,7 @@
   }
 
   .search-btn {
-    background: #14a800;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 8px;
@@ -276,8 +276,8 @@
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #14a800;
-  background: #e6f4e6;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.1);
   padding: 4px 12px;
   border-radius: 100px;
   margin-bottom: 8px;
@@ -286,7 +286,7 @@
 .section-title {
   font-size: 22px;
   font-weight: 700;
-  color: #0a0f1e;
+  color: var(--color-secondary-dark);
   letter-spacing: -0.5px;
 }
 
@@ -309,7 +309,7 @@
   .step-num {
     font-size: 11px;
     font-weight: 700;
-    color: #14a800;
+    color: var(--color-primary);
     letter-spacing: 0.5px;
     margin-bottom: 4px;
   }
@@ -317,7 +317,7 @@
   .step-title {
     font-size: 14px;
     font-weight: 600;
-    color: #0a0f1e;
+    color: var(--color-secondary-dark);
     margin-bottom: 6px;
   }
 
@@ -344,7 +344,7 @@
   transition: all 0.2s ease;
 
   .cat-icon { font-size: 22px; margin-bottom: 6px; }
-  .cat-name { font-size: 11px; font-weight: 600; color: #0a0f1e; }
+  .cat-name { font-size: 11px; font-weight: 600; color: var(--color-secondary-dark); }
   .cat-count { font-size: 10px; color: #9ca3af; margin-top: 2px; }
 }
 
@@ -383,7 +383,7 @@
   .freelancer-name {
     font-size: 15px;
     font-weight: 600;
-    color: #0a0f1e;
+    color: var(--color-secondary-dark);
   }
 
   .freelancer-title {
@@ -415,7 +415,7 @@
   .freelancer-rate {
     font-size: 16px;
     font-weight: 700;
-    color: #0a0f1e;
+    color: var(--color-secondary-dark);
 
     span {
       font-size: 11px;
@@ -434,7 +434,7 @@
 
 // ── CTA ──────────────────────────────────────
 .cta-section {
-  background: #0a0f1e;
+  background: var(--color-secondary-dark);
   padding: 48px 24px;
   text-align: center;
   position: relative;
@@ -445,7 +445,7 @@
   position: absolute;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(20,168,0,0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -464,7 +464,7 @@
   z-index: 1;
 }
 
-.cta-accent { color: #14a800; }
+.cta-accent { color: var(--color-primary); }
 
 .cta-sub {
   font-size: 14px;
@@ -483,8 +483,8 @@
   z-index: 1;
 
   .cta-btn-primary {
-    --background: #14a800;
-    --background-activated: #0d7a00;
+    --background: var(--color-primary);
+    --background-activated: var(--color-primary-dark);
     --border-radius: 12px;
     --color: white;
     font-weight: 600;

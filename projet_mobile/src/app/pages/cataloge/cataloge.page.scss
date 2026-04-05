@@ -1,0 +1,120 @@
+:host {
+  --bg:        var(--color-background); --card: var(--color-surface); --card2: var(--color-background-secondary);
+  --input-bg:  var(--color-background-tertiary); --accent: var(--color-primary); --accent-glow: rgba(var(--color-primary-rgb),0.25);
+  --green:     var(--color-success); --yellow: var(--color-warning); --red: var(--color-error);
+  --t1: var(--color-text-primary); --t2: var(--color-text-secondary); --t3: var(--color-text-tertiary);
+  --border: var(--color-border); --border-a: rgba(var(--color-primary-rgb),0.35);
+  --r: 16px; --r-sm: 10px;
+}
+
+.catalog-toolbar { --background: var(--bg); --border-width: 0;
+  .catalog-title { font-size: 20px; font-weight: 800; color: var(--t1); }
+  .filter-btn { position: relative; ion-icon { color: var(--t2); font-size: 22px; }
+    .filter-badge { position: absolute; top: 4px; right: 4px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  }
+}
+.catalog-content { --background: var(--bg); }
+
+// ── SEARCH ────────────────────────────────────────────────────
+.search-section { padding: 14px 14px 10px;
+  .search-row { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 50px; overflow: hidden; background: var(--card);
+    &:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+    .search-input { flex: 1; border: none; outline: none; padding: 13px 16px; font-size: 15px; color: var(--t1); background: transparent; &::placeholder { color: var(--t3); } }
+    .search-btn { background: var(--accent); border: none; cursor: pointer; width: 54px; height: 50px; display: flex; align-items: center; justify-content: center; ion-icon { font-size: 20px; color: #fff; } }
+    .clear-btn { background: var(--card2); }
+  }
+}
+
+// ── FILTER PANEL ──────────────────────────────────────────────
+.filter-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin: 0 14px 12px; padding: 18px 16px;
+  .filter-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    h3 { font-size: 16px; font-weight: 800; color: var(--t1); margin: 0; }
+    .reset-link { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+  }
+  .filter-group { margin-bottom: 16px;
+    .filter-lbl { display: block; font-size: 11px; color: var(--t2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .filter-select, .filter-input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border-a); border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--t1); outline: none; option { background: var(--card2); } }
+    .price-row { display: flex; align-items: center; gap: 8px; .filter-input { flex: 1; } .price-sep { color: var(--t2); } }
+  }
+  .sort-chips { display: flex; flex-wrap: wrap; gap: 8px;
+    .sort-chip { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 600; color: var(--t2); cursor: pointer;
+      &.active { border-color: var(--accent); background: rgba(79,110,247,0.15); color: var(--accent); }
+    }
+  }
+  .apply-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; box-shadow: 0 4px 16px var(--accent-glow); ion-icon { font-size: 18px; } }
+}
+
+// ── RESULTS HEADER ────────────────────────────────────────────
+.results-header { padding: 10px 14px 6px; .results-count { font-size: 13px; color: var(--t2); } .inline-spinner { --color: var(--accent); width: 18px; height: 18px; } }
+
+// ── NO RESULTS ────────────────────────────────────────────────
+.no-results { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--t3); gap: 8px;
+  ion-icon { font-size: 48px; }
+  p { font-size: 16px; font-weight: 700; color: var(--t2); margin: 0; }
+  span { font-size: 13px; }
+}
+
+// ── DIVIDER ───────────────────────────────────────────────────
+.page-divider { height: 8px; background: var(--card); margin: 4px 0; }
+
+// ── CATEGORY CHIPS ────────────────────────────────────────────
+.cat-section { padding: 16px 14px 10px;
+  .cat-chips { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; &::-webkit-scrollbar { display: none; }
+    .cat-chip { flex-shrink: 0; border: 1.5px solid var(--border); border-radius: 50px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--t2); background: var(--card); cursor: pointer; white-space: nowrap; transition: all 0.15s; &:active { border-color: var(--accent); background: rgba(79,110,247,0.15); color: var(--accent); } }
+  }
+}
+
+// ── SECTION HEADER ────────────────────────────────────────────
+.section-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 14px 10px;
+  .section-title { font-size: 18px; font-weight: 800; color: var(--t1); margin: 0; }
+  .see-all { font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; }
+}
+.featured-section .section-title { padding: 0; }
+
+// ── GIG GRID ──────────────────────────────────────────────────
+.gig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 14px 12px; }
+
+// ── GIG CARD ──────────────────────────────────────────────────
+.gig-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+  &:active { transform: scale(0.97); border-color: var(--accent); }
+
+  .gig-thumb { height: 110px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .gig-category-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; font-weight: 700; border-radius: 20px; padding: 2px 8px; text-transform: uppercase; backdrop-filter: blur(4px); }
+  }
+
+  .gig-body { padding: 10px;
+    .freelancer-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+      .fl-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border); }
+      .fl-name { font-size: 11px; font-weight: 600; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+    .gig-title { font-size: 12px; font-weight: 600; color: var(--t1); line-height: 1.4; margin: 0 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .gig-stars { display: flex; align-items: center; gap: 2px; margin-bottom: 6px;
+      .star-y { font-size: 11px; color: var(--yellow); }
+      .gig-rating { font-size: 11px; font-weight: 700; color: var(--t1); margin-left: 2px; }
+      .gig-reviews { font-size: 10px; color: var(--t2); }
+    }
+    .gig-footer { display: flex; align-items: center; justify-content: space-between;
+      .gig-price { font-size: 11px; color: var(--t2); strong { color: var(--accent); font-size: 13px; font-weight: 800; } }
+      .gig-delivery { font-size: 10px; color: var(--t3); display: flex; align-items: center; gap: 2px; ion-icon { font-size: 11px; } }
+    }
+  }
+
+  // Skeleton
+  &.skeleton-card .gig-thumb { background: var(--card2); }
+  .sk-img  { height: 110px; border-radius: 0; }
+  .sk-body { padding: 10px; }
+  .sk-name { height: 16px; width: 60%; margin-bottom: 6px; border-radius: 4px; }
+  .sk-title{ height: 10px; width: 90%; margin-bottom: 4px; border-radius: 4px; }
+  .sk-price{ height: 12px; width: 40%; border-radius: 4px; }
+}
+
+// ── LOAD MORE ─────────────────────────────────────────────────
+.load-more-btn { width: calc(100% - 28px); margin: 0 14px 12px; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; &:active { background: var(--card2); } }
+
+// ── TAB BAR ───────────────────────────────────────────────────
+.custom-tab-bar { --background: var(--color-surface); border-top: 1px solid var(--border); height: 62px; padding-bottom: env(safe-area-inset-bottom);
+  .tab-btn { --color: var(--t2); ion-icon { font-size: 22px; } ion-label { font-size: 10px; font-weight: 500; } }
+  .tab-active { --color: var(--accent); }
+}

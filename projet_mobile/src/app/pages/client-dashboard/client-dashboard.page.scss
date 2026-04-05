@@ -1,24 +1,24 @@
 
 :host {
   // ── Palette principale ──────────────────────────────────
-  --bg-dark:        #0d1117;       // fond global très sombre
-  --bg-card:        #161b27;       // cartes sombres
-  --bg-card-2:      #1e2535;       // cartes secondaires
-  --bg-input:       #1a2030;       // champs / inputs
+  --bg-dark:        var(--color-background);       // fond global
+  --bg-card:        var(--color-surface);       // cartes
+  --bg-card-2:      var(--color-background-secondary);       // cartes secondaires
+  --bg-input:       var(--color-background-tertiary);       // champs / inputs
 
-  // ── Couleur d'accent : bleu-violet (comme le bouton "Post Job") ──
-  --accent:         #4f6ef7;       // bleu-violet principal
-  --accent-dark:    #3a55d4;
-  --accent-glow:    rgba(79, 110, 247, 0.25);
+  // ── Couleur d'accent : vert marketplace ──
+  --accent:         var(--color-primary);       // vert principal
+  --accent-dark:    var(--color-primary-dark);
+  --accent-glow:    rgba(var(--color-primary-rgb), 0.25);
 
   // ── Textes ──────────────────────────────────────────────
-  --text-primary:   #ffffff;
-  --text-secondary: #8b95a8;
-  --text-muted:     #4a5568;
+  --text-primary:   var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted:     var(--color-text-tertiary);
 
   // ── Bordures ────────────────────────────────────────────
-  --border:         rgba(255,255,255,0.07);
-  --border-accent:  rgba(79,110,247,0.4);
+  --border:         var(--color-border);
+  --border-accent:  rgba(var(--color-primary-rgb), 0.4);
 
   // ── Succès (vert gardé pour certains éléments) ──────────
   --green:          #22c55e;
@@ -275,7 +275,7 @@
 
     &.cat-card--active {
       border-color: var(--accent);
-      background: rgba(79,110,247,0.1);
+      background: rgba(var(--color-primary-rgb), 0.1);
       box-shadow: 0 0 0 2px var(--accent-glow);
 
       .cat-icon-box ion-icon { color: var(--accent); }

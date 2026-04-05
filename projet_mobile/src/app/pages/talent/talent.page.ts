@@ -1,8 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/pages/talent/talent.page.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { FreelancerService } from 'src/app/services/freelancer.service';
+
+type SortType = 'rating' | 'rate_asc' | 'rate_desc' | 'newest' | 'top_success';
 
 @Component({
   selector: 'app-talent',
@@ -11,200 +16,384 @@ import { IonicModule } from '@ionic/angular';
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule],
 })
-export class TalentPage implements OnInit {
+export class TalentPage implements OnInit, OnDestroy {
 
-  // ── Search ──────────────────────────────────────────────────
-  searchQuery    = '';
-  discoverOpen   = false;
+  readonly Math = Math;
+
+  private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
+
+  // ── LOADING ─────────────────────────────
+  isLoadingLocal = true;
+  isLoadingTop = true;
+  isLoadingSearch = false;
+
+  // ── SEARCH ──────────────────────────────
+  searchQuery = '';
+  isSearchMode = false;
+  searchResults: any[] = [];
+  searchTotal = 0;
+  searchPage = 1;
+  hasMoreResults = false;
+
+  // ── DISCOVER ────────────────────────────
+  discoverOpen = false;
   selectedDiscover = 'Discover';
+
   discoverOptions = [
     'Discover',
     'Talent in my area',
     'Top rated',
-    'Rising talents',
-    'Recently active',
+    'Recently active'
   ];
 
-  // ── Talent local (Tunisia) ───────────────────────────────────
-  localTalents = [
-    {
-      id: 1,
-      name:        'Khalil B.',
-      title:       'Web Scraping & Big Data Analyst',
-      avatar:      'assets/talents/khalil.jpg',
-      hourlyRate:  20,
-      earned:      null,
-      jobSuccess:  null,
-      online:      false,
-      fav:         false,
-    },
-    {
-      id: 2,
-      name:        'Sana M.',
-      title:       'React & Vue.js Developer',
-      avatar:      'assets/talents/sana.jpg',
-      hourlyRate:  25,
-      earned:      '$5K+',
-      jobSuccess:  88,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 3,
-      name:        'Yassine T.',
-      title:       'Mobile Developer · Flutter',
-      avatar:      'assets/talents/yassine.jpg',
-      hourlyRate:  30,
-      earned:      '$8K+',
-      jobSuccess:  91,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 4,
-      name:        'Ines R.',
-      title:       'UI/UX Designer & Figma Expert',
-      avatar:      'assets/talents/ines.jpg',
-      hourlyRate:  22,
-      earned:      '$3K+',
-      jobSuccess:  85,
-      online:      false,
-      fav:         false,
-    },
-  ];
-
-  // ── Talent high Job Success ──────────────────────────────────
-  topTalents = [
-    {
-      id: 10,
-      name:        'Kareem M.',
-      title:       'Video Editor',
-      avatar:      'assets/talents/kareem.jpg',
-      hourlyRate:  20,
-      earned:      '$10K+',
-      jobSuccess:  93,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 11,
-      name:        'Sarah J.',
-      title:       'Full-Stack Developer',
-      avatar:      'assets/talents/sarah.jpg',
-      hourlyRate:  85,
-      earned:      '$50K+',
-      jobSuccess:  98,
-      online:      true,
-      fav:         false,
-    },
-    {
-      id: 12,
-      name:        'Ahmed K.',
-      title:       'SEO & Digital Marketing',
-      avatar:      'assets/talents/ahmed.jpg',
-      hourlyRate:  40,
-      earned:      '$20K+',
-      jobSuccess:  96,
-      online:      false,
-      fav:         false,
-    },
-    {
-      id: 13,
-      name:        'Maria L.',
-      title:       'Copywriter & Content Strategist',
-      avatar:      'assets/talents/maria.jpg',
-      hourlyRate:  35,
-      earned:      '$15K+',
-      jobSuccess:  94,
-      online:      true,
-      fav:         false,
-    },
-  ];
-
-  // ── Browse by category ──────────────────────────────────────
   browseCategories = [
-    {
-      name: 'Accounting & Consulting',
-      subs: ['Accounting', 'Bookkeeping', 'Business Analysis & Strategy', 'Career Coaching', 'Financial Planning', 'Management Consulting'],
-    },
-    {
-      name: 'Development & IT',
-      subs: ['Web Development', 'Mobile Apps', 'DevOps & Cloud', 'Cybersecurity', 'AI & Machine Learning', 'Database Administration'],
-    },
-    {
-      name: 'Design & Creative',
-      subs: ['Logo Design', 'UI/UX Design', 'Illustration', 'Video Production', 'Animation', 'Photography'],
-    },
-    {
-      name: 'Sales & Marketing',
-      subs: ['Digital Marketing', 'SEO / SEM', 'Social Media', 'Email Marketing', 'Influencer Marketing', 'Lead Generation'],
-    },
-    {
-      name: 'Writing & Translation',
-      subs: ['Content Writing', 'Copywriting', 'Translation', 'Proofreading', 'Technical Writing', 'Ghost Writing'],
-    },
-    {
-      name: 'Admin & Customer Support',
-      subs: ['Virtual Assistant', 'Data Entry', 'Customer Service', 'Project Management', 'Online Research'],
-    },
+  {
+    name: 'Development & IT',
+    subs: ['Web Development', 'Mobile Apps', 'AI & ML'],
+  },
+  {
+    name: 'Design & Creative',
+    subs: ['UI/UX Design', 'Logo Design', 'Video'],
+  },
+  {
+    name: 'Marketing',
+    subs: ['SEO', 'Social Media', 'Content Writing'],
+  },
+  {
+    name: 'Business',
+    subs: ['Finance', 'Consulting', 'Project Management'],
+  }
+];
+
+  // ── FILTERS ─────────────────────────────
+  showFilters = false;
+
+  filters: {
+    category: string;
+    min_rate: number | null;
+    max_rate: number | null;
+    available_only: boolean;
+    sort: SortType;
+  } = {
+    category: '',
+    min_rate: null,
+    max_rate: null,
+    available_only: false,
+    sort: 'rating',
+  };
+
+  sortOptions: { value: SortType; label: string }[] = [
+    { value: 'rating', label: 'Mieux notés' },
+    { value: 'top_success', label: 'Top Success' },
+    { value: 'rate_asc', label: 'Prix croissant' },
+    { value: 'rate_desc', label: 'Prix décroissant' },
+    { value: 'newest', label: 'Plus récents' },
   ];
-  menu: any;
 
-  constructor(private router: Router) {}
+  activeFiltersCount = 0;
 
+  // ── DATA ────────────────────────────────
+  localTalents: any[] = [];
+  topTalents: any[] = [];
+
+  constructor(
+    private talentSvc: FreelancerService,
+    private navCtrl: NavController
+  ) {}
+
+  // ────────────────────────────────────────
   ngOnInit() {
-    // TODO: charger depuis vos services
-  }
-  openMenu() {
-    this.menu.open(); // ouvre le menu latéral
+    this.loadLocal();
+    this.loadTop();
+    this.setupSearch();
   }
 
-  // ── Search ──────────────────────────────────────────────────
-  onSearch() {
-    if (!this.searchQuery.trim()) return;
-    this.router.navigate(['/talent/search'], {
-      queryParams: { q: this.searchQuery.trim() },
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── SEARCH STREAM ───────────────────────
+  private setupSearch() {
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(q => {
+
+      const query = q.trim();
+
+      if (query.length >= 2) {
+        this.isSearchMode = true;
+        this.doSearch(query, true);
+      }
+
+      if (query.length === 0) {
+        this.isSearchMode = false;
+        this.searchResults = [];
+      }
     });
   }
 
-  toggleDiscover() { this.discoverOpen = !this.discoverOpen; }
+  onSearchInput() {
+    this.searchSubject.next(this.searchQuery);
+  }
 
+  onSearch() {
+    const q = this.searchQuery.trim();
+    if (!q) return this.clearSearch();
+    this.isSearchMode = true;
+    this.doSearch(q, true);
+  }
+
+  // ── MAIN SEARCH ─────────────────────────
+  private doSearch(q: string, reset = false) {
+
+    if (reset) {
+      this.searchPage = 1;
+      this.searchResults = [];
+    }
+
+    this.isLoadingSearch = true;
+
+    const params: any = {
+      page: this.searchPage,
+      per_page: 10,
+      sort: this.filters.sort,
+    };
+
+    if (q) params.q = q;
+
+    if (this.filters.category) {
+      params.category = this.filters.category;
+    }
+
+    if (this.filters.min_rate !== null) {
+      params.min_rate = this.filters.min_rate;
+    }
+
+    if (this.filters.max_rate !== null) {
+      params.max_rate = this.filters.max_rate;
+    }
+
+    if (this.filters.available_only) {
+      params.available_only = true;
+    }
+
+    this.talentSvc.searchTalents(params).subscribe({
+      next: (res: any) => {
+
+        this.isLoadingSearch = false;
+
+        // ✅ BACKEND FIX: freelancers NOT talents
+        const list = res.freelancers || [];
+
+        const mapped = this.map(list);
+
+        this.searchResults = reset
+          ? mapped
+          : [...this.searchResults, ...mapped];
+
+        this.searchTotal = res.total || 0;
+        this.hasMoreResults = this.searchPage < (res.pages || 1);
+      },
+
+      error: (err) => {
+        console.error('Search error:', err);
+        this.isLoadingSearch = false;
+      }
+    });
+  }
+
+  // ── LOCAL TALENTS ───────────────────────
+  private loadLocal() {
+    this.isLoadingLocal = true;
+
+    this.talentSvc.getLocalTalents('Tunisia').subscribe({
+      next: (res: any) => {
+        this.isLoadingLocal = false;
+
+        const list = res.freelancers || []; // FIXED
+
+        this.localTalents = this.map(list);
+      },
+      error: () => this.isLoadingLocal = false,
+    });
+  }
+
+  // ── TOP TALENTS ─────────────────────────
+  private loadTop() {
+    this.isLoadingTop = true;
+
+    this.talentSvc.getTopRated().subscribe({
+      next: (res: any) => {
+        this.isLoadingTop = false;
+
+        const list = res.freelancers || []; // FIXED
+
+        this.topTalents = this.map(list);
+      },
+      error: () => this.isLoadingTop = false,
+    });
+  }
+
+  // ── FILTERS ─────────────────────────────
+  applyFilters() {
+    this.showFilters = false;
+    this.countFilters();
+    this.doSearch(this.searchQuery.trim(), true);
+  }
+
+  resetFilters() {
+    this.filters = {
+      category: '',
+      min_rate: null,
+      max_rate: null,
+      available_only: false,
+      sort: 'rating',
+    };
+
+    this.activeFiltersCount = 0;
+    this.doSearch('', true);
+  }
+
+  private countFilters() {
+    let c = 0;
+    if (this.filters.category) c++;
+    if (this.filters.min_rate !== null) c++;
+    if (this.filters.max_rate !== null) c++;
+    if (this.filters.available_only) c++;
+    if (this.filters.sort !== 'rating') c++;
+    this.activeFiltersCount = c;
+  }
+
+  // ── DISCOVER ────────────────────────────
   selectDiscover(opt: string) {
     this.selectedDiscover = opt;
     this.discoverOpen = false;
-    // TODO: filtrer les résultats selon opt
+
+    if (opt === 'Top rated') {
+      this.filters.sort = 'rating';
+      this.doSearch('', true);
+    }
+
+    if (opt === 'Talent in my area') {
+      this.loadLocal();
+      this.isSearchMode = false;
+    }
+
+    if (opt === 'Recently active') {
+      this.filters.sort = 'newest';
+      this.doSearch('', true);
+    }
   }
 
-  // ── Navigation ───────────────────────────────────────────────
-  goTo(path: string) { this.router.navigate([path]); }
+  // ── PAGINATION ──────────────────────────
+  loadMore() {
+    this.searchPage++;
+    this.doSearch(this.searchQuery.trim(), false);
+  }
 
+  clearSearch() {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.isSearchMode = false;
+    this.searchTotal = 0;
+  }
 
-  /**
-   * Navigue vers le profil du talent.
-   * La page de profil sera /talent-profile/:id
-   */
+  // ── NAVIGATION ──────────────────────────
   goToProfile(talent: any) {
-    this.router.navigate(['/talent-profile', talent.id], { state: { talent } });
+    this.navCtrl.navigateForward(
+      ['/talent-profile', talent.id],
+      { state: { talent } }
+    );
   }
 
-  // ── Favoris ─────────────────────────────────────────────────
+  goTo(path: string) {
+    this.navCtrl.navigateForward([path]);
+  }
+
+  openMenu() {}
+
+  // ── MAPPING BACKEND → FRONTEND ─────────
+  private map(list: any[]) {
+    return list.map(t => ({
+      id: t.id || t._id,
+      name: t.full_name || 'Freelancer',
+      title: t.title || '',
+      avatar: t.avatar || '',
+      hourlyRate: t.hourly_rate || 0,
+      location: t.location || '',
+      rating: t.stats?.rating || 0,
+      reviews: t.stats?.review_count || 0,
+      jobSuccess: t.stats?.job_success || 0,
+      online: t.is_available || false,
+      fav: false,
+    }));
+  }
+
+  // ── STARS ───────────────────────────────
+  getStars(r: number) {
+    return Array(Math.max(0, Math.round(r || 0)));
+  }
+
+  getEmptyStars(r: number) {
+    return Array(Math.max(0, 5 - Math.round(r || 0)));
+  }
+
+  // ── UI ──────────────────────────────────
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  toggleDiscover() {
+    this.discoverOpen = !this.discoverOpen;
+  }
+
   toggleFav(event: Event, talent: any) {
     event.stopPropagation();
     talent.fav = !talent.fav;
-    // TODO: appeler votre service favoris
   }
 
-  // ── See more ─────────────────────────────────────────────────
-  seeMoreLocal()    { this.router.navigate(['/talent/local']);    }
-  seeMoreProfiles() { this.router.navigate(['/talent/top-rated']); }
+  seeMoreLocal() {
+    this.isSearchMode = true;
+    this.isLoadingSearch = true;
+    this.searchPage = 1;
+    this.hasMoreResults = false;
 
-  // ── Browse category ──────────────────────────────────────────
+    this.talentSvc.getLocalTalents('Tunisia').subscribe({
+      next: (res: any) => {
+        this.isLoadingSearch = false;
+        const list = res.freelancers || [];
+        this.searchResults = this.map(list);
+        this.searchTotal = res.total ?? this.searchResults.length;
+        this.hasMoreResults = false;
+      },
+      error: () => {
+        this.isLoadingSearch = false;
+      },
+    });
+  }
+
+  seeMoreProfiles() {
+    this.filters.sort = 'top_success';
+    this.isSearchMode = true;
+    this.doSearch('', true);
+  }
+
   selectBrowseCategory(cat: any) {
-    this.router.navigate(['/talent'], { queryParams: { category: cat.name } });
+    this.filters.category = cat.name;
+    this.isSearchMode = true;
+    this.searchQuery = '';
+    this.doSearch('', true);
+    this.countFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   searchBySubCategory(sub: string) {
-    this.router.navigate(['/talent/search'], { queryParams: { q: sub } });
+    this.searchQuery = sub;
+    this.isSearchMode = true;
+    this.doSearch(sub, true);
   }
-
 }

@@ -1,0 +1,104 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="jobs-toolbar">
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="toolbar-title">Explorer les missions</ion-title>
+  </ion-toolbar>
+
+  <!-- Section de Recherche et Filtres -->
+  <div class="search-section">
+    <div class="search-bar-container">
+      <ion-searchbar 
+        placeholder="Rechercher une mission..." 
+        (ionInput)="handleSearch($event)"
+        class="custom-searchbar">
+      </ion-searchbar>
+    </div>
+    
+    <div class="categories-scroll">
+      <div 
+        class="category-chip" 
+        *ngFor="let cat of categories"
+        [class.active]="selectedCategory === cat.id"
+        (click)="filterByCategory(cat.id)">
+        {{ cat.label }}
+      </div>
+    </div>
+  </div>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="jobs-content">
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="placeholder-container">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3]">
+      <ion-skeleton-text animated style="width: 80%; height: 20px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 40%; height: 15px; margin-top: 10px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-top: 15px;"></ion-skeleton-text>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredJobs.length === 0" class="empty-state" @fadeInUp>
+    <div class="empty-icon-box">
+      <ion-icon name="search-outline"></ion-icon>
+    </div>
+    <h3>Aucune mission trouvée</h3>
+    <p>Essayez de modifier vos filtres ou de rechercher un autre mot-clé.</p>
+  </div>
+
+  <!-- Job List -->
+  <div class="jobs-list" *ngIf="!loading && filteredJobs.length > 0">
+    <div class="job-card" *ngFor="let job of filteredJobs" @fadeInUp>
+      
+      <div class="job-header">
+        <div class="job-meta">
+          <span class="category-tag">{{ job.category }}</span>
+          <span class="time-tag">{{ job.created_at | date:'shortDate' }}</span>
+        </div>
+        <h3 class="job-title">{{ job.title }}</h3>
+      </div>
+
+      <div class="job-body">
+        <p class="job-description">{{ job.description }}</p>
+        
+        <div class="job-details">
+          <div class="detail-item">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Budget: {{ job.budget_min }} - {{ job.budget_max }} DT</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>{{ job.budget_type === 'fixed' ? 'Prix fixe' : 'Par heure' }}</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="stats-chart-outline"></ion-icon>
+            <span>Expertise: {{ job.experience_level }}</span>
+          </div>
+        </div>
+
+        <div class="skills-row">
+          <span class="skill-tag" *ngFor="let skill of job.skills">{{ skill }}</span>
+        </div>
+      </div>
+
+      <div class="job-footer">
+        <ion-button 
+          expand="block" 
+          [class.applied-btn]="appliedJobIds.has(job._id)"
+          [disabled]="appliedJobIds.has(job._id)"
+          (click)="openApplyModal(job)"
+          class="apply-btn">
+          <ion-icon [name]="appliedJobIds.has(job._id) ? 'checkmark-circle' : 'send-outline'" slot="start"></ion-icon>
+          {{ appliedJobIds.has(job._id) ? 'Déjà postulé' : 'Postuler maintenant' }}
+        </ion-button>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="height: 40px;"></div>
+</ion-content>

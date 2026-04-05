@@ -1,84 +1,289 @@
-<ion-header mode="ios">
-  <ion-toolbar>
+<!-- my-gigs.page.html — Design Premium Marketplace -->
+
+<ion-header class="ion-no-border">
+  <ion-toolbar class="gigs-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>My Gigs</ion-title>
+    <ion-title class="toolbar-title">Mes Services</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" class="create-fab-btn" (click)="openCreateModal()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="gigs-page">
-  <div class="gigs-container safe-area-bottom">
-    
-    <!-- Header Card -->
-    <div class="header-card" @fadeInUp>
-      <div class="header-content">
-        <h1 class="page-title">My Gigs</h1>
-        <p class="page-subtitle">Manage your services</p>
-      </div>
-      <ion-button class="header-icon-btn" fill="clear">
-        <ion-icon slot="icon-only" name="briefcase-outline"></ion-icon>
-      </ion-button>
-    </div>
+<ion-content class="gigs-content">
 
-    <!-- Create New Gig Button -->
-    <div class="create-gig-btn" (click)="createNewGig()" @fadeInUp>
-      <div class="create-icon">
-        <ion-icon name="add-circle"></ion-icon>
-      </div>
-      <span class="create-text">Create New Gig</span>
+  <!-- ══ HERO BANNER ═══════════════════════════════════════ -->
+  <div class="gigs-hero">
+    <div class="hero-text">
+      <h1 class="hero-title">Mes Gigs</h1>
+      <p class="hero-sub">Gérez et publiez vos services</p>
     </div>
+    <button class="hero-create-btn" (click)="openCreateModal()">
+      <ion-icon name="add"></ion-icon>
+      <span>Nouveau Gig</span>
+    </button>
+  </div>
 
-    <!-- Gigs List -->
-    <div class="gigs-list">
-      <div 
-        class="gig-card" 
-        *ngFor="let gig of gigs; let i = index" 
-        (click)="viewGigDetails(gig)"
-        [style.animation-delay]="(i * 0.1) + 's'"
-        @fadeInUp>
-        
-        <!-- Color Accent Bar -->
-        <div class="gig-accent" [style.background]="gig.colorAccent"></div>
-        
-        <!-- Gig Content -->
-        <div class="gig-content">
+  <!-- ══ STATS STRIP ════════════════════════════════════════ -->
+  <div class="stats-row">
+    <div class="mini-stat">
+      <span class="mini-val">{{ gigs.length }}</span>
+      <span class="mini-lbl">Total</span>
+    </div>
+    <div class="mini-divider"></div>
+    <div class="mini-stat">
+      <span class="mini-val">{{ getActiveCount() }}</span>
+      <span class="mini-lbl">Actifs</span>
+    </div>
+    <div class="mini-divider"></div>
+    <div class="mini-stat">
+      <span class="mini-val">{{ getTotalOrders() }}</span>
+      <span class="mini-lbl">Commandes</span>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ════════════════════════════════════════════ -->
+  <div class="loading-wrap" *ngIf="isLoading">
+    <ion-spinner name="crescent" class="green-spinner"></ion-spinner>
+    <p>Chargement de vos gigs...</p>
+  </div>
+
+  <!-- ══ EMPTY STATE ════════════════════════════════════════ -->
+  <div class="empty-state" *ngIf="!isLoading && gigs.length === 0">
+    <div class="empty-illustration">
+      <ion-icon name="briefcase-outline"></ion-icon>
+    </div>
+    <h3 class="empty-title">Aucun gig pour l'instant</h3>
+    <p class="empty-sub">Créez votre premier service et commencez à recevoir des commandes</p>
+    <button class="empty-create-btn" (click)="openCreateModal()">
+      <ion-icon name="add-circle-outline"></ion-icon>
+      Créer mon premier gig
+    </button>
+  </div>
+
+  <!-- ══ GIGS LIST ══════════════════════════════════════════ -->
+  <div class="gigs-list" *ngIf="!isLoading && gigs.length > 0">
+    <div
+      class="gig-card"
+      *ngFor="let gig of gigs"
+      (click)="viewGigDetails(gig)">
+
+      <div class="gig-color-strip" [style.background]="gig.colorAccent"></div>
+
+      <div class="gig-body">
+        <div class="gig-top-row">
           <h3 class="gig-title">{{ gig.title }}</h3>
-          
-          <div class="gig-info">
-            <div class="gig-price">
-              <ion-icon name="cash-outline"></ion-icon>
-              <span>${{ gig.price }}</span>
+          <span class="status-badge" [attr.data-status]="gig.status">
+            <ion-icon [name]="getStatusIcon(gig.status)"></ion-icon>
+            {{ getStatusLabel(gig.status) }}
+          </span>
+        </div>
+
+        <span class="gig-category">
+          <ion-icon name="grid-outline"></ion-icon>
+          {{ gig.category }}
+        </span>
+
+        <div class="gig-footer">
+          <div class="gig-meta-row">
+            <div class="gig-price-tag">
+              <span class="price-from">À partir de</span>
+              <span class="price-amount">${{ gig.price }}</span>
             </div>
-            
-            <div class="gig-status" [attr.data-status]="gig.status">
-              <ion-icon [name]="getStatusIcon(gig.status)"></ion-icon>
-              <span>{{ getStatusLabel(gig.status) }}</span>
+            <div class="gig-orders-tag">
+              <ion-icon name="checkmark-done-outline"></ion-icon>
+              <span>{{ gig.ordersCompleted }} commandes</span>
             </div>
           </div>
-          
-          <div class="gig-footer">
-            <span class="orders-count">{{ gig.ordersCompleted }} orders completed</span>
-            <div class="view-details-link">
-              <span>View Details</span>
-              <ion-icon name="arrow-forward"></ion-icon>
+
+          <div class="gig-actions-row">
+            <div class="view-link">
+              <span>Voir détails</span>
+              <ion-icon name="chevron-forward-outline"></ion-icon>
             </div>
+            <button class="delete-btn" (click)="confirmDelete($event, gig)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Empty State (if no gigs) -->
-    <div class="empty-state" *ngIf="gigs.length === 0">
-      <ion-icon name="briefcase-outline"></ion-icon>
-      <h3>No Gigs Yet</h3>
-      <p>Create your first gig to start getting orders</p>
-      <ion-button (click)="createNewGig()">
-        Create Gig
-      </ion-button>
-    </div>
-
   </div>
+
+  <div style="height: 30px;"></div>
+
 </ion-content>
+
+<!-- ════════════════════════════════════════════════════
+     MODAL CRÉATION GIG — Plein écran avec scroll natif
+════════════════════════════════════════════════════ -->
+<ion-modal [isOpen]="showCreateModal" (didDismiss)="closeCreateModal()">
+  <ng-template>
+
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="modal-toolbar">
+        <ion-buttons slot="start">
+          <ion-button fill="clear" (click)="closeCreateModal()">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title class="modal-title">Créer un Gig</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-save-btn" (click)="submitGig()" [disabled]="isCreating">
+            {{ isCreating ? 'Envoi...' : 'Publier' }}
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="modal-content">
+
+      <!-- Progress indicator -->
+      <div class="form-progress">
+        <div class="progress-step">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <span>Infos</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>Prix</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+          <ion-icon name="color-palette-outline"></ion-icon>
+          <span>Style</span>
+        </div>
+      </div>
+
+      <!-- Section 1: Informations -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="section-icon-box">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <h3 class="form-section-title">Informations du service</h3>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Titre du service *</label>
+          <input
+            class="field-input"
+            [(ngModel)]="newGig.title"
+            placeholder="Ex: Création d'un logo professionnel"
+            maxlength="80" />
+          <span class="char-count">{{ newGig.title.length }}/80</span>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Catégorie *</label>
+          <div class="category-chips">
+            <button
+              class="cat-chip"
+              *ngFor="let cat of categories"
+              [class.active]="newGig.category === cat"
+              (click)="newGig.category = cat">
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Description *</label>
+          <textarea
+            class="field-input field-textarea"
+            [(ngModel)]="newGig.description"
+            placeholder="Décrivez en détail ce que vous allez livrer..."
+            rows="4"
+            maxlength="500">
+          </textarea>
+          <span class="char-count">{{ newGig.description.length }}/500</span>
+        </div>
+      </div>
+
+      <!-- Section 2: Tarification -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="section-icon-box">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <h3 class="form-section-title">Tarification &amp; Livraison</h3>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-label">Prix ($) *</label>
+            <div class="price-input-wrap">
+              <span class="price-symbol">$</span>
+              <input
+                class="field-input price-input"
+                [(ngModel)]="newGig.price"
+                type="number"
+                placeholder="150"
+                min="1" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Délai *</label>
+            <input
+              class="field-input"
+              [(ngModel)]="newGig.deliveryTime"
+              placeholder="Ex: 3 jours" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Style -->
+      <div class="form-section">
+        <div class="form-section-header">
+          <div class="section-icon-box">
+            <ion-icon name="color-palette-outline"></ion-icon>
+          </div>
+          <h3 class="form-section-title">Couleur de la carte</h3>
+        </div>
+
+        <p class="color-hint">Choisissez une couleur pour identifier votre gig</p>
+
+        <div class="color-picker-row">
+          <button
+            class="color-swatch"
+            *ngFor="let c of colorOptions"
+            [style.background]="c.value"
+            [class.selected]="newGig.colorAccent === c.value"
+            (click)="newGig.colorAccent = c.value">
+            <ion-icon name="checkmark" *ngIf="newGig.colorAccent === c.value"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Live preview -->
+        <div class="preview-card">
+          <div class="preview-strip" [style.background]="newGig.colorAccent"></div>
+          <div class="preview-body">
+            <p class="preview-title">{{ newGig.title || 'Titre de votre gig...' }}</p>
+            <div class="preview-footer">
+              <span class="preview-price">${{ newGig.price || '0' }}</span>
+              <span class="preview-time">{{ newGig.deliveryTime || '— jours' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="modal-submit-section">
+        <button class="submit-gig-btn" (click)="submitGig()" [disabled]="isCreating">
+          <ion-spinner name="crescent" *ngIf="isCreating"></ion-spinner>
+          <ion-icon name="rocket-outline" *ngIf="!isCreating"></ion-icon>
+          {{ isCreating ? 'Publication en cours...' : 'Publier le Gig' }}
+        </button>
+      </div>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>

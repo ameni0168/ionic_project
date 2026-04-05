@@ -1,115 +1,119 @@
-<ion-content [fullscreen]="true" class="dashboard-page" [scrollEvents]="true">
-  <div class="dashboard-container safe-area-top">
-    
-    <!-- Top Header -->
-    <div class="top-header" @fadeInUp>
-      <div class="user-info" (click)="navigateToProfile()">
-        <div class="user-avatar">
-          <ion-icon name="person"></ion-icon>
-        </div>
-        <div class="user-details">
-          <span class="greeting">Welcome back! 👋</span>
-          <h2 class="user-name">{{ userName }}</h2>
-        </div>
-      </div>
-      <ion-button fill="clear" class="notification-btn" (click)="navigateToNotifications()">
-        <ion-icon slot="icon-only" name="notifications"></ion-icon>
-        <ion-badge color="danger" class="notification-badge">3</ion-badge>
+<!-- freelancer-dashboard.page.html -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="dashboard-toolbar">
+    <ion-buttons slot="start">
+      <ion-avatar class="avatar-btn" (click)="navigateToProfile()">
+        <ion-icon name="person"></ion-icon>
+      </ion-avatar>
+    </ion-buttons>
+    <ion-title class="dashboard-title">Mon Espace</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" class="notif-btn" (click)="navigateToNotifications()">
+        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
+        <ion-badge color="danger" class="notif-badge">3</ion-badge>
       </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content">
+
+  <!-- ══ HERO GREETING ═══════════════════════════════════════ -->
+  <div class="hero-greeting">
+    <div class="greeting-text">
+      <span class="greeting-sub">Bienvenue 👋</span>
+      <h1 class="greeting-name">{{ userName }}</h1>
     </div>
-
-    <!-- Stats Grid -->
-    <div class="stats-section" @fadeInUp>
-      <h3 class="section-title">Overview</h3>
-      <div class="stats-grid">
-        <div class="stat-card" *ngFor="let stat of stats" [attr.data-color]="stat.color">
-          <div class="stat-icon" [ngClass]="'bg-' + stat.color">
-            <ion-icon [name]="stat.icon"></ion-icon>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ stat.value }}</div>
-            <div class="stat-label">{{ stat.label }}</div>
-            <div class="stat-trend" *ngIf="stat.trend">{{ stat.trend }}</div>
-          </div>
-        </div>
-      </div>
+    <div class="greeting-badge">
+      <ion-icon name="star"></ion-icon>
+      <span>Freelancer</span>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions-section" @fadeInUp>
-      <h3 class="section-title">Quick Actions</h3>
-      <div class="quick-actions-grid">
-        <div 
-          class="action-card" 
-          *ngFor="let action of quickActions"
-          (click)="navigateTo(action.route)">
-          <div class="action-icon" [ngClass]="'bg-' + action.color">
-            <ion-icon [name]="action.icon"></ion-icon>
-            <ion-badge *ngIf="action.badge" color="danger" class="action-badge">
-              {{ action.badge }}
-            </ion-badge>
-          </div>
-          <span class="action-title">{{ action.title }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="activity-section" @fadeInUp>
-      <div class="section-header">
-        <h3 class="section-title">Recent Activity</h3>
-        <ion-button fill="clear" size="small" (click)="viewAllActivities()">
-          View All
-        </ion-button>
-      </div>
-      
-      <div class="activity-list">
-        <div class="activity-item" *ngFor="let activity of recentActivities" (click)="onActivityClick(activity)">
-          <div class="activity-icon" [attr.data-color]="activity.color">
-            <ion-icon [name]="activity.icon"></ion-icon>
-          </div>
-          <div class="activity-content">
-            <h4 class="activity-title">{{ activity.title }}</h4>
-            <p class="activity-description">{{ activity.description }}</p>
-            <span class="activity-time">{{ activity.time }}</span>
-          </div>
-          <ion-icon name="chevron-forward" class="activity-arrow"></ion-icon>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom spacing for custom tab bar -->
-    <div class="bottom-spacer"></div>
-
   </div>
+
+  <!-- ══ STATS GRID ══════════════════════════════════════════ -->
+  <div class="section-header-row">
+    <h2 class="section-title">Vue d'ensemble</h2>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <div class="stat-icon-box" [ngClass]="'color-' + stat.color">
+        <ion-icon [name]="stat.icon"></ion-icon>
+      </div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+        <div class="stat-trend" *ngIf="stat.trend">{{ stat.trend }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ QUICK ACTIONS ═══════════════════════════════════════ -->
+  <div class="section-header-row">
+    <h2 class="section-title">Actions rapides</h2>
+  </div>
+  <div class="quick-actions-grid">
+    <div
+      class="action-tile"
+      *ngFor="let action of quickActions"
+      (click)="navigateTo(action.route)">
+      <div class="action-icon-box" [ngClass]="'color-' + action.color">
+        <ion-icon [name]="action.icon"></ion-icon>
+        <ion-badge *ngIf="action.badge" color="danger" class="action-badge">
+          {{ action.badge }}
+        </ion-badge>
+      </div>
+      <span class="action-label">{{ action.title }}</span>
+    </div>
+  </div>
+
+  <!-- ══ ACTIVITÉ RÉCENTE ════════════════════════════════════ -->
+  <div class="section-header-row">
+    <h2 class="section-title">Activité récente</h2>
+    <ion-button fill="clear" size="small" (click)="viewAllActivities()">
+      Voir tout
+    </ion-button>
+  </div>
+
+  <div class="activity-list">
+    <div class="activity-item" *ngFor="let activity of recentActivities" (click)="onActivityClick(activity)">
+      <div class="activity-icon-box" [attr.data-color]="activity.color">
+        <ion-icon [name]="activity.icon"></ion-icon>
+      </div>
+      <div class="activity-body">
+        <h4 class="activity-title">{{ activity.title }}</h4>
+        <p class="activity-desc">{{ activity.description }}</p>
+        <span class="activity-time">{{ activity.time }}</span>
+      </div>
+      <ion-icon name="chevron-forward-outline" class="activity-arrow"></ion-icon>
+    </div>
+  </div>
+
+  <div style="height: 90px;"></div>
+
 </ion-content>
 
-<!-- Custom Bottom Tab Bar (Fixed) -->
-<div class="custom-bottom-tabs">
-  <div class="tab-item" [class.active]="currentTab === 'home'" (click)="onTabClick('home')">
+<!-- ══ TAB BAR ════════════════════════════════════════════════ -->
+<ion-tab-bar slot="bottom" class="custom-tab-bar">
+  <ion-tab-button class="tab-btn tab-active" (click)="onTabClick('home')">
     <ion-icon name="home"></ion-icon>
-    <span class="tab-label">Home</span>
-  </div>
-
-  <div class="tab-item" [class.active]="currentTab === 'gigs'" (click)="onTabClick('gigs')">
-    <ion-icon name="briefcase"></ion-icon>
-    <span class="tab-label">My Gigs</span>
-  </div>
-
-  <div class="tab-item" [class.active]="currentTab === 'orders'" (click)="onTabClick('orders')">
-    <ion-icon name="document-text"></ion-icon>
-    <span class="tab-label">Orders</span>
-    <ion-badge color="danger" class="tab-badge">3</ion-badge>
-  </div>
-
-  <div class="tab-item" [class.active]="currentTab === 'messages'" (click)="onTabClick('messages')">
-    <ion-icon name="chatbubbles"></ion-icon>
-    <span class="tab-label">Messages</span>
-    <ion-badge color="primary" class="tab-badge">5</ion-badge>
-  </div>
-
-  <div class="tab-item" [class.active]="currentTab === 'profile'" (click)="onTabClick('profile')">
-    <ion-icon name="person"></ion-icon>
-    <span class="tab-label">Profile</span>
-  </div>
-</div>
+    <ion-label>Accueil</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="onTabClick('gigs')">
+    <ion-icon name="briefcase-outline"></ion-icon>
+    <ion-label>Mes Gigs</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="onTabClick('orders')">
+    <ion-icon name="document-text-outline"></ion-icon>
+    <ion-label>Commandes</ion-label>
+    <ion-badge color="danger">3</ion-badge>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="onTabClick('messages')">
+    <ion-icon name="chatbubble-outline"></ion-icon>
+    <ion-label>Messages</ion-label>
+    <ion-badge color="primary">5</ion-badge>
+  </ion-tab-button>
+  <ion-tab-button class="tab-btn" (click)="onTabClick('profile')">
+    <ion-icon name="person-outline"></ion-icon>
+    <ion-label>Profil</ion-label>
+  </ion-tab-button>
+</ion-tab-bar>

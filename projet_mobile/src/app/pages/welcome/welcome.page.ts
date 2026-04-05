@@ -36,8 +36,9 @@ import { trigger, transition, style, animate, stagger, query } from '@angular/an
 })
 export class WelcomePage implements OnInit {
   showContent = false;
+  selectedType: 'client' | 'freelancer' | null = null;
 
-  constructor(private navCtrl: NavController) {}  // ← Utilisez NavController au lieu de Router
+  constructor(private navCtrl: NavController) {}
 
   ngOnInit() {
     setTimeout(() => {
@@ -45,15 +46,27 @@ export class WelcomePage implements OnInit {
     }, 100);
   }
 
+  selectType(type: 'client' | 'freelancer') {
+    this.selectedType = type;
+  }
+
+  proceed() {
+    if (this.selectedType === 'client') {
+      this.navigateToClientAuth();
+    } else if (this.selectedType === 'freelancer') {
+      this.navigateToFreelancerAuth();
+    }
+  }
+
   navigateToClientAuth() {
-    this.navCtrl.navigateForward(['/auth/client-register']);  // ← navigateForward au lieu de navigate
+    this.navCtrl.navigateForward(['/auth/client-register']);
   }
 
   navigateToFreelancerAuth() {
-    this.navCtrl.navigateForward(['/auth/freelancer-register']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/freelancer-register']);
   }
 
   navigateToLogin() {
-    this.navCtrl.navigateForward(['/auth/login']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/login']);
   }
 }
