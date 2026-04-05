@@ -2,31 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { trigger, transition, style, animate } from '@angular/animations';
-
-interface StatCard {
-  icon: string;
-  value: string;
-  label: string;
-  color: string;
-  trend?: string;
-}
-
-interface QuickAction {
-  icon: string;
-  title: string;
-  route: string;
-  color: string;
-  badge?: number;
-}
-
-interface RecentActivity {
-  type: 'order' | 'message' | 'payment' | 'review';
-  title: string;
-  description: string;
-  time: string;
-  icon: string;
-  color: string;
-}
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-freelancer-dashboard',
@@ -44,175 +20,97 @@ interface RecentActivity {
   ]
 })
 export class FreelancerDashboardPage implements OnInit {
-  userName = 'Sarah Johnson';
-  profileImage = 'assets/avatar.jpg';
-  currentTab = 'home'; // Track current tab
-  
-  stats: StatCard[] = [
-    {
-      icon: 'briefcase',
-      value: '12',
-      label: 'Active Gigs',
-      color: 'primary',
-      trend: '+2'
-    },
-    {
-      icon: 'cash',
-      value: '$2.4k',
-      label: 'This Month',
-      color: 'success',
-      trend: '+15%'
-    },
-    {
-      icon: 'star',
-      value: '4.9',
-      label: 'Rating',
-      color: 'warning',
-      trend: '38 reviews'
-    },
-    {
-      icon: 'checkmark-done',
-      value: '47',
-      label: 'Completed',
-      color: 'tertiary',
-      trend: 'All time'
-    }
+
+  userName = '';
+  currentTab = 'home';
+  isLoading = true;
+
+  stats = [
+    { icon: 'briefcase',      value: '0',   label: 'Active Gigs',  color: 'primary',  trend: '' },
+    { icon: 'cash',           value: '$0',  label: 'This Month',   color: 'success',  trend: '' },
+    { icon: 'star',           value: '0',   label: 'Rating',       color: 'warning',  trend: '' },
+    { icon: 'checkmark-done', value: '0',   label: 'Completed',    color: 'tertiary', trend: 'All time' }
   ];
 
-  quickActions: QuickAction[] = [
-    {
-      icon: 'add-circle',
-      title: 'Create Gig',
-      route: '/create-gig',
-      color: 'primary'
-    },
-    {
-      icon: 'document-text',
-      title: 'My Orders',
-      route: '/orders',
-      color: 'secondary',
-      badge: 3
-    },
-    {
-      icon: 'chatbubbles',
-      title: 'Messages',
-      route: '/messages',
-      color: 'tertiary',
-      badge: 5
-    },
-    {
-      icon: 'wallet',
-      title: 'Earnings',
-      route: '/wallet',
-      color: 'success'
-    }
+  quickActions = [
+    { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',      color: 'success' },
+    { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',  color: 'primary' },
+    { icon: 'document-text', title: 'Mes Commandes',      route: '/orders',     color: 'secondary', badge: 0 },
+    { icon: 'chatbubbles',   title: 'Messages',           route: '/messages',   color: 'tertiary',  badge: 0 }
   ];
 
-  recentActivities: RecentActivity[] = [
-    {
-      type: 'order',
-      title: 'New Order Received',
-      description: 'Logo Design from John Doe',
-      time: '2 min ago',
-      icon: 'bag-check',
-      color: 'success'
-    },
-    {
-      type: 'message',
-      title: 'New Message',
-      description: 'Jane Smith sent you a message',
-      time: '1 hour ago',
-      icon: 'chatbubble-ellipses',
-      color: 'primary'
-    },
-    {
-      type: 'payment',
-      title: 'Payment Received',
-      description: '$150 for Web Development',
-      time: '3 hours ago',
-      icon: 'cash',
-      color: 'success'
-    },
-    {
-      type: 'review',
-      title: 'New Review',
-      description: '5 stars from Mike Johnson',
-      time: '1 day ago',
-      icon: 'star',
-      color: 'warning'
-    }
-  ];
+  recentActivities: any[] = [];
 
-  constructor(private navCtrl: NavController) {}
+  constructor(
+    private navCtrl: NavController,
+    private api: ApiService
+  ) {}
 
   ngOnInit() {
-    console.log('Dashboard loaded');
+    this.loadDashboard();
+  }
+
+  loadDashboard() {
+    this.isLoading = true;
+    this.api.getFreelancerDashboard().subscribe({
+      next: (data: { userName: string; stats: any; recentActivities: any[]; }) => {
+        this.userName = data.userName;
+
+        const s = data.stats;
+        this.stats[0].value = String(s.activeGigs);
+        this.stats[1].value = `$${s.monthlyEarnings}`;
+        this.stats[1].trend = '';
+        this.stats[2].value = String(s.rating);
+        this.stats[2].trend = `${s.reviews} reviews`;
+        this.stats[3].value = String(s.totalCompleted);
+
+        this.recentActivities = data.recentActivities;
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error('Dashboard error:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
   navigateTo(route: string) {
-    console.log('Navigating to:', route);
     this.navCtrl.navigateForward([route]);
   }
 
   navigateToProfile() {
-    console.log('Navigate to profile');
     this.navCtrl.navigateForward(['/freelancer-profile']);
   }
 
   navigateToNotifications() {
-    console.log('Navigate to notifications');
     this.navCtrl.navigateForward(['/notifications']);
   }
 
   viewAllActivities() {
-    console.log('View all activities');
     this.navCtrl.navigateForward(['/activities']);
   }
 
-  onActivityClick(activity: RecentActivity) {
-    console.log('Activity clicked:', activity);
-    // Navigate based on activity type
-    switch(activity.type) {
-      case 'order':
-        this.navCtrl.navigateForward(['/orders']);
-        break;
-      case 'message':
-        this.navCtrl.navigateForward(['/messages']);
-        break;
-      case 'payment':
-        this.navCtrl.navigateForward(['/wallet']);
-        break;
-      case 'review':
-        this.navCtrl.navigateForward(['/reviews']);
-        break;
+  onActivityClick(activity: any) {
+    switch (activity.type) {
+      case 'order':   this.navCtrl.navigateForward(['/orders']);   break;
+      case 'message': this.navCtrl.navigateForward(['/messages']); break;
+      case 'payment': this.navCtrl.navigateForward(['/wallet']);   break;
+      case 'review':  this.navCtrl.navigateForward(['/reviews']);  break;
+      default:        this.navCtrl.navigateForward(['/my-gigs']);  break;
     }
   }
 
   onTabClick(tab: string) {
-    console.log('Tab clicked:', tab);
     this.currentTab = tab;
-    
-    // Navigation based on tab
-    switch(tab) {
+    switch (tab) {
       case 'home':
-        // Already on home, scroll to top
         const content = document.querySelector('ion-content');
-        if (content) {
-          content.scrollToTop(300);
-        }
+        if (content) content.scrollToTop(300);
         break;
-      case 'gigs':
-        this.navCtrl.navigateForward(['/my-gigs']);
-        break;
-      case 'orders':
-        this.navCtrl.navigateForward(['/orders']);
-        break;
-      case 'messages':
-        this.navCtrl.navigateForward(['/messages']);
-        break;
-      case 'profile':
-        this.navCtrl.navigateForward(['/freelancer-profile']);
-        break;
+      case 'gigs':     this.navCtrl.navigateForward(['/my-gigs']);             break;
+      case 'orders':   this.navCtrl.navigateForward(['/orders']);              break;
+      case 'messages': this.navCtrl.navigateForward(['/messages']);            break;
+      case 'profile':  this.navCtrl.navigateForward(['/freelancer-profile']); break;
     }
   }
 }

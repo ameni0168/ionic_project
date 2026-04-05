@@ -1,236 +1,531 @@
-// Freelancer Profile Styles
+// freelancer-profile.page.scss — Fully harmonized with Client Profile
 
 .profile-page {
-    --background: var(--color-background);
-  }
-  
-  .profile-container {
-    min-height: calc(100vh - 56px);
-    padding: var(--spacing-6) var(--spacing-4);
-  }
-  
-  .profile-header {
-    text-align: center;
-    margin-bottom: var(--spacing-6);
-    animation: fadeInUp 0.4s ease-out;
-  }
-  
-  .profile-avatar {
-    position: relative;
-    display: inline-block;
-    margin-bottom: var(--spacing-4);
-  }
-  
-  .avatar-placeholder {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-lg);
-    
-    ion-icon {
-      font-size: 60px;
-      color: var(--color-white);
-    }
-  }
-  
-  .rating-badge {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: var(--color-warning);
-    color: var(--color-white);
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-    box-shadow: var(--shadow-md);
-    
-    ion-icon {
-      font-size: 16px;
-    }
-  }
-  
-  .profile-name {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+  --background: var(--color-background);
+}
+
+// ── TOOLBAR ───────────────────────────────────────────────────
+.profile-toolbar {
+  --background: var(--color-surface);
+  --border-width: 0;
+  box-shadow: 0 1px 0 var(--color-border);
+
+  .toolbar-icon { color: var(--color-text-secondary); font-size: 20px; }
+  .toolbar-title {
+    font-size: 17px;
+    font-weight: 700;
     color: var(--color-text-primary);
-    margin-bottom: var(--spacing-2);
   }
-  
-  .profile-title {
-    font-size: var(--font-size-lg);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--spacing-6);
+}
+
+.profile-content {
+  --background: var(--color-background);
+}
+
+// ── HERO (avatar + nom + titre + stats) ───────────────────────
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 20px 20px;
+  background: var(--color-background);
+}
+
+.profile-avatar {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.avatar-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 3px white, 0 0 0 5px var(--color-primary);
+
+  ion-icon {
+    font-size: 52px;
+    color: white;
   }
-  
-  .profile-stats {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-6);
-    padding: var(--spacing-4);
-    background: var(--color-surface);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .stat-item {
-    text-align: center;
-  }
-  
-  .stat-value {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+}
+
+.rating-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--color-warning);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  border: 2px solid white;
+
+  ion-icon { font-size: 11px; }
+}
+
+.profile-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+  text-align: center;
+}
+
+.profile-title {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+// ── STATS STRIP ───────────────────────────────────────────────
+.profile-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  padding: 16px 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.stat-label {
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--color-border);
+}
+
+// ── CARDS ─────────────────────────────────────────────────────
+// Uses global .card and .card-header from global.scss
+
+.profile-container {
+  padding: 16px 14px;
+}
+
+.bio-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+// ── INFO LIST ─────────────────────────────────────────────────
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.info-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 18px;
     color: var(--color-primary);
-    margin-bottom: var(--spacing-1);
   }
-  
-  .stat-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+}
+
+.info-content { flex: 1; }
+
+.info-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+// ── SKILLS ────────────────────────────────────────────────────
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.skill-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.skill-percentage {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.skill-bar {
+  height: 7px;
+  background: var(--color-border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.skill-progress {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 20px;
+  transition: width 1s ease-out;
+}
+
+// ── EDIT BUTTON (bottom) ──────────────────────────────────────
+.edit-profile-section {
+  padding: 8px 14px 12px;
+
+  .edit-btn {
+    --background: var(--color-primary);
+    --border-radius: 50px;
+    font-weight: 700;
+    height: 50px;
+    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.3);
   }
-  
-  .stat-divider {
-    width: 1px;
-    height: 40px;
-    background: var(--color-border);
+}
+
+// ── SECURITY ROWS ─────────────────────────────────────────────
+.security-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:active { opacity: 0.7; }
+  &.last { border-bottom: none; }
+}
+
+.security-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon { font-size: 18px; color: var(--color-primary); }
+}
+
+.security-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.security-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.security-value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.security-chevron {
+  font-size: 16px;
+  color: var(--color-text-tertiary);
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────
+.logout-section {
+  padding: 8px 0 20px;
+
+  .logout-btn {
+    --border-color: #ef4444;
+    --color: #ef4444;
+    --border-radius: 50px;
+    --border-width: 1.5px;
+    font-weight: 700;
+    height: 50px;
   }
-  
-  .section-card {
-    background: var(--color-surface);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
-    margin-bottom: var(--spacing-4);
-    box-shadow: var(--shadow-sm);
-    animation: fadeInUp 0.4s ease-out;
-  }
-  
-  .section-title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
+}
+
+// ── PASSWORD MODAL ────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 18px 32px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.modal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
     color: var(--color-text-primary);
-    margin-bottom: var(--spacing-4);
-  }
-  
-  .bio-text {
-    font-size: var(--font-size-base);
-    line-height: var(--line-height-relaxed);
-    color: var(--color-text-secondary);
     margin: 0;
   }
-  
-  .info-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.field-input {
+  width: 100%;
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
   }
-  
-  .info-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-4);
+  &::placeholder { color: var(--color-text-tertiary); }
+}
+
+.modal-error {
+  font-size: 12px;
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.modal-save-btn {
+  --background: var(--color-primary);
+  --border-radius: 50px;
+  font-weight: 700;
+  height: 50px;
+  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.3);
+}
+
+// ── EDIT FORM (inside modal) ──────────────────────────────────
+.modal-edit-content {
+  --background: var(--color-background);
+}
+
+.edit-form-container {
+  padding: 16px 14px 60px;
+}
+
+.edit-section {
+  background: var(--color-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  padding: 18px 16px;
+  margin-bottom: 14px;
+}
+
+.edit-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 14px;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.edit-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.edit-input {
+  width: 100%;
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
   }
-  
-  .info-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
-    background: rgba(var(--color-primary-rgb), 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &::placeholder { color: var(--color-text-tertiary); }
+}
+
+.edit-textarea { resize: none; line-height: 1.6; }
+
+.skills-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.skill-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+
+  .skill-edit-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+  .skill-edit-level { font-size: 12px; color: var(--color-primary); font-weight: 700; }
+  .skill-remove-btn { background: none; border: none; cursor: pointer; ion-icon { font-size: 18px; color: #ef4444; } }
+}
+
+.add-skill-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .skill-name-input  { flex: 1; }
+  .skill-level-input { width: 70px; }
+
+  .add-skill-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    
-    ion-icon {
-      font-size: 20px;
-      color: var(--color-primary);
-    }
+
+    ion-icon { font-size: 20px; color: white; }
   }
-  
-  .info-content {
-    flex: 1;
+}
+
+.edit-submit-row {
+  padding-top: 4px;
+
+  .edit-save-btn {
+    --background: var(--color-primary);
+    --border-radius: 50px;
+    font-weight: 700;
+    height: 50px;
+    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.3);
   }
-  
-  .info-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-    margin-bottom: var(--spacing-1);
+}
+
+// ── RESPONSIVE ────────────────────────────────────────────────
+@media (min-width: 768px) {
+  .profile-container {
+    max-width: 600px;
+    margin: 0 auto;
   }
-  
-  .info-value {
-    font-size: var(--font-size-base);
-    color: var(--color-text-primary);
-    font-weight: var(--font-weight-medium);
-  }
-  
-  .skills-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4);
-  }
-  
-  .skill-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2);
-  }
-  
-  .skill-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .skill-name {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-primary);
-  }
-  
-  .skill-percentage {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-semibold);
-  }
-  
-  .skill-bar {
-    height: 8px;
-    background: var(--color-gray-200);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-  }
-  
-  .skill-progress {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-    border-radius: var(--radius-full);
-    transition: width 1s ease-out;
-  }
-  
-  // Responsive
-  @media (min-width: 768px) {
-    .profile-container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-  }
-  
-  // Dark mode adjustments
-  @media (prefers-color-scheme: dark) {
-    .section-card {
-      background: var(--color-surface);
-    }
-    
-    .skill-bar {
-      background: var(--color-gray-700);
-    }
-  }
+}
