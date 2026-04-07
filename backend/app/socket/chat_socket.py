@@ -16,7 +16,7 @@ def handle_send_message(data):
     create_message(
         data["conversationId"],
         data["senderId"],
-        data["content"]
+        data["message"]
     )
 
     emit("receive_message", data, room=data["conversationId"])

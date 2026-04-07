@@ -170,17 +170,31 @@ export class TalentProfilePage implements OnInit {
   shareProfile() {
     // TODO
   }
+//   createConversation(data: any) {
+//   return this.http.post('http://localhost:5000/api/chat/conversation', data);
+// }
 
   sendMessage() {
-    if (!this.talent?.id) return;
+  if (!this.talent?.id) return;
 
-    this.navCtrl.navigateForward(['/messages'], {
+  const user = JSON.parse(localStorage.getItem('user')!);
+
+  this.talentSvc.createConversation({
+    user1: user._id,
+    user2: this.talent.id
+  }).subscribe((res: any) => {
+
+    const conversationId = res.conversation_id;
+
+    this.navCtrl.navigateForward(['/chat'], {
       queryParams: {
-        to: this.talent.id,
-        name: this.talent.name,
-      },
+        conversationId,
+        name: this.talent.name
+      }
     });
-  }
+
+  });
+}
 
   hireNow() {
     if (!this.talent?.id) return;
