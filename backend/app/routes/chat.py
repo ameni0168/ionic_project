@@ -17,3 +17,16 @@ def create_conversation():
     return jsonify({
         "conversation_id": str(result.inserted_id)
     })
+@chat_bp.route("/conversations/<user_id>", methods=["GET"])
+def get_user_conversations(user_id):
+
+    conversations = current_app.db.conversations
+
+    convs = list(conversations.find({
+        "participants": user_id
+    }))
+
+    for c in convs:
+        c["_id"] = str(c["_id"])
+
+    return {"conversations": convs}

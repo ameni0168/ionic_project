@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chat</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+<h2>Chat Test</h2>
+
+<label>User ID:</label>
+<input id="userId" placeholder="user1 ou user2"><br><br>
+
+<label>Conversation ID:</label>
+<input id="conversationId" value="conv1"><br><br>
+
+<input id="msg" placeholder="message">
+<button onclick="sendMessage()">Envoyer</button>
+
+<ul id="messages"></ul>
+
+<script>
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+        console.log("✅ connecté", socket.id);
+    });
+
+    function joinRoom() {
+        const conversationId = document.getElementById("conversationId").value;
+        socket.emit("join", { conversationId });
+    }
+
+    socket.on("receive_message", (data) => {
+        const li = document.createElement("li");
+        li.innerText = data.senderId + ": " + data.content;
+        document.getElementById("messages").appendChild(li);
+    });
+
+    function sendMessage() {
+        const conversationId = document.getElementById("conversationId").value;
+        const senderId = document.getElementById("userId").value;
+        const content = document.getElementById("msg").value;
+
+        socket.emit("send_message", {
+            conversationId,
+            senderId,
+            content
+        });
+    }
+
+    // rejoindre automatiquement après 1 seconde
+    setTimeout(joinRoom, 1000);
+</script>
+
+</body>
+</html>
