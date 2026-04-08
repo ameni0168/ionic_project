@@ -1,57 +1,34 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Test Chat</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-</head>
 <body>
+  <input id="msg" placeholder="Message..." />
+  <button onclick="send()">Envoyer</button>
+  <div id="log"></div>
 
-<h2>Chat Test</h2>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io('http://localhost:5000');
+    const convId = 'conv_test_1';
 
-<label>User ID:</label>
-<input id="userId" placeholder="user1 ou user2"><br><br>
-
-<label>Conversation ID:</label>
-<input id="conversationId" value="conv1"><br><br>
-
-<input id="msg" placeholder="message">
-<button onclick="sendMessage()">Envoyer</button>
-
-<ul id="messages"></ul>
-
-<script>
-    const socket = io("http://localhost:5000");
-
-    socket.on("connect", () => {
-        console.log("✅ connecté", socket.id);
+    socket.on('connect', () => {
+      console.log('✅ connecté');
+      socket.emit('join', { conversationId: convId });
     });
 
-    function joinRoom() {
-        const conversationId = document.getElementById("conversationId").value;
-        socket.emit("join", { conversationId });
-    }
-
-    socket.on("receive_message", (data) => {
-        const li = document.createElement("li");
-        li.innerText = data.senderId + ": " + data.content;
-        document.getElementById("messages").appendChild(li);
+    socket.on('receive_message', (msg) => {
+      document.getElementById('log').innerHTML +=
+        `<p><b>${msg.senderId}:</b> ${msg.content}</p>`;
     });
 
-    function sendMessage() {
-        const conversationId = document.getElementById("conversationId").value;
-        const senderId = document.getElementById("userId").value;
-        const content = document.getElementById("msg").value;
-
-        socket.emit("send_message", {
-            conversationId,
-            senderId,
-            content
-        });
+    function send() {
+      const content = document.getElementById('msg').value;
+      socket.emit('send_message', {
+        conversationId: convId,
+        senderId: 'userA',
+        content: content
+      });
+      document.getElementById('msg').value = '';
     }
-
-    // rejoindre automatiquement après 1 seconde
-    setTimeout(joinRoom, 1000);
-</script>
-
+  </script>
 </body>
 </html>
