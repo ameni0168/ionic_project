@@ -92,7 +92,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/jobs/jobs.page').then(m => m.JobsPage)
   },
   {
-    path: 'chat',
+    path: 'chat/:id',
     loadComponent: () => import('./pages/chat/chat.page').then( m => m.ChatPage)
   }
   
