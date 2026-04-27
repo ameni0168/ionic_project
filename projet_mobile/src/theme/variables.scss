@@ -3,16 +3,16 @@
 
 :root {
     // Primary Colors
-    --color-primary: #2563eb;
-    --color-primary-light: #3b82f6;
-    --color-primary-dark: #1d4ed8;
-    --color-primary-rgb: 37, 99, 235;
+    --color-primary: #1dbf73;
+    --color-primary-light: #3fd38e;
+    --color-primary-dark: #16985a;
+    --color-primary-rgb: 29, 191, 115;
     
     // Secondary Colors
-    --color-secondary: #7c3aed;
-    --color-secondary-light: #8b5cf6;
-    --color-secondary-dark: #6d28d9;
-    --color-secondary-rgb: 124, 58, 237;
+    --color-secondary: #1f2937;
+    --color-secondary-light: #374151;
+    --color-secondary-dark: #111827;
+    --color-secondary-rgb: 31, 41, 55;
     
     // Neutral Colors
     --color-white: #ffffff;
@@ -128,23 +128,23 @@
     --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
     
     // Override Ionic variables to match design system
-    --ion-color-primary: #2563eb;
-    --ion-color-primary-rgb: 37, 99, 235;
+    --ion-color-primary: #1dbf73;
+    --ion-color-primary-rgb: 29, 191, 115;
     --ion-color-primary-contrast: #ffffff;
     --ion-color-primary-contrast-rgb: 255, 255, 255;
-    --ion-color-primary-shade: #1d4ed8;
-    --ion-color-primary-tint: #3b82f6;
+    --ion-color-primary-shade: #16985a;
+    --ion-color-primary-tint: #3fd38e;
     
-    --ion-color-secondary: #7c3aed;
-    --ion-color-secondary-rgb: 124, 58, 237;
+    --ion-color-secondary: #1f2937;
+    --ion-color-secondary-rgb: 31, 41, 55;
     --ion-color-secondary-contrast: #ffffff;
     --ion-color-secondary-contrast-rgb: 255, 255, 255;
-    --ion-color-secondary-shade: #6d28d9;
-    --ion-color-secondary-tint: #8b5cf6;
+    --ion-color-secondary-shade: #111827;
+    --ion-color-secondary-tint: #374151;
   }
   
-  // Dark Mode
-  @media (prefers-color-scheme: dark) {
+  // Dark Mode deactivated to force crisp Marketplace design
+  /* @media (prefers-color-scheme: dark) {
     :root {
       --color-background: #0f172a;
       --color-background-secondary: #1e293b;
@@ -181,4 +181,4 @@
       --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
       --shadow-2xl: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
     }
-  }
+  } */

@@ -23,7 +23,7 @@ export class FreelancerService {
 
   private readonly API = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ========================
   // HEADERS SAFE
@@ -109,4 +109,16 @@ export class FreelancerService {
       { headers: this.getHeaders() }
     );
   }
+  changePassword(data: {
+    old_password: string;
+    new_password: string;
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.API}/freelancer/change-password`,
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+
 }

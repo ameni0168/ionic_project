@@ -1,11 +1,20 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
+from bson.errors import InvalidId
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.models.freelancer_model import get_freelancers_collection
 from app.models.users_model import get_users_collection
 from app.models.gig_model import get_gigs_collection
 from app.models.order_model import get_orders_collection
+
+
+def safe_id(user_id):
+    try:
+        return ObjectId(user_id)
+    except InvalidId:
+        return None
 
 
 def _user_for_freelancer(f):
@@ -301,3 +310,32 @@ def get_dashboard_stats(user_id):
         },
         "recentActivities": recent_activities,
     }, 200
+def change_freelancer_password(user_id: str, data: dict):
+    users = get_users_collection()
+
+    oid = safe_id(user_id)
+    if not oid:
+        return {"error": "Invalid ID"}, 400
+
+    old_pw = data.get("old_password", "")
+    new_pw = data.get("new_password", "")
+
+    if not old_pw or not new_pw:
+        return {"error": "Ancien et nouveau mot de passe requis"}, 400
+
+    if len(new_pw) < 6:
+        return {"error": "Minimum 6 caracteres"}, 400
+
+    user = users.find_one({"_id": oid})
+    if not user:
+        return {"error": "Utilisateur non trouve"}, 404
+
+    ph = user.get("password_hash")
+    if not ph or not check_password_hash(ph, old_pw):
+        return {"error": "Ancien mot de passe incorrect"}, 400
+
+    new_hash = generate_password_hash(new_pw)
+
+    users.update_one({"_id": oid}, {"$set": {"password_hash": new_hash}})
+
+    return {"message": "Mot de passe modifie avec succes"}, 200

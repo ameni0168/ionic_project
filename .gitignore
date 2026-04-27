@@ -1,3 +1,21 @@
+
+# Python
 __pycache__/
 *.pyc
 .venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Mobile
+node_modules/
+.angular/
+.ion-ide/
+www/
+dist/
+platforms/
+plugins/
+*.log

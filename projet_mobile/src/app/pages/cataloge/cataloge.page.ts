@@ -6,6 +6,7 @@ import { IonicModule, NavController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { CatalogService } from '../../services/catalog.service';
+import { MarketplaceContentService } from '../../services/marketplace-content.service';
 
 @Component({
   selector:    'app-catalog',
@@ -44,11 +45,7 @@ export class CatalogPage implements OnInit, OnDestroy {
     { value: 'newest',     label: 'Plus récents'        },
   ];
 
-  categories = [
-    'Design & Creative', 'Development & IT', 'Writing & Translation',
-    'Sales & Marketing', 'Video & Animation', 'Music & Audio',
-    'Admin & Support',   'Finance & Accounting',
-  ];
+  categories: string[] = [];
 
   activeFiltersCount = 0;
 
@@ -61,10 +58,12 @@ export class CatalogPage implements OnInit, OnDestroy {
 
   constructor(
     private catalogSvc: CatalogService,
+    private marketplaceContent: MarketplaceContentService,
     private navCtrl:    NavController,
   ) {}
 
   ngOnInit() {
+    this._loadCategories();
     this._loadFeatured();
     this._setupDebounce();
   }
@@ -80,6 +79,17 @@ export class CatalogPage implements OnInit, OnDestroy {
     this.catalogSvc.getFeatured(6).subscribe({
       next:  (res: any) => { this.featuredGigs = res.gigs || []; this.isLoadingFeatured = false; },
       error: ()         => { this.isLoadingFeatured = false; },
+    });
+  }
+
+  private _loadCategories() {
+    this.marketplaceContent.getDynamicCategories(8).subscribe({
+      next: (categories) => {
+        this.categories = categories.map((category) => category.name);
+      },
+      error: () => {
+        this.categories = [];
+      },
     });
   }
 

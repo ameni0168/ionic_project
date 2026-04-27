@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
@@ -32,11 +33,14 @@ export class LoginPage implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   showContent = false;
+  redirectTo: string | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
     private navCtrl: NavController,
-    private api:ApiService  // ← NavController au lieu de Router
+    private api: ApiService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -45,6 +49,7 @@ export class LoginPage implements OnInit {
   }
 
   ngOnInit() {
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
     setTimeout(() => {
       this.showContent = true;
     }, 100);
@@ -54,52 +59,64 @@ export class LoginPage implements OnInit {
   get passwordControl() { return this.loginForm.get('password'); }
 
   async onLogin() {
-  if (this.loginForm.valid) {
-    this.isLoading = true;
-    const formData = this.loginForm.value;
+    if (this.loginForm.valid) {
+      this.isLoading = true;
+      const formData = this.loginForm.value;
 
-    // Appelle API
-    this.api.login(formData).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
+      this.api.login(formData).subscribe({
+        next: (res: any) => {
+          this.isLoading = false;
 
-        console.log('Login success', res);
+          const target = this.getRedirectUrl(res.role);
+          if (target) {
+            this.router.navigateByUrl(target);
+            return;
+          }
 
-        // Redirection selon le rôle
-        if (res.role === 'client') {
-          this.navCtrl.navigateRoot(['/client-dashboard']);
-        } else if (res.role === 'freelancer') {
-          this.navCtrl.navigateRoot(['/freelancer-dashboard']);
-        } else {
-          alert("Rôle inconnu");
+          if (res.role === 'client') {
+            this.navCtrl.navigateRoot(['/client-dashboard']);
+          } else if (res.role === 'freelancer') {
+            this.navCtrl.navigateRoot(['/freelancer-dashboard']);
+          } else {
+            alert('Role inconnu');
+          }
+        },
+        error: (err: any) => {
+          this.isLoading = false;
+          alert(err.error?.error || 'Erreur serveur');
         }
-      },
-      error: (err:any) => {
-        this.isLoading = false;
-        alert(err.error?.error || "Erreur serveur");
-      }
-    });
-  } else {
-    Object.keys(this.loginForm.controls).forEach(key => {
-      this.loginForm.get(key)?.markAsTouched();
-    });
+      });
+    } else {
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
+      });
+    }
   }
-}
 
   goBack() {
     this.navCtrl.navigateBack('/welcome');
   }
 
-  navigateToRegister() {
-    this.navCtrl.navigateForward('/auth/client-register');
+  navigateToWelcome() {
+    this.navCtrl.navigateForward('/welcome', {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 
   navigateToForgotPassword() {
-    // TODO : implémenter la navigation réelle
     console.log('Navigate to forgot password');
   }
 
-  private determineRole(email: string): 'client' | 'freelancer' {
-    return email.includes('freelancer') ? 'freelancer' : 'client';
+  private getRedirectUrl(role: string): string | null {
+    if (!this.redirectTo) {
+      return null;
+    }
+
+    const allowedByRole: Record<string, string[]> = {
+      client: ['/post-job', '/hire-freelancers'],
+      freelancer: ['/jobs'],
+    };
+
+    return allowedByRole[role]?.includes(this.redirectTo) ? this.redirectTo : null;
   }
 }

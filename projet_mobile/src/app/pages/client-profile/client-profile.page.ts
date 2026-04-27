@@ -1,7 +1,7 @@
 // src/app/pages/client-profile/client-profile.page.ts
-import { Component, OnInit }  from '@angular/core';
-import { CommonModule }       from '@angular/common';
-import { FormsModule }        from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IonicModule, NavController, ToastController, LoadingController } from '@ionic/angular';
 import {
   ClientProfileService,
@@ -9,43 +9,43 @@ import {
 } from '../../services/client-profile.service';
 
 @Component({
-  selector:    'app-client-profile',
+  selector: 'app-client-profile',
   templateUrl: './client-profile.page.html',
-  styleUrls:  ['./client-profile.page.scss'],
-  standalone:  true,
-  imports:    [CommonModule, FormsModule, IonicModule],
+  styleUrls: ['./client-profile.page.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule, IonicModule],
 })
 export class ClientProfilePage implements OnInit {
 
   // ── Données ───────────────────────────────────────────────────
-  profile:   ClientProfile | null = null;
-  isLoading  = true;
-  isEditing  = false;
-  isSaving   = false;
+  profile: ClientProfile | null = null;
+  isLoading = true;
+  isEditing = false;
+  isSaving = false;
 
   // ── Formulaire d'édition ──────────────────────────────────────
   editForm = {
     full_name: '',
-    phone:     '',
-    location:  '',
-    company:   '',
-    website:   '',
-    bio:       '',
-    avatar:    '',
+    phone: '',
+    location: '',
+    company: '',
+    website: '',
+    bio: '',
+    avatar: '',
   };
 
   // ── Modal mot de passe ────────────────────────────────────────
   showPwModal = false;
   pwForm = { old_password: '', new_password: '', confirm_password: '' };
-  pwError  = '';
+  pwError = '';
   pwSaving = false;
 
   constructor(
     private profileSvc: ClientProfileService,
-    private navCtrl:    NavController,
-    private toastCtrl:  ToastController,
+    private navCtrl: NavController,
+    private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
-  ) {}
+  ) { }
 
   ngOnInit() { this.loadProfile(); }
 
@@ -54,7 +54,7 @@ export class ClientProfilePage implements OnInit {
     this.isLoading = true;
     this.profileSvc.getProfile().subscribe({
       next: (data: any) => {
-        this.profile   = data;
+        this.profile = data;
         this.isLoading = false;
         this.fillForm();
       },
@@ -73,13 +73,13 @@ export class ClientProfilePage implements OnInit {
   private fillForm() {
     if (!this.profile) return;
     this.editForm = {
-      full_name: this.profile.user.full_name       || '',
-      phone:     this.profile.client.phone         || '',
-      location:  this.profile.client.location      || '',
-      company:   this.profile.client.company       || '',
-      website:   this.profile.client.website       || '',
-      bio:       this.profile.client.bio           || '',
-      avatar:    this.profile.client.avatar        || '',
+      full_name: this.profile.user.full_name || '',
+      phone: this.profile.client.phone || '',
+      location: this.profile.client.location || '',
+      company: this.profile.client.company || '',
+      website: this.profile.client.website || '',
+      bio: this.profile.client.bio || '',
+      avatar: this.profile.client.avatar || '',
     };
   }
 
@@ -100,7 +100,7 @@ export class ClientProfilePage implements OnInit {
 
     // Filtrer les champs vides pour n'envoyer que ce qui a changé
     const payload: any = {};
-    const fields = ['full_name','phone','location','company','website','bio','avatar'];
+    const fields = ['full_name', 'phone', 'location', 'company', 'website', 'bio', 'avatar'];
     fields.forEach(f => {
       if ((this.editForm as any)[f] !== undefined) {
         payload[f] = (this.editForm as any)[f];
@@ -109,8 +109,8 @@ export class ClientProfilePage implements OnInit {
 
     this.profileSvc.updateProfile(payload).subscribe({
       next: (data: any) => {
-        this.profile   = data;
-        this.isSaving  = false;
+        this.profile = data;
+        this.isSaving = false;
         this.isEditing = false;
         this.showToast('Profil mis à jour ✅', 'success');
       },
@@ -133,7 +133,7 @@ export class ClientProfilePage implements OnInit {
 
   // ── MODAL MOT DE PASSE ────────────────────────────────────────
   openPwModal() {
-    this.pwForm  = { old_password: '', new_password: '', confirm_password: '' };
+    this.pwForm = { old_password: '', new_password: '', confirm_password: '' };
     this.pwError = '';
     this.showPwModal = true;
   }
@@ -168,7 +168,7 @@ export class ClientProfilePage implements OnInit {
       },
       error: (err: { error: { error: string; }; }) => {
         this.pwSaving = false;
-        this.pwError  = err.error?.error || 'Erreur';
+        this.pwError = err.error?.error || 'Erreur';
       },
     });
   }
@@ -183,9 +183,9 @@ export class ClientProfilePage implements OnInit {
   goBack() { this.navCtrl.back(); }
 
   // ── TOAST HELPER ──────────────────────────────────────────────
-  private async showToast(msg: string, color: 'success'|'danger'|'warning' = 'success') {
+  private async showToast(msg: string, color: 'success' | 'danger' | 'warning' = 'success') {
     const toast = await this.toastCtrl.create({
-      message:  msg,
+      message: msg,
       duration: 2500,
       position: 'top',
       color,

@@ -1,7 +1,5 @@
 <ion-content [fullscreen]="true" class="accueil-page">
   <div *ngIf="showContent">
-
-    <!-- NAVBAR -->
     <div class="navbar">
       <div class="navbar-logo">FreelanceHub</div>
       <div class="navbar-actions">
@@ -10,7 +8,6 @@
       </div>
     </div>
 
-    <!-- NAV LINKS -->
     <div class="nav-links">
       <button class="nav-link" (click)="goToHireFreelancer()">
         <ion-icon name="people-outline"></ion-icon>
@@ -26,135 +23,115 @@
       </button>
     </div>
 
-    <!-- HERO -->
     <div class="hero">
       <div class="hero-glow"></div>
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        Trusted by 10,000+ companies
+        {{ homeContent.heroBadge }}
       </div>
       <h1 class="hero-title">
-        Find the perfect<br>
-        <span class="hero-accent">freelance</span> talent
+        {{ homeContent.heroTitlePrefix }}<br />
+        <span class="hero-accent">{{ homeContent.heroTitleAccent }}</span>
       </h1>
-      <p class="hero-sub">
-        Connect with top-tier professionals. Post a job, browse talent, and get work done — your way.
-      </p>
+      <p class="hero-sub">{{ homeContent.heroSubtitle }}</p>
 
-      <!-- Search -->
       <div class="hero-search">
         <ion-icon name="search-outline" class="search-icon"></ion-icon>
-        <input type="text" placeholder="Search for a skill or service..." class="search-input" />
-        <button class="search-btn">Search</button>
+        <input
+          type="text"
+          [placeholder]="homeContent.searchPlaceholder"
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="submitSearch()"
+        />
+        <button class="search-btn" type="button" (click)="submitSearch()">Search</button>
       </div>
 
-      <!-- Tags -->
       <div class="hero-tags">
         <span class="tags-label">Popular:</span>
-        <span class="hero-tag">Web Dev</span>
-        <span class="hero-tag">UI Design</span>
-        <span class="hero-tag">Mobile</span>
-        <span class="hero-tag">Data</span>
+        <button type="button" class="hero-tag" *ngFor="let tag of homeContent.popularTags" (click)="searchByTag(tag)">
+          {{ tag }}
+        </button>
       </div>
 
-      <!-- Stats -->
       <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-number">50K+</div>
-          <div class="stat-label">Freelancers</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <div class="stat-number">12K+</div>
-          <div class="stat-label">Jobs Posted</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <div class="stat-number">98%</div>
-          <div class="stat-label">Satisfaction</div>
-        </div>
+        <ng-container *ngFor="let stat of homeStats; let isLast = last">
+          <div class="stat">
+            <div class="stat-number">{{ isLoadingStats ? '...' : stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+          <div class="stat-divider" *ngIf="!isLast"></div>
+        </ng-container>
       </div>
     </div>
 
-    <!-- HOW IT WORKS -->
     <div class="section">
       <div class="section-header">
         <span class="section-tag">How It Works</span>
         <h2 class="section-title">Up and running in minutes</h2>
       </div>
       <div class="steps">
-        <div class="step">
-          <div class="step-icon">📝</div>
-          <div class="step-num">01</div>
-          <h3 class="step-title">Post a Job</h3>
-          <p class="step-desc">Describe your project and set a budget in under 5 minutes.</p>
-        </div>
-        <div class="step">
-          <div class="step-icon">🔍</div>
-          <div class="step-num">02</div>
-          <h3 class="step-title">Review Proposals</h3>
-          <p class="step-desc">Get proposals from skilled freelancers and browse portfolios.</p>
-        </div>
-        <div class="step">
-          <div class="step-icon">💬</div>
-          <div class="step-num">03</div>
-          <h3 class="step-title">Collaborate</h3>
-          <p class="step-desc">Chat, share files, and track milestones all in one place.</p>
-        </div>
-        <div class="step">
-          <div class="step-icon">✅</div>
-          <div class="step-num">04</div>
-          <h3 class="step-title">Pay Securely</h3>
-          <p class="step-desc">Release payment only when you're 100% satisfied.</p>
+        <div class="step" *ngFor="let step of homeContent.steps">
+          <div class="step-icon">
+            <ion-icon [name]="step.icon"></ion-icon>
+          </div>
+          <div class="step-num">{{ step.number }}</div>
+          <h3 class="step-title">{{ step.title }}</h3>
+          <p class="step-desc">{{ step.description }}</p>
         </div>
       </div>
-      
     </div>
 
-    <!-- CATEGORIES -->
     <div class="section section--gray">
       <div class="section-header">
         <span class="section-tag">Explore</span>
         <h2 class="section-title">Browse Categories</h2>
       </div>
-      <div class="categories-grid">
-        <div class="category-card" *ngFor="let cat of categories">
-          <div class="cat-icon">{{ cat.icon }}</div>
+      <div class="categories-grid" *ngIf="!isLoadingCategories; else categoriesLoading">
+        <div class="category-card" *ngFor="let cat of categories; trackBy: trackByName">
+          <div class="cat-icon">
+            <ion-icon [name]="cat.icon"></ion-icon>
+          </div>
           <div class="cat-name">{{ cat.name }}</div>
-          <div class="cat-count">{{ cat.count }} jobs</div>
+          <div class="cat-count">{{ cat.count }} opportunities</div>
         </div>
       </div>
+      <ng-template #categoriesLoading>
+        <div class="categories-grid">
+          <div class="category-card" *ngFor="let placeholder of [1,2,3,4]">
+            <div class="cat-name">Loading...</div>
+          </div>
+        </div>
+      </ng-template>
     </div>
 
-    <!-- TOP FREELANCERS -->
     <div class="section">
       <div class="section-header">
         <span class="section-tag">Top Talent</span>
         <h2 class="section-title">Work with the best</h2>
       </div>
-      <div class="freelancers-list">
-        <div class="freelancer-card" *ngFor="let f of freelancers">
-          <div class="freelancer-avatar">{{ f.avatar }}</div>
+      <div class="freelancers-list" *ngIf="!isLoadingFreelancers">
+        <div class="freelancer-card" *ngFor="let freelancer of freelancers; trackBy: trackByName">
+          <div class="freelancer-avatar">{{ freelancer.initials }}</div>
           <div class="freelancer-info">
-            <div class="freelancer-name">{{ f.name }}</div>
-            <div class="freelancer-title">{{ f.title }}</div>
+            <div class="freelancer-name">{{ freelancer.name }}</div>
+            <div class="freelancer-title">{{ freelancer.title }}</div>
             <div class="freelancer-tags">
-              <span class="ftag" *ngFor="let tag of f.tags">{{ tag }}</span>
+              <span class="ftag" *ngFor="let tag of freelancer.tags">{{ tag }}</span>
             </div>
           </div>
           <div class="freelancer-right">
-            <div class="freelancer-rate">{{ f.rate }}<span>/hr</span></div>
-            <div class="freelancer-stars">★ {{ f.rating }}</div>
+            <div class="freelancer-rate">{{ freelancer.rate }}<span>/hr</span></div>
+            <div class="freelancer-stars">★ {{ freelancer.rating }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- CTA -->
     <div class="cta-section">
       <div class="cta-glow"></div>
-      <h2 class="cta-title">Ready to get<br><span class="cta-accent">started?</span></h2>
-      <p class="cta-sub">Thousands of companies and freelancers are already growing with us.</p>
+      <h2 class="cta-title">{{ homeContent.ctaTitle }}<br /><span class="cta-accent">{{ homeContent.ctaAccent }}</span></h2>
+      <p class="cta-sub">{{ homeContent.ctaSubtitle }}</p>
       <div class="cta-btns">
         <ion-button class="cta-btn-primary" expand="block" (click)="goToHireFreelancer()">
           Hire a Freelancer
@@ -164,6 +141,5 @@
         </ion-button>
       </div>
     </div>
-
   </div>
 </ion-content>

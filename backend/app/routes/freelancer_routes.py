@@ -8,6 +8,7 @@ from app.services.freelancer_service import (
     service_search_freelancers,
     service_get_top_rated,
     service_get_local,
+    change_freelancer_password,
 )
 
 freelancer_bp = Blueprint("freelancer", __name__)
@@ -114,4 +115,22 @@ def freelancer_by_id(user_id):
         return "", 200
 
     result, status = get_freelancer_profile(user_id)
+    return jsonify(result), status
+
+@freelancer_bp.route("/change-password", methods=["POST", "OPTIONS"], strict_slashes=False)
+@jwt_required()
+def change_password():
+    if request.method == "OPTIONS":
+        return "", 200
+    error = require_freelancer_role()
+    if error:
+        return error
+
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Corps de la requête vide"}), 400
+
+    result, status = change_freelancer_password(user_id, data)
     return jsonify(result), status

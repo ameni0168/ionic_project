@@ -1,17 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { ButtonComponent } from '../../components/button/button.component';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { JobService } from '../../services/job.service';
 import { ProposalService } from '../../services/proposal.service';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-jobs',
   templateUrl: './jobs.page.html',
   styleUrls: ['./jobs.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, ButtonComponent],
+  imports: [CommonModule, IonicModule, FormsModule],
   animations: [
     trigger('fadeInUp', [
       transition(':enter', [
@@ -22,166 +24,189 @@ import { ProposalService } from '../../services/proposal.service';
   ]
 })
 export class JobsPage implements OnInit {
-
   jobs: any[] = [];
-  userId = "freelancer123";
+  filteredJobs: any[] = [];
+  userId: string | null = null;
   loading = false;
-  error: string | null = null;
-  appliedJobs: Set<string> = new Set();
+  searchTerm = '';
+  selectedCategory = 'all';
+  appliedJobIds: Set<string> = new Set();
+
+  categories: Array<{ id: string; label: string }> = [{ id: 'all', label: 'Tous' }];
 
   constructor(
-    private http: HttpClient,
-    private alertController: AlertController,
-    private proposalService: ProposalService
+    private jobService: JobService,
+    private proposalService: ProposalService,
+    private apiService: ApiService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController
   ) {}
 
   ngOnInit() {
-    this.loadJobs();
-    this.loadUserApplications();
+    this.userId = this.apiService.getUserId();
+    this.route.queryParamMap.subscribe((params) => {
+      this.searchTerm = (params.get('q') || '').trim();
+      this.applyFilters();
+    });
+    this.loadData();
   }
 
-  loadJobs() {
+  async loadData() {
     this.loading = true;
-    this.error = null;
-    
-    this.http.get<any>('http://localhost:5000/api/jobs')
-      .subscribe({
-        next: (data) => {
-          console.log('Jobs received:', data);
-          this.jobs = data.jobs || [];
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('Error loading jobs:', err);
-          this.error = 'Failed to load jobs. Please check if backend is running.';
-          this.loading = false;
-        }
-      });
+    try {
+      const jobsRes = await this.jobService.getAllJobs().toPromise();
+      this.jobs = jobsRes.jobs || [];
+      this.categories = this.buildDynamicCategories(this.jobs);
+
+      if (this.userId && this.apiService.getUserRole() === 'freelancer') {
+        const proposalsRes = await this.proposalService.getProposalsByFreelancer(this.userId).toPromise();
+        const proposals = proposalsRes.proposals || [];
+        this.appliedJobIds = new Set(proposals.map((p: any) => p.job_id));
+      }
+
+      this.applyFilters();
+    } catch (err) {
+      console.error('Error loading jobs board data:', err);
+      this.showToast('Erreur lors du chargement des offres', 'danger');
+    } finally {
+      this.loading = false;
+    }
   }
 
-  loadUserApplications() {
-    this.proposalService.getProposalsByFreelancer(this.userId).subscribe({
-      next: (response: { proposals: any[]; }) => {
-        console.log('User applications:', response);
-        if (response.proposals) {
-          response.proposals.forEach((proposal: any) => {
-            this.appliedJobs.add(proposal.job_id);
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Error loading applications:', err);
-      }
+  applyFilters() {
+    this.filteredJobs = this.jobs.filter(job => {
+      const matchSearch = !this.searchTerm ||
+        job.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        job.description.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchCat = this.selectedCategory === 'all' || job.category === this.selectedCategory;
+
+      return matchSearch && matchCat && job.status === 'open';
     });
   }
 
-  async apply(job: any) {
-    // Check if already applied
-    if (this.appliedJobs.has(job._id)) {
-      const alert = await this.alertController.create({
-        header: 'Already Applied',
-        message: 'You have already submitted a proposal for this job.',
-        buttons: ['OK']
-      });
-      await alert.present();
+  handleSearch(event: any) {
+    this.searchTerm = event?.detail?.value ?? event?.target?.value ?? '';
+    this.applyFilters();
+  }
+
+  filterByCategory(catId: string) {
+    this.selectedCategory = catId;
+    this.applyFilters();
+  }
+
+  private buildDynamicCategories(jobs: any[]): Array<{ id: string; label: string }> {
+    const uniqueCategories = Array.from(
+      new Set(
+        jobs
+          .map((job) => this.normalizeCategory(job?.category))
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    if (!uniqueCategories.includes(this.selectedCategory)) {
+      this.selectedCategory = 'all';
+    }
+
+    return [
+      { id: 'all', label: 'Tous' },
+      ...uniqueCategories.map((category) => ({
+        id: category,
+        label: category,
+      })),
+    ];
+  }
+
+  private normalizeCategory(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  async openApplyModal(job: any) {
+    if (!this.userId || this.apiService.getUserRole() !== 'freelancer') {
+      this.showToast('Inscription freelancer obligatoire avant de confirmer une candidature', 'warning');
+      this.router.navigate(['/welcome'], { queryParams: { redirectTo: '/jobs' } });
       return;
     }
 
-    // Check if job is already in progress
-    if (job.status === 'in_progress') {
-      const alert = await this.alertController.create({
-        header: 'Job Already Assigned',
-        message: 'This job has already been assigned to another freelancer.',
-        buttons: ['OK']
-      });
-      await alert.present();
+    if (this.appliedJobIds.has(job._id)) {
+      this.showToast('Vous avez deja postule a cette offre', 'warning');
       return;
     }
 
-    // Show proposal form
-    const alert = await this.alertController.create({
-      header: 'Submit Proposal',
+    const alert = await this.alertCtrl.create({
+      header: 'Proposer mes services',
       subHeader: job.title,
+      mode: 'ios',
+      cssClass: 'custom-alert',
       inputs: [
         {
           name: 'message',
           type: 'textarea',
-          placeholder: 'Write a message to the client...',
-          attributes: {
-            rows: 4
-          }
+          placeholder: 'Pourquoi etes-vous le meilleur pour ce job ?',
         },
         {
           name: 'price',
           type: 'number',
-          placeholder: 'Your proposed price (DT)',
-          value: job.budget_min.toString()
+          placeholder: 'Votre tarif propose (DT)',
+          value: job.budget_min
         },
         {
           name: 'days',
           type: 'number',
-          placeholder: 'Estimated days to complete'
+          placeholder: 'Nombre de jours estimes'
         }
       ],
       buttons: [
+        { text: 'Annuler', role: 'cancel' },
         {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Submit',
+          text: 'Envoyer',
           handler: (data) => {
-            if (!data.message || !data.price) {
-              this.showErrorAlert('Please fill all required fields');
-              return false;
-            }
-            
-            const proposal = {
-              job_id: job._id,
-              freelancer_id: this.userId,
-              client_id: job.client_id,
-              message: data.message,
-              price: parseFloat(data.price),
-              estimated_days: data.days ? parseInt(data.days) : undefined  // ✅ Fixed: use undefined instead of null
-            };
-            
-            this.proposalService.createProposal(proposal).subscribe({
-              next: (response: any) => {
-                console.log('Proposal created:', response);
-                this.appliedJobs.add(job._id);
-                this.showSuccessAlert('Proposal submitted successfully!');
-              },
-              error: (err: { error: { error: string; }; }) => {
-                console.error('Error submitting proposal:', err);
-                const errorMessage = err.error?.error || 'Failed to submit proposal. Please try again.';
-                this.showErrorAlert(errorMessage);
-              }
-            });
+            this.submitProposal(job, data);
             return true;
           }
         }
       ]
     });
-    
     await alert.present();
   }
 
-  async showSuccessAlert(message: string) {
-    const alert = await this.alertController.create({
-      header: 'Success',
-      message: message,
-      buttons: ['OK']
-    });
-    await alert.present();
+  async submitProposal(job: any, data: any) {
+    if (!data.message || !data.price || !data.days) {
+      this.showToast('Veuillez remplir tous les champs', 'warning');
+      return false;
+    }
+
+    try {
+      const proposal = {
+        job_id: job._id,
+        freelancer_id: this.userId!,
+        client_id: job.client_id,
+        message: data.message,
+        price: parseFloat(data.price),
+        estimated_days: parseInt(data.days)
+      };
+
+      await this.proposalService.createProposal(proposal).toPromise();
+      this.appliedJobIds.add(job._id);
+      this.showToast('Candidature envoyee avec succes !', 'success');
+      return true;
+    } catch (err: any) {
+      const msg = err.error?.error || 'Erreur lors de l envoi';
+      this.showToast(msg, 'danger');
+      return false;
+    }
   }
 
-  async showErrorAlert(message: string) {
-    const alert = await this.alertController.create({
-      header: 'Error',
-      message: message,
-      buttons: ['OK']
+  async showToast(message: string, color: string = 'success') {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2000,
+      color,
+      position: 'top'
     });
-    await alert.present();
+    await toast.present();
   }
 
   goBack() {

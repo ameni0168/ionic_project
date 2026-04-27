@@ -1,14 +1,14 @@
-<ion-header mode="ios">
-  <ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="profile-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Profile</ion-title>
+    <ion-title class="toolbar-title">Mon Profil</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="openEdit()">
-        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      <ion-button fill="clear" (click)="openEdit()">
+        <ion-icon slot="icon-only" name="create-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -21,10 +21,10 @@
     <ion-spinner name="crescent"></ion-spinner>
   </div>
 
-  <div *ngIf="!isLoading" class="profile-container safe-area-bottom">
+  <div *ngIf="!isLoading">
 
-    <!-- ── En-tête profil ── -->
-    <div class="profile-header" @fadeInUp>
+    <!-- ── HERO ── -->
+    <div class="hero-section">
       <div class="profile-avatar">
         <div class="avatar-placeholder">
           <ion-icon name="person"></ion-icon>
@@ -39,58 +39,119 @@
       <div class="profile-stats">
         <div class="stat-item">
           <div class="stat-value">{{ profile.completedProjects }}</div>
-          <div class="stat-label">Projects</div>
+          <div class="stat-label">Projets</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <div class="stat-value">{{ profile.rating }}</div>
-          <div class="stat-label">Rating</div>
+          <div class="stat-label">Note</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <div class="stat-value">{{ profile.reviews }}</div>
-          <div class="stat-label">Reviews</div>
+          <div class="stat-label">Avis</div>
         </div>
       </div>
     </div>
 
-    <!-- ── Bio ── -->
-    <div class="section-card" @fadeInUp>
-      <h2 class="section-title">About</h2>
-      <p class="bio-text">{{ profile.bio || 'Aucune description.' }}</p>
-    </div>
+    <!-- ── CARDS SECTION ── -->
+    <div class="profile-container">
 
-    <!-- ── Contact ── -->
-    <div class="section-card" @fadeInUp>
-      <h2 class="section-title">Contact Information</h2>
-      <div class="info-list">
-        <div class="info-item" *ngFor="let info of profileInfo">
-          <div class="info-icon"><ion-icon [name]="info.icon"></ion-icon></div>
-          <div class="info-content">
-            <div class="info-label">{{ info.label }}</div>
-            <div class="info-value">{{ info.value }}</div>
+      <!-- À propos -->
+      <div class="card">
+        <div class="card-header">
+          <ion-icon name="document-text-outline" class="card-icon"></ion-icon>
+          <h3 class="card-title">À propos</h3>
+        </div>
+        <p class="bio-text">{{ profile.bio || 'Aucune description.' }}</p>
+      </div>
+
+      <!-- Contact -->
+      <div class="card">
+        <div class="card-header">
+          <ion-icon name="mail-outline" class="card-icon"></ion-icon>
+          <h3 class="card-title">Informations de contact</h3>
+        </div>
+        <div class="info-list">
+          <div class="info-item" *ngFor="let info of profileInfo">
+            <div class="info-icon"><ion-icon [name]="info.icon"></ion-icon></div>
+            <div class="info-content">
+              <div class="info-label">{{ info.label }}</div>
+              <div class="info-value">{{ info.value }}</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ── Skills ── -->
-    <div class="section-card" @fadeInUp>
-      <h2 class="section-title">Skills</h2>
-      <div *ngIf="skills.length === 0" style="color:var(--ion-color-medium); font-size:14px;">
-        Aucune compétence ajoutée.
-      </div>
-      <div class="skills-list">
-        <div class="skill-item" *ngFor="let skill of skills">
-          <div class="skill-header">
-            <span class="skill-name">{{ skill.name }}</span>
-            <span class="skill-percentage">{{ skill.level }}%</span>
-          </div>
-          <div class="skill-bar">
-            <div class="skill-progress" [style.width.%]="skill.level"></div>
+      <!-- Compétences -->
+      <div class="card">
+        <div class="card-header">
+          <ion-icon name="trophy-outline" class="card-icon"></ion-icon>
+          <h3 class="card-title">Compétences</h3>
+        </div>
+        <div *ngIf="skills.length === 0" style="color:var(--color-text-tertiary); font-size:14px;">
+          Aucune compétence ajoutée.
+        </div>
+        <div class="skills-list">
+          <div class="skill-item" *ngFor="let skill of skills">
+            <div class="skill-header">
+              <span class="skill-name">{{ skill.name }}</span>
+              <span class="skill-percentage">{{ skill.level }}%</span>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-progress" [style.width.%]="skill.level"></div>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Modifier le profil -->
+      <div class="edit-profile-section">
+        <ion-button expand="block" class="edit-btn" (click)="openEdit()">
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          Modifier le profil
+        </ion-button>
+      </div>
+
+      <!-- ── SÉCURITÉ ── -->
+      <div class="card">
+        <div class="card-header">
+          <ion-icon name="shield-checkmark-outline" class="card-icon"></ion-icon>
+          <h3 class="card-title">Sécurité</h3>
+        </div>
+
+        <!-- Changer mot de passe -->
+        <div class="security-row" (click)="openPwModal()">
+          <div class="security-icon-box">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+          </div>
+          <div class="security-text">
+            <span class="security-label">Mot de passe</span>
+            <span class="security-value">••••••••</span>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="security-chevron"></ion-icon>
+        </div>
+
+        <!-- Membre depuis -->
+        <div class="security-row last">
+          <div class="security-icon-box">
+            <ion-icon name="calendar-outline"></ion-icon>
+          </div>
+          <div class="security-text">
+            <span class="security-label">Freelancer depuis</span>
+            <span class="security-value">{{ profile.memberSince || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DÉCONNEXION ── -->
+      <div class="logout-section">
+        <ion-button expand="block" fill="outline" class="logout-btn" (click)="logout()">
+          <ion-icon slot="start" name="log-out-outline"></ion-icon>
+          Se déconnecter
+        </ion-button>
+      </div>
+
     </div>
 
     <!-- Bouton éditer (bas de page) -->
@@ -102,6 +163,44 @@
     </div>
 
   </div>
+
+  <!-- ══ MODAL CHANGER MOT DE PASSE ════════════════════════════ -->
+  <div class="modal-overlay" *ngIf="showPwModal" (click)="closePwModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-top">
+        <h3 class="modal-title">Changer le mot de passe</h3>
+        <ion-button fill="clear" (click)="closePwModal()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field">
+          <label class="modal-lbl">Ancien mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.old_password" name="old_password" type="password" placeholder="••••••" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-lbl">Nouveau mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.new_password" name="new_password" type="password" placeholder="••••••" />
+        </div>
+        <div class="modal-field">
+          <label class="modal-lbl">Confirmer le mot de passe</label>
+          <input class="field-input" [(ngModel)]="pwForm.confirm_password" name="confirm_password" type="password" placeholder="••••••" />
+        </div>
+        <p class="modal-error" *ngIf="pwError">{{ pwError }}</p>
+      </div>
+
+      <ion-button expand="block" class="modal-save-btn" (click)="submitChangePassword()" [disabled]="pwSaving">
+        <ion-spinner *ngIf="pwSaving" name="crescent" slot="start"></ion-spinner>
+        {{ pwSaving ? 'Modification...' : 'Modifier le mot de passe' }}
+      </ion-button>
+
+    </div>
+  </div>
+
+  <div style="height: 50px;"></div>
+
 </ion-content>
 
 <!-- ═══════════════════════════════════════════
@@ -109,119 +208,88 @@
 ════════════════════════════════════════════ -->
 <ion-modal [isOpen]="showEdit" (didDismiss)="closeEdit()">
   <ng-template>
-    <ion-header mode="ios">
-      <ion-toolbar>
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="profile-toolbar">
         <ion-buttons slot="start">
-          <ion-button (click)="closeEdit()">
-            <ion-icon slot="icon-only" name="close"></ion-icon>
+          <ion-button fill="clear" (click)="closeEdit()">
+            <ion-icon slot="icon-only" name="close-outline" class="toolbar-icon"></ion-icon>
           </ion-button>
         </ion-buttons>
-        <ion-title>Edit Profile</ion-title>
+        <ion-title class="toolbar-title">Modifier mon profil</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="saveProfile()" [disabled]="isSaving" strong="true">
-            {{ isSaving ? 'Saving...' : 'Save' }}
+          <ion-button fill="clear" (click)="saveProfile()" [disabled]="isSaving">
+            <ion-spinner *ngIf="isSaving" name="crescent" slot="icon-only"></ion-spinner>
+            <span *ngIf="!isSaving" style="color:var(--color-primary); font-weight:700;">Sauvegarder</span>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <ion-content class="modal-edit-content">
+      <div class="edit-form-container">
 
-      <!-- Informations de base -->
-      <ion-list-header>
-        <ion-label>Basic Info</ion-label>
-      </ion-list-header>
+        <div class="edit-section">
+          <h3 class="edit-section-title">Informations personnelles</h3>
 
-      <ion-item>
-        <ion-label position="stacked">Full Name *</ion-label>
-        <ion-input [(ngModel)]="editForm.fullName" placeholder="Ton nom complet"></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Professional Title</ion-label>
-        <ion-input [(ngModel)]="editForm.title" placeholder="Ex: Full Stack Developer"></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Bio</ion-label>
-        <ion-textarea [(ngModel)]="editForm.bio" rows="4"
-          placeholder="Décris ton expérience et tes spécialités...">
-        </ion-textarea>
-      </ion-item>
-
-      <!-- Contact -->
-      <ion-list-header style="margin-top:16px;">
-        <ion-label>Contact</ion-label>
-      </ion-list-header>
-
-      <ion-item>
-        <ion-label position="stacked">Location</ion-label>
-        <ion-input [(ngModel)]="editForm.location" placeholder="Ex: Tunis, Tunisia"></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Phone</ion-label>
-        <ion-input [(ngModel)]="editForm.phone" type="tel" placeholder="+216 XX XXX XXX"></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Portfolio URL</ion-label>
-        <ion-input [(ngModel)]="editForm.portfolioUrl" type="url" placeholder="https://..."></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="stacked">Hourly Rate ($)</ion-label>
-        <ion-input [(ngModel)]="editForm.hourlyRate" type="number" min="0" placeholder="0"></ion-input>
-      </ion-item>
-
-      <!-- Skills -->
-      <ion-list-header style="margin-top:16px;">
-        <ion-label>Skills</ion-label>
-      </ion-list-header>
-
-      <!-- Skills existants -->
-      <ion-item *ngFor="let skill of editForm.skills; let i = index">
-        <ion-label>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="flex:1; font-size:14px;">{{ skill.name }}</span>
-            <span style="font-size:13px; color:var(--ion-color-medium);">{{ skill.level }}%</span>
+          <div class="edit-field">
+            <label class="edit-label">Nom complet</label>
+            <input class="edit-input" [(ngModel)]="editForm.fullName" placeholder="Votre nom" />
           </div>
-          <ion-range [(ngModel)]="skill.level" min="0" max="100" step="5"
-            color="primary" style="padding: 0;">
-          </ion-range>
-        </ion-label>
-        <ion-button slot="end" fill="clear" color="danger" (click)="removeSkill(i)">
-          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-        </ion-button>
-      </ion-item>
+          <div class="edit-field">
+            <label class="edit-label">Titre / Spécialité</label>
+            <input class="edit-input" [(ngModel)]="editForm.title" placeholder="Ex: Développeur Full Stack" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Bio</label>
+            <textarea class="edit-input edit-textarea" [(ngModel)]="editForm.bio" rows="4" placeholder="Parlez de vous..."></textarea>
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Localisation</label>
+            <input class="edit-input" [(ngModel)]="editForm.location" placeholder="Ville, Pays" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Téléphone</label>
+            <input class="edit-input" [(ngModel)]="editForm.phone" type="tel" placeholder="+213 ..." />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Tarif horaire ($)</label>
+            <input class="edit-input" [(ngModel)]="editForm.hourlyRate" type="number" placeholder="Ex: 50" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Portfolio URL</label>
+            <input class="edit-input" [(ngModel)]="editForm.portfolioUrl" type="url" placeholder="https://..." />
+          </div>
+        </div>
 
-      <!-- Ajouter un skill -->
-      <div style="padding:12px 16px; background:var(--ion-color-light); border-radius:8px; margin:12px 0;">
-        <p style="font-size:12px; color:var(--ion-color-medium); margin:0 0 8px;">Add a skill</p>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <ion-input [(ngModel)]="newSkillName" placeholder="Ex: React"
-            style="flex:1; border:1px solid var(--ion-color-light-shade); border-radius:6px; padding:6px 10px; font-size:14px;">
-          </ion-input>
-          <ion-button size="small" (click)="addSkill()">
-            <ion-icon slot="icon-only" name="add"></ion-icon>
+        <div class="edit-section">
+          <h3 class="edit-section-title">Compétences</h3>
+          <div class="skills-edit-list">
+            <div class="skill-edit-item" *ngFor="let skill of editForm.skills; let i = index">
+              <span class="skill-edit-name">{{ skill.name }}</span>
+              <span class="skill-edit-level">{{ skill.level }}%</span>
+              <button class="skill-remove-btn" (click)="removeSkill(i)">
+                <ion-icon name="close-circle-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+          <div class="add-skill-row">
+            <input class="edit-input skill-name-input" [(ngModel)]="newSkillName" placeholder="Nom compétence" />
+            <input class="edit-input skill-level-input" [(ngModel)]="newSkillLevel" type="number" min="1" max="100" placeholder="%" />
+            <button class="add-skill-btn" (click)="addSkill()">
+              <ion-icon name="add-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="edit-submit-row">
+          <ion-button expand="block" class="edit-save-btn" (click)="saveProfile()" [disabled]="isSaving">
+            <ion-spinner *ngIf="isSaving" name="crescent" slot="start"></ion-spinner>
+            <ion-icon *ngIf="!isSaving" name="checkmark-outline" slot="start"></ion-icon>
+            {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder les modifications' }}
           </ion-button>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-          <span style="font-size:12px; color:var(--ion-color-medium); white-space:nowrap;">Level: {{ newSkillLevel }}%</span>
-          <ion-range [(ngModel)]="newSkillLevel" min="0" max="100" step="5"
-            color="primary" style="flex:1; padding:0;">
-          </ion-range>
-        </div>
-      </div>
 
-      <!-- Bouton Save (bas de page) -->
-      <div style="padding: 20px 0 40px;">
-        <ion-button expand="block" (click)="saveProfile()" [disabled]="isSaving">
-          <ion-icon name="save-outline" slot="start"></ion-icon>
-          {{ isSaving ? 'Saving...' : 'Save Profile' }}
-        </ion-button>
       </div>
-
     </ion-content>
   </ng-template>
 </ion-modal>

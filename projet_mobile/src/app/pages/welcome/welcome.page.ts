@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate, stagger, query } from '@angular/animations';
 
 @Component({
@@ -36,24 +37,48 @@ import { trigger, transition, style, animate, stagger, query } from '@angular/an
 })
 export class WelcomePage implements OnInit {
   showContent = false;
+  selectedType: 'client' | 'freelancer' | null = null;
+  redirectTo: string | null = null;
 
-  constructor(private navCtrl: NavController) {}  // ← Utilisez NavController au lieu de Router
+  constructor(
+    private navCtrl: NavController,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit() {
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
     setTimeout(() => {
       this.showContent = true;
     }, 100);
   }
 
+  selectType(type: 'client' | 'freelancer') {
+    this.selectedType = type;
+  }
+
+  proceed() {
+    if (this.selectedType === 'client') {
+      this.navigateToClientAuth();
+    } else if (this.selectedType === 'freelancer') {
+      this.navigateToFreelancerAuth();
+    }
+  }
+
   navigateToClientAuth() {
-    this.navCtrl.navigateForward(['/auth/client-register']);  // ← navigateForward au lieu de navigate
+    this.navCtrl.navigateForward(['/auth/client-register'], {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 
   navigateToFreelancerAuth() {
-    this.navCtrl.navigateForward(['/auth/freelancer-register']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/freelancer-register'], {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 
   navigateToLogin() {
-    this.navCtrl.navigateForward(['/auth/login']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/login'], {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 }
