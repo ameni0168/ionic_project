@@ -11,8 +11,6 @@
 
 <ion-content [fullscreen]="true" class="post-job-page">
   <div class="page-wrapper" *ngIf="showContent">
-
-    <!-- ── Hero Banner ───────────────────────── -->
     <div class="hero-banner">
       <div class="hero-bg-shapes">
         <div class="shape shape-1"></div>
@@ -24,22 +22,18 @@
           <ion-icon name="flash-outline"></ion-icon>
           New Opportunity
         </div>
-        <h1 class="hero-title">Create a<br/><span class="hero-accent">Job Offer</span></h1>
+        <h1 class="hero-title">Create a<br /><span class="hero-accent">Job Offer</span></h1>
         <p class="hero-sub">Connect with top freelancers around the world</p>
       </div>
     </div>
 
-    <!-- ── Form ──────────────────────────────── -->
     <div class="form-sheet">
       <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
-
-        <!-- ── Section: Basics ── -->
         <div class="section-label">
           <div class="section-dot"></div>
           Project Basics
         </div>
 
-        <!-- Job Title -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap indigo">
@@ -60,7 +54,6 @@
           </app-input-field>
         </div>
 
-        <!-- Description -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap teal">
@@ -81,7 +74,6 @@
           </app-input-field>
         </div>
 
-        <!-- Category -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap amber">
@@ -99,26 +91,19 @@
               placeholder="Choose a category..."
               interface="action-sheet"
               class="custom-select">
-              <ion-select-option value="Development">💻 Development</ion-select-option>
-              <ion-select-option value="Design">🎨 Design</ion-select-option>
-              <ion-select-option value="Marketing">📣 Marketing</ion-select-option>
-              <ion-select-option value="Writing">✍️ Writing</ion-select-option>
-              <ion-select-option value="Video">🎬 Video & Animation</ion-select-option>
-              <ion-select-option value="Finance">💰 Finance</ion-select-option>
-              <ion-select-option value="Data">📊 Data & Analytics</ion-select-option>
-              <ion-select-option value="Other">📦 Other</ion-select-option>
+              <ion-select-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </ion-select-option>
             </ion-select>
             <ion-icon name="chevron-down-outline" class="select-suffix-icon"></ion-icon>
           </div>
         </div>
 
-        <!-- ── Section: Budget ── -->
         <div class="section-label">
           <div class="section-dot green"></div>
           Budget & Timeline
         </div>
 
-        <!-- Budget Type Toggle -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap green">
@@ -132,14 +117,14 @@
           <div class="toggle-group">
             <div class="toggle-option"
                  [class.active]="jobForm.get('budget_type')?.value === 'fixed'"
-                 (click)="$any(this).setBudgetType('fixed')">
+                 (click)="setBudgetType('fixed')">
               <ion-icon name="pricetag-outline"></ion-icon>
               <span class="toggle-label">Fixed Price</span>
               <span class="toggle-desc">One-time payment</span>
             </div>
             <div class="toggle-option"
                  [class.active]="jobForm.get('budget_type')?.value === 'hourly'"
-                 (click)="$any(this).setBudgetType('hourly')">
+                 (click)="setBudgetType('hourly')">
               <ion-icon name="time-outline"></ion-icon>
               <span class="toggle-label">Hourly Rate</span>
               <span class="toggle-desc">Pay per hour</span>
@@ -147,7 +132,6 @@
           </div>
         </div>
 
-        <!-- Budget Min/Max -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap green">
@@ -165,7 +149,7 @@
                 type="number"
                 placeholder="500"
                 icon="cash-outline"
-                [formControlRef]="$any(this).budgetMinControl"
+                [formControlRef]="budgetMinControl"
                 [required]="true"
                 formControlName="budget_min">
               </app-input-field>
@@ -179,7 +163,7 @@
                 type="number"
                 placeholder="2000"
                 icon="cash-outline"
-                [formControlRef]="$any(this).budgetMaxControl"
+                [formControlRef]="budgetMaxControl"
                 [required]="true"
                 formControlName="budget_max">
               </app-input-field>
@@ -187,7 +171,6 @@
           </div>
         </div>
 
-        <!-- Deadline -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap rose">
@@ -207,13 +190,11 @@
           </app-input-field>
         </div>
 
-        <!-- ── Section: Requirements ── -->
         <div class="section-label">
           <div class="section-dot rose"></div>
           Requirements
         </div>
 
-        <!-- Experience Level -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap rose">
@@ -227,29 +208,28 @@
           <div class="exp-cards">
             <div class="exp-card"
                  [class.active]="jobForm.get('experience_level')?.value === 'beginner'"
-                 (click)="$any(this).setExperience('beginner')">
-              <div class="exp-emoji">🌱</div>
+                 (click)="setExperience('beginner')">
+              <div class="exp-emoji">Beginner</div>
               <p class="exp-name">Beginner</p>
               <p class="exp-desc">Entry level, learning</p>
             </div>
             <div class="exp-card"
                  [class.active]="jobForm.get('experience_level')?.value === 'intermediate'"
-                 (click)="$any(this).setExperience('intermediate')">
-              <div class="exp-emoji">⚡</div>
+                 (click)="setExperience('intermediate')">
+              <div class="exp-emoji">Pro</div>
               <p class="exp-name">Intermediate</p>
               <p class="exp-desc">Some experience</p>
             </div>
             <div class="exp-card"
                  [class.active]="jobForm.get('experience_level')?.value === 'expert'"
-                 (click)="$any(this).setExperience('expert')">
-              <div class="exp-emoji">🏆</div>
+                 (click)="setExperience('expert')">
+              <div class="exp-emoji">Top</div>
               <p class="exp-name">Expert</p>
               <p class="exp-desc">Highly skilled</p>
             </div>
           </div>
         </div>
 
-        <!-- Skills -->
         <div class="field-card">
           <div class="field-header">
             <div class="field-icon-wrap indigo">
@@ -265,19 +245,18 @@
             <input
               class="skill-text-input"
               placeholder="e.g. Ionic, Python, Figma..."
-              [value]="$any(this).skillInput"
-              (input)="$any(this).skillInput = $any($event.target).value"
-              (keydown.enter)="$any(this).addSkill($event)"/>
+              [value]="skillInput"
+              (input)="skillInput = $any($event.target).value"
+              (keydown.enter)="addSkill($event)" />
           </div>
-          <div class="skills-cloud" *ngIf="$any(this).skills.length > 0">
-            <div class="skill-chip" *ngFor="let skill of $any(this).skills">
+          <div class="skills-cloud" *ngIf="skills.length > 0">
+            <div class="skill-chip" *ngFor="let skill of skills">
               <span>{{ skill }}</span>
-              <ion-icon name="close-circle" (click)="$any(this).removeSkill(skill)"></ion-icon>
+              <ion-icon name="close-circle" (click)="removeSkill(skill)"></ion-icon>
             </div>
           </div>
         </div>
 
-        <!-- ── Submit ── -->
         <div class="submit-section">
           <div class="submit-info">
             <ion-icon name="shield-checkmark-outline"></ion-icon>
@@ -293,9 +272,7 @@
             Publish Job Offer
           </app-button>
         </div>
-
       </form>
     </div>
-
   </div>
 </ion-content>

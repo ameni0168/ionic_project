@@ -5,6 +5,7 @@ import { IonicModule, ToastController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';                      // ← Router Angular, pas NavController
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ApiService } from '../../services/api.service';
+import { MarketplaceContentService } from '../../services/marketplace-content.service';
 
 interface Gig {
   id: string;
@@ -50,11 +51,7 @@ export class MyGigsPage implements OnInit {
     colorAccent: '#6366f1'
   };
 
-  categories = [
-    'Graphic Design', 'Web Development', 'Mobile Development',
-    'Digital Marketing', 'Writing', 'Video & Animation',
-    'Music & Audio', 'Photography', 'Data & Analytics', 'Other'
-  ];
+  categories: string[] = [];
 
   colorOptions = [
     { label: 'Violet',  value: '#6366f1' },
@@ -68,11 +65,13 @@ export class MyGigsPage implements OnInit {
   constructor(
     private router: Router,                // ← Router Angular
     private api: ApiService,
+    private marketplaceContent: MarketplaceContentService,
     private toast: ToastController,
     private alert: AlertController
   ) {}
 
   ngOnInit() {
+    this.loadCategories();
     this.loadGigs();
   }
 
@@ -88,6 +87,17 @@ export class MyGigsPage implements OnInit {
         this.isLoading = false;
         this.showToast('Erreur lors du chargement des gigs', 'danger');
       }
+    });
+  }
+
+  loadCategories() {
+    this.marketplaceContent.getDynamicCategories(10).subscribe({
+      next: (categories) => {
+        this.categories = categories.map((category) => category.name);
+      },
+      error: () => {
+        this.categories = [];
+      },
     });
   }
 
@@ -181,6 +191,14 @@ export class MyGigsPage implements OnInit {
 
   getStatusIcon(status: string): string {
     return ({ active: 'checkmark-circle', pending: 'time', paused: 'pause-circle' } as any)[status] ?? 'ellipse';
+  }
+
+  getActiveCount(): number {
+    return this.gigs.filter(g => g.status === 'active').length;
+  }
+
+  getTotalOrders(): number {
+    return this.gigs.reduce((sum, g) => sum + (g.ordersCompleted || 0), 0);
   }
 
   async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {

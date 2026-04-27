@@ -1,102 +1,105 @@
-<ion-header mode="ios">
-  <ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="jobs-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" class="toolbar-icon"></ion-icon>
       </ion-button>
     </ion-buttons>
-
-    <ion-title>Jobs</ion-title>
-    
-    <!-- Add button to navigate to proposals -->
-    <ion-buttons slot="end">
-      <ion-button routerLink="/proposal">
-        <ion-icon slot="icon-only" name="document-text-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
+    <ion-title class="toolbar-title">Explorer les missions</ion-title>
   </ion-toolbar>
-</ion-header>
 
-<ion-content [fullscreen]="true" class="jobs-page">
-
-  <!-- Loading state -->
-  <div *ngIf="loading" class="loading-state">
-    <ion-spinner name="crescent"></ion-spinner>
-    <p>Loading jobs...</p>
-  </div>
-
-  <!-- Error state -->
-  <div *ngIf="error && !loading" class="error-state">
-    <ion-icon name="alert-circle-outline" color="danger" size="large"></ion-icon>
-    <p class="error-message">{{ error }}</p>
-    <ion-button (click)="loadJobs()" expand="block" size="small">
-      Retry
-    </ion-button>
-  </div>
-
-  <!-- Jobs container -->
-  <div *ngIf="!loading && !error && jobs.length > 0" class="jobs-container safe-area-bottom">
-
-    <!-- Header -->
-    <div class="jobs-header" @fadeInUp>
-      <h1 class="jobs-title">Available Jobs</h1>
-      <p class="jobs-subtitle">Find projects that match your skills</p>
+  <!-- Section de Recherche et Filtres -->
+  <div class="search-section">
+    <div class="search-bar-container">
+      <ion-searchbar 
+        placeholder="Rechercher une mission..." 
+        [value]="searchTerm"
+        (ionInput)="handleSearch($event)"
+        class="custom-searchbar">
+      </ion-searchbar>
     </div>
-
-    <!-- Jobs List -->
-    <div class="jobs-list">
-      <div class="job-card" *ngFor="let job of jobs" @fadeInUp>
-        <div class="job-header">
-          <h2 class="job-title">{{ job.title }}</h2>
-          <span class="job-category">{{ job.category }}</span>
-        </div>
-
-        <p class="job-description">
-          {{ job.description }}
-        </p>
-
-        <div class="job-info">
-          <span class="budget">
-            💰 {{ job.budget_min }} - {{ job.budget_max }} DT
-          </span>
-          <span class="level">
-            {{ job.experience_level }}
-          </span>
-        </div>
-
-        <div class="job-actions">
-          <!-- Show different states based on application status -->
-          <ng-container *ngIf="!appliedJobs.has(job._id); else alreadyApplied">
-            <app-button
-              *ngIf="job.status !== 'in_progress'"
-              variant="primary"
-              size="md"
-              [fullWidth]="true"
-              (click)="apply(job)">
-              Apply Now
-            </app-button>
-            <div *ngIf="job.status === 'in_progress'" class="in-progress-badge">
-              <ion-icon name="time" color="warning"></ion-icon>
-              <span>In Progress</span>
-            </div>
-          </ng-container>
-          
-          <ng-template #alreadyApplied>
-            <div class="applied-badge">
-              <ion-icon name="checkmark-circle" color="success"></ion-icon>
-              <span>Applied</span>
-            </div>
-          </ng-template>
-        </div>
+    
+    <div class="categories-scroll">
+      <div 
+        class="category-chip" 
+        *ngFor="let cat of categories"
+        [class.active]="selectedCategory === cat.id"
+        (click)="filterByCategory(cat.id)">
+        {{ cat.label }}
       </div>
     </div>
   </div>
+</ion-header>
 
-  <!-- Empty state -->
-  <div *ngIf="!loading && !error && jobs.length === 0" class="empty-state">
-    <ion-icon name="briefcase-outline" size="large"></ion-icon>
-    <h3>No Jobs Available</h3>
-    <p>Check back later for new opportunities</p>
+<ion-content [fullscreen]="true" class="jobs-content">
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="placeholder-container">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3]">
+      <ion-skeleton-text animated style="width: 80%; height: 20px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 40%; height: 15px; margin-top: 10px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-top: 15px;"></ion-skeleton-text>
+    </div>
   </div>
 
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredJobs.length === 0" class="empty-state" @fadeInUp>
+    <div class="empty-icon-box">
+      <ion-icon name="search-outline"></ion-icon>
+    </div>
+    <h3>Aucune mission trouvée</h3>
+    <p>Essayez de modifier vos filtres ou de rechercher un autre mot-clé.</p>
+  </div>
+
+  <!-- Job List -->
+  <div class="jobs-list" *ngIf="!loading && filteredJobs.length > 0">
+    <div class="job-card" *ngFor="let job of filteredJobs" @fadeInUp>
+      
+      <div class="job-header">
+        <div class="job-meta">
+          <span class="category-tag">{{ job.category }}</span>
+          <span class="time-tag">{{ job.created_at | date:'shortDate' }}</span>
+        </div>
+        <h3 class="job-title">{{ job.title }}</h3>
+      </div>
+
+      <div class="job-body">
+        <p class="job-description">{{ job.description }}</p>
+        
+        <div class="job-details">
+          <div class="detail-item">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Budget: {{ job.budget_min }} - {{ job.budget_max }} DT</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>{{ job.budget_type === 'fixed' ? 'Prix fixe' : 'Par heure' }}</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="stats-chart-outline"></ion-icon>
+            <span>Expertise: {{ job.experience_level }}</span>
+          </div>
+        </div>
+
+        <div class="skills-row">
+          <span class="skill-tag" *ngFor="let skill of job.skills">{{ skill }}</span>
+        </div>
+      </div>
+
+      <div class="job-footer">
+        <ion-button 
+          expand="block" 
+          [class.applied-btn]="appliedJobIds.has(job._id)"
+          [disabled]="appliedJobIds.has(job._id)"
+          (click)="openApplyModal(job)"
+          class="apply-btn">
+          <ion-icon [name]="appliedJobIds.has(job._id) ? 'checkmark-circle' : 'send-outline'" slot="start"></ion-icon>
+          {{ appliedJobIds.has(job._id) ? 'Déjà postulé' : 'Postuler maintenant' }}
+        </ion-button>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="height: 40px;"></div>
 </ion-content>

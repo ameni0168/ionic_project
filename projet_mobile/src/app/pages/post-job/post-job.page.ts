@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
 import { JobService } from '../../services/job.service';
+import { ApiService } from 'src/app/services/api.service';
+import { MarketplaceContentService } from 'src/app/services/marketplace-content.service';
 
 @Component({
   selector: 'app-post-job',
@@ -23,12 +26,11 @@ import { JobService } from '../../services/job.service';
     InputFieldComponent
   ]
 })
-export class PostJobPage {
-  [x: string]: any;
-
+export class PostJobPage implements OnInit {
   jobForm!: FormGroup;
   isLoading  = false;
   showContent = true;
+  categories: string[] = [];
 
   // Skills chip logic
   skills: string[]  = [];
@@ -37,10 +39,17 @@ export class PostJobPage {
   constructor(
     private fb:        FormBuilder,
     private navCtrl:   NavController,
+    private router: Router,
     private jobService: JobService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private api: ApiService,
+    private marketplaceContent: MarketplaceContentService
   ) {
     this.initForm();
+  }
+
+  ngOnInit(): void {
+    this.loadCategories();
   }
 
   // ── Form init ────────────────────────────────────────────────
@@ -97,9 +106,12 @@ export class PostJobPage {
       return;
     }
 
-    const clientId = localStorage.getItem('user_id')?.trim();
-    if (!clientId) {
-      void this.showToast('Connectez-vous en tant que client pour publier une offre.', 'danger');
+    const clientId = this.api.getUserId()?.trim();
+    const role = this.api.getUserRole();
+
+    if (!clientId || role !== 'client') {
+      void this.showToast('Inscription client obligatoire avant la publication.', 'danger');
+      this.router.navigate(['/welcome'], { queryParams: { redirectTo: '/post-job' } });
       return;
     }
 
@@ -147,5 +159,16 @@ export class PostJobPage {
 
   goBack() {
     this.navCtrl.back();
+  }
+
+  private loadCategories() {
+    this.marketplaceContent.getDynamicCategories(12).subscribe({
+      next: (categories) => {
+        this.categories = categories.map((category) => category.name);
+      },
+      error: () => {
+        this.categories = [];
+      },
+    });
   }
 }

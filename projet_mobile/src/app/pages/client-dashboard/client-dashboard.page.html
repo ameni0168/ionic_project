@@ -71,12 +71,7 @@
     </ion-list>
   </div>
 
-  <!-- ========== LIENS RAPIDES ========== -->
-  <div class="links-row">
-    <a class="link-item" (click)="viewAllJobs()">View all job posts</a>
-    <span class="divider">|</span>
-    <a class="link-item" (click)="viewAllContracts()">View all contracts</a>
-  </div>
+  
 
   <!-- ========== FIND EXPERTS BY CATEGORY ========== -->
   <div class="experts-section">
@@ -160,20 +155,7 @@
 
   </div><!-- /experts-section -->
 
-  <!-- ========== GUIDED TOUR ========== -->
-  <div class="guided-tour-banner" (click)="toggleGuidedTour()">
-    <span>Guided tour</span>
-    <ion-icon [name]="tourExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-  </div>
-  <div class="guided-tour-content" *ngIf="tourExpanded">
-    <div class="tour-step" *ngFor="let step of tourSteps; let i = index">
-      <div class="step-number">{{ i + 1 }}</div>
-      <div class="step-text">
-        <strong>{{ step.title }}</strong>
-        <p>{{ step.desc }}</p>
-      </div>
-    </div>
-  </div>
+ 
 
   <div style="height: 90px;"></div>
 </ion-content>
@@ -199,9 +181,9 @@
     <ion-icon name="albums-outline"></ion-icon>
     <ion-label>Catalog</ion-label>
   </ion-tab-button>
-  <ion-tab-button class="tab-btn" (click)="goTo('/orders')">
+  <ion-tab-button class="tab-btn" (click)="goTo('/messages')">
     <ion-icon name="chatbubble-outline"></ion-icon>
-    <ion-label>Orders</ion-label>
+    <ion-label>Message</ion-label>
   </ion-tab-button>
   <ion-tab-button class="tab-btn" (click)="goTo('/client-profile')">
     <ion-icon name="person-outline"></ion-icon>

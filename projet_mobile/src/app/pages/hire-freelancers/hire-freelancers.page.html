@@ -1,0 +1,87 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="hire-toolbar">
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Hire Freelancers</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="hire-page">
+  <div class="hero-panel">
+    <p class="eyebrow">Client space</p>
+    <h1>Find the right freelancer for your project</h1>
+    <p class="subtitle">Search top profiles, filter by category, and open a profile before posting your offer.</p>
+
+    <div class="search-box">
+      <ion-icon name="search-outline"></ion-icon>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Search by skill, title, or keyword"
+        (keyup.enter)="onSearch()" />
+      <ion-button size="small" (click)="onSearch()">Search</ion-button>
+    </div>
+  </div>
+
+  <div class="category-row">
+    <button
+      type="button"
+      class="category-chip"
+      [class.active]="selectedCategory === category"
+      *ngFor="let category of categories"
+      (click)="selectCategory(category)">
+      {{ category }}
+    </button>
+    <button type="button" class="category-chip clear-chip" *ngIf="selectedCategory || searchQuery" (click)="clearFilters()">
+      Clear
+    </button>
+  </div>
+
+  <div class="state-box" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div class="state-box" *ngIf="!loading && freelancers.length === 0">
+    <h3>No freelancers found</h3>
+    <p>Try another keyword or a different category.</p>
+  </div>
+
+  <div class="freelancer-grid" *ngIf="!loading && freelancers.length > 0">
+    <div class="freelancer-card" *ngFor="let freelancer of freelancers" (click)="openProfile(freelancer)">
+      <div class="card-top">
+        <div class="avatar-wrap">
+          <img
+            [src]="freelancer.avatar"
+            onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"
+            alt="freelancer avatar" />
+          <span class="status-dot" [class.online]="freelancer.online"></span>
+        </div>
+        <div class="identity">
+          <h3>{{ freelancer.name }}</h3>
+          <p>{{ freelancer.title }}</p>
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <span>${{ freelancer.hourlyRate }}/hr</span>
+        <span>★ {{ freelancer.rating }} ({{ freelancer.reviews }})</span>
+      </div>
+
+      <div class="meta-row location-row">
+        <ion-icon name="location-outline"></ion-icon>
+        <span>{{ freelancer.location }}</span>
+      </div>
+
+      <div class="skills-row">
+        <span class="skill-tag" *ngFor="let skill of freelancer.skills">{{ skill }}</span>
+      </div>
+
+      <ion-button expand="block" fill="outline" (click)="$event.stopPropagation(); openProfile(freelancer)">
+        View profile
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

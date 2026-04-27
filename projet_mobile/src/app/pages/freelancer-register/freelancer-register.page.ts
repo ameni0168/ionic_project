@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
@@ -39,10 +40,11 @@ export class FreelancerRegisterPage implements OnInit {
   registerForm: FormGroup;
   isLoading = false;
   showContent = false;
-  
+  redirectTo: string | null = null;
+
   cvFile: UploadedFile | null = null;
   portfolioFiles: UploadedFile[] = [];
-  
+
   readonly maxCvSize = 5 * 1024 * 1024;
   readonly maxPortfolioSize = 10 * 1024 * 1024;
   readonly acceptedCvTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -50,8 +52,9 @@ export class FreelancerRegisterPage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController, // ← NavController
-    private api: ApiService
+    private navCtrl: NavController,
+    private api: ApiService,
+    private route: ActivatedRoute
   ) {
     this.registerForm = this.formBuilder.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -64,6 +67,7 @@ export class FreelancerRegisterPage implements OnInit {
   }
 
   ngOnInit() {
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
     setTimeout(() => {
       this.showContent = true;
     }, 100);
@@ -78,7 +82,7 @@ export class FreelancerRegisterPage implements OnInit {
     const hasNumeric = /[0-9]/.test(value);
     const isLengthValid = value.length >= 8;
 
-    return (hasUpperCase && hasLowerCase && hasNumeric && isLengthValid) ? null : { weakPassword: true };
+    return hasUpperCase && hasLowerCase && hasNumeric && isLengthValid ? null : { weakPassword: true };
   }
 
   passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -97,19 +101,19 @@ export class FreelancerRegisterPage implements OnInit {
   getPasswordStrength(): string {
     const password = this.passwordControl?.value || '';
     if (password.length === 0) return '';
-    
+
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumeric = /[0-9]/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     let strength = 0;
     if (password.length >= 8) strength++;
     if (hasUpperCase) strength++;
     if (hasLowerCase) strength++;
     if (hasNumeric) strength++;
     if (hasSpecial) strength++;
-    
+
     if (strength <= 2) return 'weak';
     if (strength <= 3) return 'medium';
     return 'strong';
@@ -130,7 +134,7 @@ export class FreelancerRegisterPage implements OnInit {
         alert('CV file size must be less than 5MB');
         return;
       }
-      
+
       this.cvFile = {
         name: file.name,
         size: file.size,
@@ -141,7 +145,7 @@ export class FreelancerRegisterPage implements OnInit {
 
   onPortfolioFileSelect(event: any) {
     const files = Array.from(event.target.files) as File[];
-    
+
     for (const file of files) {
       if (!this.acceptedPortfolioTypes.includes(file.type)) {
         alert(`${file.name} is not a supported file type`);
@@ -151,7 +155,7 @@ export class FreelancerRegisterPage implements OnInit {
         alert(`${file.name} is too large (max 10MB)`);
         continue;
       }
-      
+
       this.portfolioFiles.push({
         name: file.name,
         size: file.size,
@@ -183,37 +187,35 @@ export class FreelancerRegisterPage implements OnInit {
   }
 
   async onRegister() {
-  if (this.registerForm.valid) {
+    if (this.registerForm.valid) {
+      this.isLoading = true;
 
-    this.isLoading = true;
-
-    const formData = this.registerForm.value;
-
-    this.api.registerFreelancer(formData).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        console.log("Freelancer created", res);
-
-        this.navCtrl.navigateRoot(['/auth/login']);
-      },
-      error: (err:any) => {
-        this.isLoading = false;
-        console.error(err);
-        alert(err.error?.error || "Erreur serveur");
-      }
-    });
-
-  } else {
-    Object.keys(this.registerForm.controls).forEach(key => {
-      this.registerForm.get(key)?.markAsTouched();
-    });
+      this.api.registerFreelancer(this.registerForm.value).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.navCtrl.navigateRoot(['/auth/login'], {
+            queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+          });
+        },
+        error: (err: any) => {
+          this.isLoading = false;
+          alert(err.error?.error || 'Erreur serveur');
+        }
+      });
+    } else {
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
+      });
+    }
   }
-}
+
   goBack() {
-    this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
+    this.navCtrl.navigateBack(['/welcome']);
   }
 
   navigateToLogin() {
-    this.navCtrl.navigateForward(['/auth/login']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/login'], {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 }

@@ -11,8 +11,10 @@ export class ApiService {
 
   private readonly baseUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'access_token';
+  private readonly USER_ID_KEY = 'user_id';
+  private readonly USER_ROLE_KEY = 'user_role';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ── Gestion token ─────────────────────────
 
@@ -26,6 +28,40 @@ export class ApiService {
 
   clearToken(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_ID_KEY);
+    localStorage.removeItem(this.USER_ROLE_KEY);
+  }
+
+  getUserId(): string | null {
+    const storedUserId = localStorage.getItem(this.USER_ID_KEY);
+    if (storedUserId) {
+      return storedUserId;
+    }
+
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  getUserRole(): string | null {
+    const storedRole = localStorage.getItem(this.USER_ROLE_KEY);
+    if (storedRole) {
+      return storedRole;
+    }
+
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role || null;
+    } catch (e) {
+      return null;
+    }
   }
 
   isLoggedIn(): boolean {
@@ -56,6 +92,12 @@ export class ApiService {
         if (res?.access_token) {
           this.saveToken(res.access_token);
         }
+        if (res?.user_id) {
+          localStorage.setItem(this.USER_ID_KEY, res.user_id);
+        }
+        if (res?.role) {
+          localStorage.setItem(this.USER_ROLE_KEY, res.role);
+        }
       })
     );
   }
@@ -73,6 +115,15 @@ export class ApiService {
       headers: this.authHeaders()
     });
   }
+
+  changeFreelancerPassword(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/freelancer/change-password`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+
+
 
   getFreelancerDashboard(): Observable<any> {
     return this.http.get(`${this.baseUrl}/freelancer/dashboard`, {

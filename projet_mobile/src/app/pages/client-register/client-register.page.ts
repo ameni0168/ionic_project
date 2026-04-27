@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ButtonComponent } from '../../components/button/button.component';
 import { InputFieldComponent } from '../../components/input-field/input-field.component';
@@ -32,11 +33,13 @@ export class ClientRegisterPage implements OnInit {
   registerForm: FormGroup;
   isLoading = false;
   showContent = false;
+  redirectTo: string | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
-    private navCtrl: NavController,  // ← NavController
-    private api: ApiService 
+    private navCtrl: NavController,
+    private api: ApiService,
+    private route: ActivatedRoute
   ) {
     this.registerForm = this.formBuilder.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -50,6 +53,7 @@ export class ClientRegisterPage implements OnInit {
   }
 
   ngOnInit() {
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
     setTimeout(() => {
       this.showContent = true;
     }, 100);
@@ -66,15 +70,13 @@ export class ClientRegisterPage implements OnInit {
     const hasNumeric = /[0-9]/.test(value);
     const isLengthValid = value.length >= 8;
 
-    const passwordValid = hasUpperCase && hasLowerCase && hasNumeric && isLengthValid;
-
-    return passwordValid ? null : { weakPassword: true };
+    return hasUpperCase && hasLowerCase && hasNumeric && isLengthValid ? null : { weakPassword: true };
   }
 
   passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const password = group.get('password')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
-    
+
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
@@ -89,59 +91,55 @@ export class ClientRegisterPage implements OnInit {
   getPasswordStrength(): string {
     const password = this.passwordControl?.value || '';
     if (password.length === 0) return '';
-    
+
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumeric = /[0-9]/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     let strength = 0;
     if (password.length >= 8) strength++;
     if (hasUpperCase) strength++;
     if (hasLowerCase) strength++;
     if (hasNumeric) strength++;
     if (hasSpecial) strength++;
-    
+
     if (strength <= 2) return 'weak';
     if (strength <= 3) return 'medium';
     return 'strong';
   }
 
   async onRegister() {
+    if (this.registerForm.invalid) {
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
 
-  if (this.registerForm.invalid) {
-    Object.keys(this.registerForm.controls).forEach(key => {
-      this.registerForm.get(key)?.markAsTouched();
+    this.isLoading = true;
+
+    this.api.registerClient(this.registerForm.value).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.navCtrl.navigateRoot(['/auth/login'], {
+          queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+        });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        alert(error.error?.error || "Erreur lors de l'inscription");
+      }
     });
-    return;
   }
 
-  this.isLoading = true;
-
-  const formData = this.registerForm.value;
-
-  this.api.registerClient(formData).subscribe({
-    next: (response: any) => {
-      this.isLoading = false;
-      console.log("Registration success:", response);
-
-      // Redirection après succès
-      this.navCtrl.navigateRoot(['/client-dashboard']);
-    },
-    error: (error) => {
-      this.isLoading = false;
-      console.error("Registration error:", error);
-
-      alert(error.error?.error || "Erreur lors de l'inscription");
-    }
-  });
-}
-
   goBack() {
-    this.navCtrl.navigateBack(['/welcome']);  // ← navigateBack
+    this.navCtrl.navigateBack(['/welcome']);
   }
 
   navigateToLogin() {
-    this.navCtrl.navigateForward(['/auth/login']);  // ← navigateForward
+    this.navCtrl.navigateForward(['/auth/login'], {
+      queryParams: this.redirectTo ? { redirectTo: this.redirectTo } : undefined
+    });
   }
 }

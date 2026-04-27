@@ -1,9 +1,9 @@
 :host {
-  --bg:        #0d1117; --card: #161b27; --card2: #1e2535;
-  --input-bg:  #252f42; --accent: #4f6ef7; --accent-glow: rgba(79,110,247,0.25);
-  --green:     #22c55e; --yellow: #f59e0b; --red: #ef4444;
-  --t1: #ffffff; --t2: #8b95a8; --t3: #4a5568;
-  --border: rgba(255,255,255,0.07); --border-a: rgba(79,110,247,0.35);
+  --bg:        var(--color-background); --card: var(--color-surface); --card2: var(--color-background-secondary);
+  --input-bg:  var(--color-background-tertiary); --accent: var(--color-primary); --accent-glow: rgba(var(--color-primary-rgb),0.25);
+  --green:     var(--color-success); --yellow: var(--color-warning); --red: var(--color-error);
+  --t1: var(--color-text-primary); --t2: var(--color-text-secondary); --t3: var(--color-text-tertiary);
+  --border: var(--color-border); --border-a: rgba(var(--color-primary-rgb),0.35);
   --r: 16px; --r-sm: 10px;
 }
 
@@ -114,7 +114,7 @@
 .load-more-btn { width: calc(100% - 28px); margin: 0 14px 12px; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; &:active { background: var(--card2); } }
 
 // ── TAB BAR ───────────────────────────────────────────────────
-.custom-tab-bar { --background: #161b27; border-top: 1px solid var(--border); height: 62px; padding-bottom: env(safe-area-inset-bottom);
+.custom-tab-bar { --background: var(--color-surface); border-top: 1px solid var(--border); height: 62px; padding-bottom: env(safe-area-inset-bottom);
   .tab-btn { --color: var(--t2); ion-icon { font-size: 22px; } ion-label { font-size: 10px; font-weight: 500; } }
   .tab-active { --color: var(--accent); }
 }

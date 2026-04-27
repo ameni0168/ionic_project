@@ -1,42 +1,48 @@
-import { WelcomePage } from './../welcome/welcome.page';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import {
+  CategoryOption,
+  HomeContent,
+  HomeFreelancer,
+  HomeStat,
+  MarketplaceContentService,
+} from 'src/app/services/marketplace-content.service';
 
 @Component({
   selector: 'app-accueil',
   templateUrl: './accueil.page.html',
   styleUrls: ['./accueil.page.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    IonicModule,
-  ]
+  imports: [CommonModule, IonicModule, FormsModule],
 })
-export class AccueilPage {
-
+export class AccueilPage implements OnInit {
   showContent = true;
+  homeContent: HomeContent;
+  homeStats: HomeStat[] = [];
+  categories: CategoryOption[] = [];
+  freelancers: HomeFreelancer[] = [];
+  isLoadingCategories = true;
+  isLoadingFreelancers = true;
+  isLoadingStats = true;
+  searchQuery = '';
 
-  categories = [
-    { icon: '💻', name: 'Development', count: '8,200+' },
-    { icon: '🎨', name: 'Design', count: '5,400+' },
-    { icon: '📣', name: 'Marketing', count: '3,100+' },
-    { icon: '✍️', name: 'Writing', count: '2,800+' },
-    { icon: '🎬', name: 'Video', count: '1,900+' },
-    { icon: '📊', name: 'Data Science', count: '2,300+' },
-    { icon: '💰', name: 'Finance', count: '1,500+' },
-    { icon: '📱', name: 'Mobile Apps', count: '3,700+' },
-  ];
+  constructor(
+    private readonly navCtrl: NavController,
+    private readonly router: Router,
+    private readonly marketplaceContent: MarketplaceContentService
+  ) {
+    this.homeContent = this.marketplaceContent.getHomeContent();
+  }
 
-  freelancers = [
-    { avatar: '👩‍💻', name: 'Sarah M.', title: 'Full Stack Developer', tags: ['React', 'Node.js', 'AWS'], rate: '$85', rating: '4.9', reviews: 142 },
-    { avatar: '🧑‍🎨', name: 'Carlos R.', title: 'UI/UX Designer', tags: ['Figma', 'Branding', 'Motion'], rate: '$70', rating: '5.0', reviews: 98 },
-    { avatar: '👨‍💼', name: 'Ahmed K.', title: 'Data Scientist', tags: ['Python', 'ML', 'SQL'], rate: '$95', rating: '4.8', reviews: 76 },
-    { avatar: '👩‍💻', name: 'Léa T.', title: 'Mobile Developer', tags: ['Flutter', 'Ionic', 'Firebase'], rate: '$80', rating: '4.9', reviews: 110 },
-  ];
-
-  constructor(private navCtrl: NavController, private router: Router) {}
+  ngOnInit(): void {
+    this.homeStats = this.homeContent.stats;
+    this.loadStats();
+    this.loadCategories();
+    this.loadFreelancers();
+  }
 
   goToPostJob() {
     this.router.navigate(['/post-job']);
@@ -51,11 +57,67 @@ export class AccueilPage {
   }
 
   goToFindWork() {
-    this.router.navigate(['/find-work']);//pas developpé encore
+    this.router.navigate(['/jobs']);
+  }
+
+  submitSearch() {
+    const q = this.searchQuery.trim();
+
+    this.router.navigate(['/jobs'], {
+      queryParams: q ? { q } : undefined,
+    });
+  }
+
+  searchByTag(tag: string) {
+    this.searchQuery = tag;
+    this.submitSearch();
   }
 
   goToHireFreelancer() {
-    this.router.navigate(['/hire']);//pas developpé encore 
+    this.router.navigate(['/hire-freelancers']);
   }
 
+  trackByName(_: number, item: { name: string }) {
+    return item.name;
+  }
+
+  private loadCategories() {
+    this.isLoadingCategories = true;
+    this.marketplaceContent.getDynamicCategories().subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        this.isLoadingCategories = false;
+      },
+      error: () => {
+        this.isLoadingCategories = false;
+      },
+    });
+  }
+
+  private loadStats() {
+    this.isLoadingStats = true;
+    this.marketplaceContent.getHomeStats().subscribe({
+      next: (stats) => {
+        this.homeStats = stats;
+        this.isLoadingStats = false;
+      },
+      error: () => {
+        this.homeStats = this.homeContent.stats;
+        this.isLoadingStats = false;
+      },
+    });
+  }
+
+  private loadFreelancers() {
+    this.isLoadingFreelancers = true;
+    this.marketplaceContent.getTopFreelancers().subscribe({
+      next: (freelancers) => {
+        this.freelancers = freelancers;
+        this.isLoadingFreelancers = false;
+      },
+      error: () => {
+        this.isLoadingFreelancers = false;
+      },
+    });
+  }
 }

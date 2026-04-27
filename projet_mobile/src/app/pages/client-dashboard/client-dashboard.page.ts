@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { DashboardService } from 'src/app/services/client-dashboard.service';
+import { MarketplaceContentService } from 'src/app/services/marketplace-content.service';
 
 interface DashboardStats {
   active_projects: number;
@@ -53,33 +54,9 @@ export class ClientDashboardPage implements OnInit {
   hasActiveJobs = false;
   activeJobs: any[] = [];
 
-  selectedCategoryId = 1;
+  selectedCategoryId = 0;
 
-  categories = [
-    { id: 1, name: 'AI Services', ionIcon: 'hardware-chip-outline' },
-    { id: 2, name: 'Development & IT', ionIcon: 'code-slash-outline' },
-    { id: 3, name: 'Design & Creative', ionIcon: 'color-palette-outline' },
-    { id: 4, name: 'Sales & Marketing', ionIcon: 'megaphone-outline' },
-    { id: 5, name: 'Writing', ionIcon: 'create-outline' },
-    { id: 6, name: 'Admin & Support', ionIcon: 'headset-outline' },
-    { id: 7, name: 'Finance', ionIcon: 'bar-chart-outline' },
-    { id: 8, name: 'Legal', ionIcon: 'scale-outline' },
-    { id: 9, name: 'HR & Training', ionIcon: 'people-circle-outline' },
-    { id: 10, name: 'Engineering', ionIcon: 'construct-outline' },
-  ];
-
-  private categoryNames: Record<number, string> = {
-    1: 'AI Services',
-    2: 'Development & IT',
-    3: 'Design & Creative',
-    4: 'Sales & Marketing',
-    5: 'Writing & Translation',
-    6: 'Admin & Customer Support',
-    7: 'Finance & Accounting',
-    8: 'Legal',
-    9: 'HR & Training',
-    10: 'Engineering',
-  };
+  categories: Array<{ id: number; name: string; ionIcon: string }> = [];
 
   topExperts: any[] = [];
 
@@ -93,12 +70,14 @@ export class ClientDashboardPage implements OnInit {
 
   constructor(
     private dashboardSvc: DashboardService,
+    private marketplaceContent: MarketplaceContentService,
     private navCtrl: NavController,
   ) {}
 
   ngOnInit() {
     this._loadUserFromStorage();
     this._loadDashboard();
+    this._loadCategories();
     this._loadTopFreelancers();
   }
 
@@ -191,6 +170,26 @@ export class ClientDashboardPage implements OnInit {
     });
   }
 
+  private _loadCategories() {
+    this.marketplaceContent.getDynamicCategories(10).subscribe({
+      next: (categories) => {
+        this.categories = categories.map((category, index) => ({
+          id: index + 1,
+          name: category.name,
+          ionIcon: category.icon,
+        }));
+
+        if (!this.categories.some((category) => category.id === this.selectedCategoryId)) {
+          this.selectedCategoryId = this.categories[0]?.id ?? 0;
+        }
+      },
+      error: () => {
+        this.categories = [];
+        this.selectedCategoryId = 0;
+      },
+    });
+  }
+
   // ─────────────────────────────
   // CATEGORY FILTER (FIXED)
   // ─────────────────────────────
@@ -198,9 +197,7 @@ export class ClientDashboardPage implements OnInit {
     this.selectedCategoryId = cat.id;
     this.isLoadingExperts = true;
 
-    const catName = this.categoryNames[cat.id] || cat.name;
-
-    this.dashboardSvc.getFreelancersByCategory(catName).subscribe({
+    this.dashboardSvc.getFreelancersByCategory(cat.name).subscribe({
       next: (res: any) => {
         this.isLoadingExperts = false;
 

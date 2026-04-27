@@ -1,0 +1,183 @@
+.hire-page {
+  --background: linear-gradient(180deg, #f5f7fb 0%, #eef3f8 100%);
+}
+
+.hire-toolbar {
+  --background: #ffffff;
+}
+
+.hero-panel {
+  margin: 16px;
+  padding: 20px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #123458 0%, #1f6f8b 100%);
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(18, 52, 88, 0.18);
+}
+
+.hero-panel h1 {
+  margin: 8px 0 10px;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.subtitle {
+  margin: 0 0 16px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 10px 12px;
+}
+
+.search-box input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.category-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 16px 8px;
+}
+
+.category-chip {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  white-space: nowrap;
+  background: #ffffff;
+  color: #123458;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(18, 52, 88, 0.08);
+}
+
+.category-chip.active,
+.clear-chip {
+  background: #123458;
+  color: #ffffff;
+}
+
+.state-box {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: #456;
+}
+
+.freelancer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.freelancer-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(25, 40, 65, 0.08);
+}
+
+.card-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.avatar-wrap {
+  position: relative;
+}
+
+.avatar-wrap img {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.status-dot {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #b9c4d0;
+  border: 2px solid #ffffff;
+}
+
+.status-dot.online {
+  background: #2bb673;
+}
+
+.identity h3,
+.identity p {
+  margin: 0;
+}
+
+.identity h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #18314f;
+}
+
+.identity p {
+  margin-top: 4px;
+  color: #5f738a;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #32485f;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.location-row {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 16px;
+}
+
+.skill-tag {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4f8;
+  color: #18314f;
+  font-size: 12px;
+  font-weight: 700;
+}

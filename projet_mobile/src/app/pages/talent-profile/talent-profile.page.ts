@@ -2,8 +2,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FreelancerService } from 'src/app/services/freelancer.service';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector: 'app-talent-profile',
@@ -30,6 +31,8 @@ export class TalentProfilePage implements OnInit {
     private route: ActivatedRoute,
     private navCtrl: NavController,
     private talentSvc: FreelancerService,
+    private router: Router,
+    private api: ApiService,
   ) {}
 
   // ── INIT ─────────────────────────────────────────────
@@ -174,6 +177,11 @@ export class TalentProfilePage implements OnInit {
   sendMessage() {
     if (!this.talent?.id) return;
 
+    if (!this.api.isLoggedIn()) {
+      this.router.navigate(['/welcome'], { queryParams: { redirectTo: `/talent-profile/${this.talent.id}` } });
+      return;
+    }
+
     this.navCtrl.navigateForward(['/messages'], {
       queryParams: {
         to: this.talent.id,
@@ -184,6 +192,11 @@ export class TalentProfilePage implements OnInit {
 
   hireNow() {
     if (!this.talent?.id) return;
+
+    if (!this.api.isLoggedIn() || this.api.getUserRole() !== 'client') {
+      this.router.navigate(['/welcome'], { queryParams: { redirectTo: '/post-job' } });
+      return;
+    }
 
     this.navCtrl.navigateForward(['/post-job'], {
       queryParams: {
