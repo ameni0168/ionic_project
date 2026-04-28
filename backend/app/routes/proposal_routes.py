@@ -3,6 +3,8 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime
 from app.models.proposal_model import proposal_schema
+from app.services.contract_service import create_contract
+from app.services.activity_log_service import log_activity
 
 proposal_bp = Blueprint("proposal_bp", __name__)
 
@@ -12,14 +14,15 @@ def get_db():
 
 
 def serialize(doc):
-    if doc:
-        doc["_id"] = str(doc["_id"])
-        if "job_id" in doc:
-            doc["job_id"] = str(doc["job_id"]) if isinstance(doc["job_id"], ObjectId) else doc["job_id"]
-        if "freelancer_id" in doc:
-            doc["freelancer_id"] = str(doc["freelancer_id"])
-        if "client_id" in doc:
-            doc["client_id"] = str(doc["client_id"])
+    """Convertit récursivement tous les ObjectId en strings dans un document."""
+    if doc is None:
+        return doc
+    if isinstance(doc, ObjectId):
+        return str(doc)
+    if isinstance(doc, dict):
+        return {k: serialize(v) for k, v in doc.items()}
+    if isinstance(doc, list):
+        return [serialize(item) for item in doc]
     return doc
 
 
@@ -146,33 +149,41 @@ def get_proposals_by_freelancer(freelancer_id):
 def get_client_jobs_with_proposals(client_id):
     try:
         db = get_db()
+        current_app.logger.info(f"Fetching jobs with proposals for client: {client_id}")
+
         jobs = list(db.jobs.find({"client_id": client_id}).sort("created_at", -1))
+        current_app.logger.info(f"Found {len(jobs)} jobs for client {client_id}")
 
         result = []
         for job in jobs:
-            proposals = list(
-                db.proposals.find({"job_id": job["_id"]}).sort("created_at", -1)
-            )
+            try:
+                proposals = list(
+                    db.proposals.find({"job_id": job["_id"]}).sort("created_at", -1)
+                )
 
-            for proposal in proposals:
-                freelancer = _find_user(db, proposal.get("freelancer_id"))
-                if freelancer:
-                    proposal["freelancer"] = {
-                        "_id": str(freelancer["_id"]),
-                        "name": _freelancer_display_name(freelancer),
-                        "email": freelancer.get("email", ""),
-                    }
+                for proposal in proposals:
+                    freelancer = _find_user(db, proposal.get("freelancer_id"))
+                    if freelancer:
+                        proposal["freelancer"] = {
+                            "_id": str(freelancer["_id"]),
+                            "name": _freelancer_display_name(freelancer),
+                            "email": freelancer.get("email", ""),
+                        }
 
-            result.append({
-                "job": serialize(job.copy()),
-                "proposals": [serialize(p) for p in proposals],
-                "proposals_count": len(proposals),
-            })
+                result.append({
+                    "job": serialize(dict(job)),
+                    "proposals": [serialize(p) for p in proposals],
+                    "proposals_count": len(proposals),
+                })
+            except Exception as job_err:
+                current_app.logger.error(f"Error processing job {job.get('_id')}: {job_err}")
+                continue
 
         return jsonify({"jobs": result, "total": len(result)}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        current_app.logger.error(f"Error in get_client_jobs_with_proposals: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @proposal_bp.route("/<proposal_id>", methods=["PATCH"])
@@ -185,7 +196,29 @@ def update_proposal_status(proposal_id):
 
     try:
         db = get_db()
-        result = db.proposals.update_one(
+        proposal = db.proposals.find_one({"_id": ObjectId(proposal_id)})
+        if not proposal:
+            return jsonify({"error": "Proposal not found"}), 404
+
+        if new_status == "accepted":
+            job = db.jobs.find_one({"_id": proposal["job_id"]})
+
+            if not job:
+                return jsonify({"error": "Associated job not found"}), 404
+
+            existing_contract = db.contracts.find_one({"proposal_id": proposal["_id"]})
+            if existing_contract:
+                return jsonify({"error": "A contract already exists for this proposal"}), 400
+
+            contract = create_contract(
+                db,
+                job=job,
+                proposal=proposal,
+                currency=data.get("currency", proposal.get("currency", "USD")),
+                actor_id=proposal.get("client_id"),
+            )
+
+        db.proposals.update_one(
             {"_id": ObjectId(proposal_id)},
             {"$set": {
                 "status": new_status,
@@ -193,21 +226,7 @@ def update_proposal_status(proposal_id):
             }},
         )
 
-        if result.matched_count == 0:
-            return jsonify({"error": "Proposal not found"}), 404
-
         if new_status == "accepted":
-            proposal = db.proposals.find_one({"_id": ObjectId(proposal_id)})
-
-            db.jobs.update_one(
-                {"_id": proposal["job_id"]},
-                {"$set": {
-                    "status": "in_progress",
-                    "assigned_freelancer": proposal["freelancer_id"],
-                    "updated_at": datetime.utcnow(),
-                }},
-            )
-
             db.proposals.update_many(
                 {
                     "job_id": proposal["job_id"],
@@ -217,6 +236,18 @@ def update_proposal_status(proposal_id):
                     "status": "rejected",
                     "updated_at": datetime.utcnow(),
                 }},
+            )
+
+            log_activity(
+                db,
+                entity_type="job",
+                entity_id=job["_id"],
+                event_type="proposal_accepted",
+                actor_id=proposal.get("client_id"),
+                meta={
+                    "proposal_id": proposal["_id"],
+                    "contract_id": contract["_id"],
+                },
             )
 
         return jsonify({

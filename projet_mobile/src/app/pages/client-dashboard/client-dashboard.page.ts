@@ -276,6 +276,7 @@ export class ClientDashboardPage implements OnInit {
   postJob() { this.navCtrl.navigateForward(['/post-job']); }
   viewJob(job: any) { this.navCtrl.navigateForward(['/job-detail', job.id]); }
   viewAllJobs() { this.navCtrl.navigateForward(['/jobs']); }
+  viewProposals() { this.navCtrl.navigateForward(['/proposal']); }
   viewAllContracts() { this.navCtrl.navigateForward(['/contracts']); }
   seeAllExperts() { this.navCtrl.navigateForward(['/talent']); }
   viewExpert(e: any) { this.navCtrl.navigateForward(['/talent-profile', e.id]); }

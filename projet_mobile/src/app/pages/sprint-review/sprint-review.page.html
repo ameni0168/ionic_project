@@ -1,0 +1,116 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Review Sprint Submission</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="reviewing && !sprint" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading sprint...</p>
+  </div>
+
+  <div *ngIf="sprint" class="review-container">
+    <!-- Sprint Info -->
+    <ion-card class="sprint-info-card">
+      <ion-card-header>
+        <ion-card-subtitle>Sprint {{ sprint.sequence }}</ion-card-subtitle>
+        <ion-card-title>{{ sprint.title }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="sprint-meta">
+          <span>
+            <ion-icon name="cash-outline"></ion-icon>
+            {{ formatCents(sprint.price_cents, sprint.currency) }}
+          </span>
+          <span>
+            <ion-icon name="time-outline"></ion-icon>
+            {{ sprint.duration_days }} days
+          </span>
+          <span>
+            <ion-icon name="refresh-outline"></ion-icon>
+            {{ sprint.revision_count }} / {{ sprint.max_revisions }} revisions
+          </span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Submission Details -->
+    <ion-card class="submission-card" *ngIf="sprint.submission_note">
+      <ion-card-header>
+        <ion-card-title>Freelancer Submission</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="submission-note">{{ sprint.submission_note }}</p>
+
+        <div class="attachments-list" *ngIf="sprint.attachments?.length">
+          <strong>Attachments:</strong>
+          <ion-list lines="none">
+            <ion-item *ngFor="let att of sprint.attachments" class="attachment-item">
+              <ion-icon name="link-outline" slot="start" color="primary"></ion-icon>
+              <ion-label>
+                <a [href]="att.url" target="_blank">{{ att.url }}</a>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Deliverables Checklist -->
+    <ion-card class="deliverables-card">
+      <ion-card-header>
+        <ion-card-title>Expected Deliverables</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item *ngFor="let d of sprint.deliverables" class="deliverable-item">
+            <ion-checkbox slot="start"></ion-checkbox>
+            <ion-label>{{ d }}</ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Feedback Input -->
+    <div class="feedback-section">
+      <ion-item lines="none" class="feedback-item">
+        <ion-label position="stacked">Feedback</ion-label>
+        <ion-textarea
+          [(ngModel)]="feedback"
+          rows="3"
+          placeholder="Enter approval notes or change requests...">
+        </ion-textarea>
+      </ion-item>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border" *ngIf="sprint">
+  <ion-toolbar>
+    <div class="footer-buttons">
+      <ion-button
+        expand="block"
+        fill="outline"
+        color="warning"
+        [disabled]="reviewing"
+        (click)="requestChanges()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Request Changes
+      </ion-button>
+      <ion-button
+        expand="block"
+        color="success"
+        [disabled]="reviewing"
+        (click)="approveSprint()">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        Approve & Pay
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

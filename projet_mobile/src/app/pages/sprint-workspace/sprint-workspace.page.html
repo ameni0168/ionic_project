@@ -1,0 +1,88 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Submit Sprint Work</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="workspace-container">
+    <!-- Submission Form -->
+    <ion-card class="submission-card">
+      <ion-card-header>
+        <ion-card-title>Submit Deliverables</ion-card-title>
+        <ion-card-subtitle>Describe what you've completed and attach links</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item lines="none" class="note-item">
+          <ion-label position="stacked">Submission Note *</ion-label>
+          <ion-textarea
+            [(ngModel)]="submissionNote"
+            rows="4"
+            placeholder="Describe what you've completed, where to find it, and any notes for the client...">
+          </ion-textarea>
+        </ion-item>
+
+        <!-- Attachments -->
+        <div class="attachments-section">
+          <div class="section-label">
+            <span>Attachments</span>
+            <ion-button size="small" fill="clear" (click)="addAttachment()">
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              Add Link
+            </ion-button>
+          </div>
+
+          <div *ngFor="let att of attachments; let i = index" class="attachment-item">
+            <ion-item lines="none">
+              <ion-label position="stacked">Link URL</ion-label>
+              <ion-input [(ngModel)]="att.url" placeholder="https://..."></ion-input>
+            </ion-item>
+            <ion-button size="small" fill="clear" color="danger" (click)="removeAttachment(i)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </div>
+
+          <div *ngIf="attachments.length === 0" class="empty-attachments">
+            <ion-note>No attachments added</ion-note>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Tips Card -->
+    <ion-card class="tips-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="bulb-outline" color="warning"></ion-icon>
+          Tips for a good submission
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ul>
+          <li>Be specific about what was completed</li>
+          <li>Include staging/demo links when possible</li>
+          <li>Mention any known issues or limitations</li>
+          <li>Reference the sprint goals and deliverables</li>
+        </ul>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar>
+    <ion-button
+      expand="block"
+      color="primary"
+      [disabled]="submitting"
+      (click)="submitWork()">
+      <ion-icon name="send-outline" slot="start"></ion-icon>
+      {{ submitting ? 'Submitting...' : 'Submit for Review' }}
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

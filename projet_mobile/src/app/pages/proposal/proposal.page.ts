@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController } from '@ionic/angular';
-import { ProposalService, Proposal } from '../../services/proposal.service';  // Updated path
+import { IonicModule, AlertController, NavController } from '@ionic/angular';
+import { ProposalService } from '../../services/proposal.service';
 
 @Component({
   selector: 'app-proposal',
@@ -18,7 +18,8 @@ export class ProposalPage implements OnInit {
 
   constructor(
     private proposalService: ProposalService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -37,12 +38,12 @@ export class ProposalPage implements OnInit {
     }
 
     this.proposalService.getClientJobsWithProposals(this.clientId).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('Jobs with proposals:', response);
         this.jobsWithProposals = response.jobs;
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading proposals:', err);
         this.error = 'Failed to load proposals';
         this.loading = false;
@@ -63,11 +64,15 @@ export class ProposalPage implements OnInit {
           text: 'Accept',
           handler: () => {
             this.proposalService.updateProposalStatus(proposal._id!, 'accepted').subscribe({
-              next: () => {
+              next: (res: any) => {
                 this.loadProposals();
-                this.showSuccessAlert('Proposal accepted successfully!');
+                this.showSuccessAlert('Proposal accepted! A contract has been created.');
+                // Navigate to contracts list after short delay
+                setTimeout(() => {
+                  this.navCtrl.navigateForward(['/contracts']);
+                }, 800);
               },
-              error: (err) => {
+              error: (err: any) => {
                 console.error('Error accepting proposal:', err);
                 this.showErrorAlert('Failed to accept proposal');
               }
@@ -97,7 +102,7 @@ export class ProposalPage implements OnInit {
                 this.loadProposals();
                 this.showSuccessAlert('Proposal rejected');
               },
-              error: (err) => {
+              error: (err: any) => {
                 console.error('Error rejecting proposal:', err);
                 this.showErrorAlert('Failed to reject proposal');
               }
@@ -142,6 +147,28 @@ export class ProposalPage implements OnInit {
       case 'rejected': return 'Rejected';
       default: return 'Pending';
     }
+  }
+
+  goToContract(contractId: string) {
+    this.navCtrl.navigateForward(['/contract-detail', contractId]);
+  }
+
+  hasAcceptedProposal(): boolean {
+    return this.jobsWithProposals.some(j => 
+      j.proposals.some((p: any) => p.status === 'accepted')
+    );
+  }
+
+  hasContractWithPlan(): boolean {
+    return this.jobsWithProposals.some(j => 
+      j.job.contract_id && j.job.hiring_status === 'contract_created'
+    );
+  }
+
+  hasActiveSprints(): boolean {
+    return this.jobsWithProposals.some(j => 
+      j.job.status === 'active' && j.job.contract_id
+    );
   }
 
   goBack() {

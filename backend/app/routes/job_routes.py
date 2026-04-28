@@ -12,6 +12,9 @@ def get_db():
 def serialize(doc):
     if doc:
         doc["_id"] = str(doc["_id"])
+        for field in ["selected_proposal_id", "contract_id"]:
+            if doc.get(field) is not None:
+                doc[field] = str(doc[field])
     return doc
 
 
@@ -140,7 +143,7 @@ def update_job_status(job_id):
     data = request.get_json()
     new_status = data.get("status")
 
-    if new_status not in ["open", "in_progress", "closed"]:
+    if new_status not in ["draft", "open", "under_review", "active", "completed", "cancelled", "archived"]:
         return jsonify({"error": "Invalid status"}), 400
 
     try:
