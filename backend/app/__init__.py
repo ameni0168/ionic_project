@@ -13,6 +13,10 @@ from app.routes.gig_routes        import gig_bp
 from app.routes.order_routes      import order_bp, catalog_bp
 from app.routes.job_routes        import job_bp
 from app.routes.proposal_routes        import proposal_bp
+from app.routes.contract_routes import contract_bp
+from app.routes.sprint_plan_routes import sprint_plan_bp
+from app.routes.sprint_routes import sprint_bp
+from app.routes.payment_routes import payment_bp
 
 
 load_dotenv()
@@ -43,6 +47,10 @@ def create_app():
     app.register_blueprint(client_bp,        url_prefix="/api/client")
     app.register_blueprint(job_bp,           url_prefix="/api/jobs")
     app.register_blueprint(proposal_bp,           url_prefix="/api/proposals")
+    app.register_blueprint(contract_bp,      url_prefix="/api/contracts")
+    app.register_blueprint(sprint_plan_bp,   url_prefix="/api")
+    app.register_blueprint(sprint_bp,        url_prefix="/api/sprints")
+    app.register_blueprint(payment_bp,       url_prefix="/api")
 
 
     return app

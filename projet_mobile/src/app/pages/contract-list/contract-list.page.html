@@ -1,0 +1,85 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>My Contracts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Filter Chips -->
+  <div class="filter-chips">
+    <ion-chip [outline]="activeFilter !== 'all'" [color]="activeFilter === 'all' ? 'primary' : 'medium'" (click)="setFilter('all')">
+      <ion-label>All</ion-label>
+    </ion-chip>
+    <ion-chip [outline]="activeFilter !== 'active'" [color]="activeFilter === 'active' ? 'primary' : 'medium'" (click)="setFilter('active')">
+      <ion-label>Active</ion-label>
+    </ion-chip>
+    <ion-chip [outline]="activeFilter !== 'awaiting'" [color]="activeFilter === 'awaiting' ? 'primary' : 'medium'" (click)="setFilter('awaiting')">
+      <ion-label>Awaiting Plan</ion-label>
+    </ion-chip>
+    <ion-chip [outline]="activeFilter !== 'completed'" [color]="activeFilter === 'completed' ? 'primary' : 'medium'" (click)="setFilter('completed')">
+      <ion-label>Completed</ion-label>
+    </ion-chip>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading contracts...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredContracts.length === 0" class="empty-state">
+    <ion-icon name="document-text-outline" size="large" color="medium"></ion-icon>
+    <h3>No contracts found</h3>
+    <p *ngIf="userRole === 'client'">Post a job and accept a proposal to create a contract.</p>
+    <p *ngIf="userRole === 'freelancer'">Apply to jobs and get hired to start a contract.</p>
+  </div>
+
+  <!-- Contract List -->
+  <ion-list *ngIf="!loading && filteredContracts.length > 0" lines="none" class="contract-list">
+    <ion-card *ngFor="let contract of filteredContracts" class="contract-card" (click)="viewContract(contract)">
+      <ion-card-header>
+        <div class="card-header-row">
+          <ion-card-title>{{ contract.title }}</ion-card-title>
+          <ion-badge [color]="getStatusColor(contract.status)">
+            {{ getStatusLabel(contract.status) }}
+          </ion-badge>
+        </div>
+        <ion-card-subtitle>{{ formatCents(contract.total_approved_amount_cents || contract.total_estimated_amount_cents, contract.currency) }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Progress -->
+        <div class="progress-section" *ngIf="contract.total_sprints_count > 0">
+          <div class="progress-label">
+            <span>{{ contract.completed_sprints_count }} / {{ contract.total_sprints_count }} sprints completed</span>
+            <span>{{ getProgressPercent(contract) }}%</span>
+          </div>
+          <ion-progress-bar [value]="getProgressPercent(contract) / 100" color="primary"></ion-progress-bar>
+        </div>
+
+        <div class="progress-section" *ngIf="contract.total_sprints_count === 0">
+          <ion-note>Sprint plan pending</ion-note>
+        </div>
+
+        <!-- Meta Row -->
+        <div class="meta-row">
+          <div class="meta-item">
+            <ion-icon name="calendar-outline" color="medium"></ion-icon>
+            <span>{{ contract.created_at | date:'mediumDate' }}</span>
+          </div>
+          <div class="meta-item" *ngIf="contract.current_sprint_id">
+            <ion-icon name="flag-outline" color="medium"></ion-icon>
+            <span>In progress</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+</ion-content>
+

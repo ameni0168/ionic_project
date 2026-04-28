@@ -1,0 +1,154 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Sprint Plan Builder</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading plan...</p>
+  </div>
+
+  <div *ngIf="!loading" class="builder-container">
+    <!-- Plan Summary -->
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Plan Overview</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-label position="stacked">Summary</ion-label>
+          <ion-textarea [(ngModel)]="summary" rows="2" placeholder="Describe the overall plan..."></ion-textarea>
+        </ion-item>
+
+        <div class="totals-row">
+          <div class="total-item">
+            <span class="total-label">Total Price</span>
+            <span class="total-value">{{ formatCents(totalPriceCents) }}</span>
+          </div>
+          <div class="total-item">
+            <span class="total-label">Total Duration</span>
+            <span class="total-value">{{ totalDurationDays }} days</span>
+          </div>
+          <div class="total-item">
+            <span class="total-label">Sprints</span>
+            <span class="total-value">{{ sprints.length }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Sprint Items -->
+    <div class="section-header">
+      <h3>Sprints</h3>
+      <ion-button size="small" fill="clear" color="primary" (click)="addSprint()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Add Sprint
+      </ion-button>
+    </div>
+
+    <div *ngFor="let sprint of sprints; let i = index" class="sprint-form-card">
+      <ion-card>
+        <ion-card-header>
+          <div class="sprint-header-row">
+            <ion-card-title>Sprint {{ sprint.sequence }}</ion-card-title>
+            <div class="sprint-actions">
+              <ion-button size="small" fill="clear" [disabled]="i === 0" (click)="moveSprint(i, -1)">
+                <ion-icon name="arrow-up-outline"></ion-icon>
+              </ion-button>
+              <ion-button size="small" fill="clear" [disabled]="i === sprints.length - 1" (click)="moveSprint(i, 1)">
+                <ion-icon name="arrow-down-outline"></ion-icon>
+              </ion-button>
+              <ion-button size="small" fill="clear" color="danger" (click)="removeSprint(i)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-header>
+
+        <ion-card-content>
+          <ion-item lines="full">
+            <ion-label position="stacked">Title *</ion-label>
+            <ion-input [(ngModel)]="sprint.title" placeholder="e.g. Authentication"></ion-input>
+          </ion-item>
+
+          <ion-item lines="full">
+            <ion-label position="stacked">Description</ion-label>
+            <ion-textarea [(ngModel)]="sprint.description" rows="2" placeholder="What will be delivered..."></ion-textarea>
+          </ion-item>
+
+          <div class="row-items">
+            <ion-item lines="full">
+              <ion-label position="stacked">Duration (days) *</ion-label>
+              <ion-input type="number" [(ngModel)]="sprint.duration_days" min="1"></ion-input>
+            </ion-item>
+
+            <ion-item lines="full">
+              <ion-label position="stacked">Price (cents) *</ion-label>
+              <ion-input type="number" [(ngModel)]="sprint.price_cents" min="0"></ion-input>
+            </ion-item>
+
+            <ion-item lines="full">
+              <ion-label position="stacked">Max Revisions</ion-label>
+              <ion-input type="number" [(ngModel)]="sprint.max_revisions" min="0"></ion-input>
+            </ion-item>
+          </div>
+
+          <!-- Goals -->
+          <div class="dynamic-list">
+            <div class="dynamic-header">
+              <label>Goals</label>
+              <ion-button size="small" fill="clear" (click)="addGoal(i)">
+                <ion-icon name="add-outline"></ion-icon>
+              </ion-button>
+            </div>
+            <div *ngFor="let goal of sprint.goals; let gi = index" class="dynamic-item">
+              <ion-input [(ngModel)]="sprint.goals![gi]" placeholder="Goal..."></ion-input>
+              <ion-button size="small" fill="clear" color="danger" (click)="removeGoal(i, gi)">
+                <ion-icon name="close-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Deliverables -->
+          <div class="dynamic-list">
+            <div class="dynamic-header">
+              <label>Deliverables</label>
+              <ion-button size="small" fill="clear" (click)="addDeliverable(i)">
+                <ion-icon name="add-outline"></ion-icon>
+              </ion-button>
+            </div>
+            <div *ngFor="let del of sprint.deliverables; let di = index" class="dynamic-item">
+              <ion-input [(ngModel)]="sprint.deliverables![di]" placeholder="Deliverable..."></ion-input>
+              <ion-button size="small" fill="clear" color="danger" (click)="removeDeliverable(i, di)">
+                <ion-icon name="close-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar>
+    <div class="footer-buttons">
+      <ion-button expand="block" fill="outline" [disabled]="submitting" (click)="saveDraft()">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Save Draft
+      </ion-button>
+      <ion-button expand="block" color="primary" [disabled]="submitting" (click)="submitPlan()">
+        <ion-icon name="send-outline" slot="start"></ion-icon>
+        Submit Plan
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>
+

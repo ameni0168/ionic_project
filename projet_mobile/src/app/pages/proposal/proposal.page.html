@@ -5,7 +5,7 @@
         <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Proposals</ion-title>
+    <ion-title>Proposals & Hiring</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -25,14 +25,77 @@
     </ion-button>
   </div>
 
+  <!-- Workflow Explanation -->
+  <div *ngIf="!loading && !error" class="workflow-info">
+    <ion-card class="workflow-card">
+      <ion-card-header>
+        <ion-card-title>How it works</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="workflow-steps">
+          <div class="step" [class.active]="true">
+            <div class="step-number">1</div>
+            <div class="step-text">
+              <strong>Review Proposals</strong>
+              <span>Compare freelancer offers</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" [class.active]="hasAcceptedProposal()">
+            <div class="step-number">2</div>
+            <div class="step-text">
+              <strong>Accept & Create Contract</strong>
+              <span>Hire the best freelancer</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" [class.active]="hasContractWithPlan()">
+            <div class="step-number">3</div>
+            <div class="step-text">
+              <strong>Review Sprint Plan</strong>
+              <span>Approve project breakdown</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" [class.active]="hasActiveSprints()">
+            <div class="step-number">4</div>
+            <div class="step-text">
+              <strong>Track Progress</strong>
+              <span>Fund & validate sprints</span>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
   <!-- Proposals list -->
   <div *ngIf="!loading && !error" class="proposals-container">
     <div *ngFor="let item of jobsWithProposals" class="job-section">
+      <!-- Job Header with Contract Status -->
       <div class="job-header">
-        <h2>{{ item.job.title }}</h2>
-        <ion-chip [color]="item.job.status === 'in_progress' ? 'success' : 'primary'">
-          {{ item.job.status || 'open' }}
-        </ion-chip>
+        <div class="job-title-section">
+          <h2>{{ item.job.title }}</h2>
+          <div class="job-badges">
+            <ion-chip [color]="item.job.status === 'active' ? 'success' : 'primary'">
+              {{ item.job.status || 'open' }}
+            </ion-chip>
+            <ion-chip *ngIf="item.job.contract_id" color="warning">
+              <ion-icon name="document-text-outline"></ion-icon>
+              Contract Created
+            </ion-chip>
+          </div>
+        </div>
+        
+        <!-- Contract Action Button -->
+        <ion-button 
+          *ngIf="item.job.contract_id"
+          expand="block"
+          color="primary"
+          (click)="goToContract(item.job.contract_id)">
+          <ion-icon name="briefcase-outline" slot="start"></ion-icon>
+          View Contract & Sprints
+        </ion-button>
       </div>
       
       <div *ngIf="item.proposals.length === 0" class="no-proposals">
@@ -60,24 +123,37 @@
           </div>
         </div>
         
+        <!-- Next Steps for Accepted Proposals -->
+        <div *ngIf="proposal.status === 'accepted'" class="next-steps">
+          <div class="step-indicator">
+            <ion-icon name="checkmark-circle" color="success"></ion-icon>
+            <span>Proposal accepted — Contract created!</span>
+          </div>
+          <ion-button 
+            *ngIf="item.job.contract_id"
+            expand="block"
+            color="primary"
+            (click)="goToContract(item.job.contract_id)">
+            <ion-icon name="git-branch-outline" slot="start"></ion-icon>
+            Go to Sprint Planning
+          </ion-button>
+        </div>
+        
         <div *ngIf="proposal.status === 'pending'" class="proposal-actions">
           <ion-button 
             color="success" 
             size="small"
             (click)="acceptProposal(proposal)">
-            Accept
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            Accept & Hire
           </ion-button>
           <ion-button 
             color="danger" 
             size="small"
             (click)="rejectProposal(proposal)">
+            <ion-icon name="close-outline" slot="start"></ion-icon>
             Reject
           </ion-button>
-        </div>
-        
-        <div *ngIf="proposal.status === 'accepted'" class="accepted-message">
-          <ion-icon name="checkmark-circle" color="success"></ion-icon>
-          <span>This proposal was accepted</span>
         </div>
         
         <div *ngIf="proposal.status === 'rejected'" class="rejected-message">
@@ -88,3 +164,4 @@
     </div>
   </div>
 </ion-content>
+

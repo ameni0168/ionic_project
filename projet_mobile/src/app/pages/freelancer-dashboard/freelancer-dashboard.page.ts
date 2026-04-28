@@ -33,10 +33,10 @@ export class FreelancerDashboardPage implements OnInit {
   ];
 
   quickActions = [
-    { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',      color: 'success' },
-    { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',  color: 'primary' },
+    { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',       color: 'success' },
+    { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',    color: 'primary' },
     { icon: 'document-text', title: 'Mes Commandes',      route: '/orders',     color: 'secondary', badge: 0 },
-    { icon: 'chatbubbles',   title: 'Messages',           route: '/messages',   color: 'tertiary',  badge: 0 }
+    { icon: 'briefcase',     title: 'Mes Contrats',       route: '/contracts',  color: 'warning',   badge: 0 }
   ];
 
   recentActivities: any[] = [];

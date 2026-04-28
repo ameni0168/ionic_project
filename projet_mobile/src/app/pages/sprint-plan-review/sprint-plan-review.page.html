@@ -1,0 +1,122 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Review Sprint Plan</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="reviewing && !plan" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading plan...</p>
+  </div>
+
+  <div *ngIf="plan" class="review-container">
+    <!-- Plan Header -->
+    <ion-card class="plan-header-card">
+      <ion-card-header>
+        <div class="header-row">
+          <ion-card-title>{{ plan.summary }}</ion-card-title>
+          <ion-badge [color]="getStatusColor(plan.status)">
+            {{ getStatusLabel(plan.status) }}
+          </ion-badge>
+        </div>
+        <ion-card-subtitle>
+          Version {{ plan.version }} &middot; {{ plan.sprints.length || 0 }} sprints &middot; {{ plan.total_duration_days }} days
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="price-tag">
+          {{ formatCents(plan.total_price_cents, plan.currency) }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Sprint Breakdown -->
+    <div class="section-header">
+      <h3>Sprint Breakdown</h3>
+    </div>
+
+    <div class="sprint-list">
+      <ion-card *ngFor="let sprint of plan.sprints; let i = index" class="sprint-card">
+        <ion-card-header>
+          <ion-card-subtitle>Sprint {{ sprint.sequence }}</ion-card-subtitle>
+          <ion-card-title>{{ sprint.title }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="sprint-description">{{ sprint.description }}</p>
+
+          <div class="sprint-meta">
+            <span>
+              <ion-icon name="cash-outline"></ion-icon>
+              {{ formatCents(sprint.price_cents, plan.currency) }}
+            </span>
+            <span>
+              <ion-icon name="time-outline"></ion-icon>
+              {{ sprint.duration_days }} days
+            </span>
+            <span>
+              <ion-icon name="refresh-outline"></ion-icon>
+              {{ sprint.max_revisions || 2 }} max revisions
+            </span>
+          </div>
+
+          <div class="tag-list" *ngIf="sprint.goals?.length">
+            <strong>Goals:</strong>
+            <ion-chip *ngFor="let goal of sprint.goals" size="small" color="light">
+              <ion-label>{{ goal }}</ion-label>
+            </ion-chip>
+          </div>
+
+          <div class="tag-list" *ngIf="sprint.deliverables?.length">
+            <strong>Deliverables:</strong>
+            <ion-chip *ngFor="let d of sprint.deliverables" size="small" color="light">
+              <ion-label>{{ d }}</ion-label>
+            </ion-chip>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Feedback Input -->
+    <div class="feedback-section" *ngIf="plan.status === 'submitted'">
+      <ion-item lines="none" class="feedback-item">
+        <ion-label position="stacked">Feedback (required for revision)</ion-label>
+        <ion-textarea
+          [(ngModel)]="feedback"
+          rows="3"
+          placeholder="Enter feedback or approval notes...">
+        </ion-textarea>
+      </ion-item>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border" *ngIf="plan && plan.status === 'submitted'">
+  <ion-toolbar>
+    <div class="footer-buttons">
+      <ion-button
+        expand="block"
+        fill="outline"
+        color="warning"
+        [disabled]="reviewing"
+        (click)="requestRevision()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Request Revision
+      </ion-button>
+      <ion-button
+        expand="block"
+        color="success"
+        [disabled]="reviewing"
+        (click)="approvePlan()">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        Approve Plan
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>
+

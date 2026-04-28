@@ -1,0 +1,245 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Contract Workspace</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading contract...</p>
+  </div>
+
+  <div *ngIf="!loading && contract">
+    <!-- Contract Header Card -->
+    <ion-card class="header-card">
+      <ion-card-header>
+        <div class="header-row">
+          <ion-card-title>{{ contract.title }}</ion-card-title>
+          <ion-badge [color]="getStatusColor(contract.status)">
+            {{ getStatusLabel(contract.status) }}
+          </ion-badge>
+        </div>
+        <ion-card-subtitle>{{ formatCents(contract.total_approved_amount_cents || contract.total_estimated_amount_cents, contract.currency) }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="description">{{ contract.description_snapshot }}</p>
+
+        <div class="progress-section" *ngIf="contract.total_sprints_count > 0">
+          <div class="progress-label">
+            <span>{{ contract.completed_sprints_count }} / {{ contract.total_sprints_count }} sprints completed</span>
+            <span class="percent">{{ getProgressPercent() }}%</span>
+          </div>
+          <ion-progress-bar [value]="getProgressPercent() / 100" color="primary"></ion-progress-bar>
+        </div>
+
+        <div class="budget-row">
+          <div class="budget-item">
+            <span class="budget-label">Estimated</span>
+            <span class="budget-value">{{ formatCents(contract.total_estimated_amount_cents, contract.currency) }}</span>
+          </div>
+          <div class="budget-item">
+            <span class="budget-label">Approved</span>
+            <span class="budget-value">{{ formatCents(contract.total_approved_amount_cents, contract.currency) }}</span>
+          </div>
+          <div class="budget-item" *ngIf="paymentSummary">
+            <span class="budget-label">Released</span>
+            <span class="budget-value released">{{ formatCents(paymentSummary.released_cents || 0, contract.currency) }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Workflow Pipeline -->
+    <div class="workflow-pipeline">
+      <h4>Project Workflow</h4>
+      <div class="pipeline-steps">
+        <div class="pipeline-step" [class.completed]="true" [class.active]="contract.status === 'awaiting_sprint_plan'">
+          <div class="step-circle">
+            <ion-icon name="checkmark"></ion-icon>
+          </div>
+          <span class="step-name">Hiring</span>
+        </div>
+        <div class="pipeline-line" [class.completed]="contract.status !== 'awaiting_sprint_plan'"></div>
+        <div class="pipeline-step" [class.completed]="contract.status !== 'awaiting_sprint_plan' && contract.status !== 'sprint_plan_under_review'" [class.active]="contract.status === 'sprint_plan_under_review' || contract.status === 'awaiting_sprint_plan'">
+          <div class="step-circle">
+            <ion-icon *ngIf="contract.status === 'awaiting_sprint_plan' || contract.status === 'sprint_plan_under_review'" name="git-branch-outline"></ion-icon>
+            <ion-icon *ngIf="contract.status !== 'awaiting_sprint_plan' && contract.status !== 'sprint_plan_under_review'" name="checkmark"></ion-icon>
+          </div>
+          <span class="step-name">Sprint Plan</span>
+        </div>
+        <div class="pipeline-line" [class.completed]="contract.status === 'active' || contract.status === 'completed'"></div>
+        <div class="pipeline-step" [class.completed]="contract.status === 'completed'" [class.active]="contract.status === 'active'">
+          <div class="step-circle">
+            <ion-icon *ngIf="contract.status === 'completed'" name="checkmark"></ion-icon>
+            <ion-icon *ngIf="contract.status !== 'completed'" name="hammer-outline"></ion-icon>
+          </div>
+          <span class="step-name">Execution</span>
+        </div>
+        <div class="pipeline-line" [class.completed]="contract.status === 'completed'"></div>
+        <div class="pipeline-step" [class.completed]="contract.status === 'completed'" [class.active]="contract.status === 'completed'">
+          <div class="step-circle">
+            <ion-icon name="trophy-outline"></ion-icon>
+          </div>
+          <span class="step-name">Complete</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next Action Banner -->
+    <div class="next-action-banner" *ngIf="getNextAction()">
+      <div class="banner-content">
+        <ion-icon [name]="getNextAction()!.icon" [color]="getNextAction()!.color"></ion-icon>
+        <div class="banner-text">
+          <strong>{{ getNextAction()!.title }}</strong>
+          <span>{{ getNextAction()!.description }}</span>
+        </div>
+      </div>
+      <ion-button
+        size="small"
+        [color]="getNextAction()!.color"
+        (click)="getNextAction()!.action()">
+        {{ getNextAction()!.buttonText }}
+      </ion-button>
+    </div>
+
+    <!-- Sprint Plan Section -->
+    <div class="section-header">
+      <h3>Sprint Plan</h3>
+      <ion-button
+        *ngIf="canCreatePlan()"
+        size="small"
+        fill="solid"
+        color="primary"
+        (click)="goToSprintPlanBuilder()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Create Plan
+      </ion-button>
+      <ion-button
+        *ngIf="showPlanReviewButton() && getLatestPlan()"
+        size="small"
+        fill="solid"
+        color="primary"
+        (click)="goToSprintPlanReview(getLatestPlan()!._id)">
+        Review Plan
+      </ion-button>
+    </div>
+
+    <ion-card *ngIf="getLatestPlan()" class="plan-card">
+      <ion-card-content>
+        <div class="plan-header">
+          <div>
+            <strong>Version {{ getLatestPlan()!.version }}</strong>
+            <ion-badge [color]="getPlanStatusColor(getLatestPlan()!.status)" class="plan-badge">
+              {{ getPlanStatusLabel(getLatestPlan()!.status) }}
+            </ion-badge>
+          </div>
+          <span class="plan-price">{{ formatCents(getLatestPlan()!.total_price_cents, contract.currency) }}</span>
+        </div>
+        <p class="plan-summary">{{ getLatestPlan()!.summary }}</p>
+        <div class="plan-meta">
+          <span>{{ getLatestPlan()!.sprints.length || 0 }} sprints</span>
+          <span>{{ getLatestPlan()!.total_duration_days }} days total</span>
+        </div>
+        <ion-note *ngIf="getLatestPlan()!.client_feedback" color="warning">
+          Feedback: {{ getLatestPlan()!.client_feedback }}
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="!getLatestPlan()" class="empty-section">
+      <ion-icon name="clipboard-outline" color="medium"></ion-icon>
+      <p>No sprint plan yet</p>
+      <ion-note *ngIf="isFreelancer">Create a sprint plan to break down the work.</ion-note>
+      <ion-note *ngIf="isClient">Waiting for freelancer to submit a sprint plan.</ion-note>
+    </div>
+
+    <!-- Sprints Section -->
+    <div class="section-header">
+      <h3>Sprints</h3>
+    </div>
+
+    <div *ngIf="sprints.length === 0" class="empty-section">
+      <ion-icon name="list-outline" color="medium"></ion-icon>
+      <p>No sprints yet</p>
+      <ion-note>Sprints will be created after a plan is approved.</ion-note>
+    </div>
+
+    <div class="sprint-timeline" *ngIf="sprints.length > 0">
+      <div
+        *ngFor="let sprint of sprints; let i = index"
+        class="sprint-item"
+        [class.active]="sprint._id === contract.current_sprint_id"
+        [class.completed]="isSprintCompleted(sprint.status)">
+
+        <!-- Timeline connector -->
+        <div class="timeline-connector">
+          <div class="timeline-dot" [class.filled]="isSprintCompleted(sprint.status) || sprint._id === contract.current_sprint_id"></div>
+          <div class="timeline-line" *ngIf="i < sprints.length - 1"></div>
+        </div>
+
+        <!-- Sprint Card -->
+        <ion-card class="sprint-card">
+          <ion-card-header>
+            <div class="sprint-header-row">
+              <div>
+                <ion-card-subtitle>Sprint {{ sprint.sequence }}</ion-card-subtitle>
+                <ion-card-title>{{ sprint.title }}</ion-card-title>
+              </div>
+              <ion-badge [color]="getSprintStatusColor(sprint.status)">
+                {{ getSprintStatusLabel(sprint.status) }}
+              </ion-badge>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <p class="sprint-description">{{ sprint.description }}</p>
+
+            <div class="sprint-meta">
+              <span>
+                <ion-icon name="cash-outline"></ion-icon>
+                {{ formatCents(sprint.price_cents, sprint.currency) }}
+              </span>
+              <span>
+                <ion-icon name="time-outline"></ion-icon>
+                {{ sprint.duration_days }} days
+              </span>
+              <span *ngIf="sprint.revision_count > 0">
+                <ion-icon name="refresh-outline"></ion-icon>
+                {{ sprint.revision_count }} revision(s)
+              </span>
+            </div>
+
+            <!-- Deliverables -->
+            <div class="deliverables" *ngIf="sprint.deliverables?.length">
+              <strong>Deliverables:</strong>
+              <ul>
+                <li *ngFor="let d of sprint.deliverables">{{ d }}</li>
+              </ul>
+            </div>
+
+            <!-- Action Button -->
+            <ion-button
+              *ngIf="getSprintAction(sprint)"
+              expand="block"
+              [color]="getSprintAction(sprint)!.color"
+              (click)="getSprintAction(sprint)!.action()">
+              {{ getSprintAction(sprint)!.label }}
+            </ion-button>
+
+            <!-- Submission Note (if submitted) -->
+            <ion-note *ngIf="sprint.submission_note" class="submission-note">
+              <ion-icon name="chatbubble-outline"></ion-icon>
+              {{ sprint.submission_note }}
+            </ion-note>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
