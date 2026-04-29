@@ -67,10 +67,12 @@ def create_gig(user_id, data):
         "category": data["category"].strip(),
         "deliveryTime": data["deliveryTime"].strip(),
         "status": "pending",          # pending par défaut, activé manuellement
+        "review_note": "",
         "ordersCompleted": 0,
         "colorAccent": data.get("colorAccent", "#6366f1"),
         "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
+        "updatedAt": datetime.utcnow(),
+        "reviewedAt": None
     }
 
     result = gigs.insert_one(gig_doc)

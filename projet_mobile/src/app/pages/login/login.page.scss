@@ -25,10 +25,19 @@
     line-height: var(--line-height-tight);
   }
   
-  .login-subtitle {
+.login-subtitle {
     font-size: var(--font-size-base);
     color: var(--color-text-secondary);
     margin: 0;
+  }
+
+  .admin-hint {
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-3);
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
   }
   
   .login-form {

@@ -24,6 +24,9 @@ def job_schema(
         "client_id": client_id,
         "skills": skills,           # list of skill names/ids
         "status": "open",           # open | in_progress | closed
+        "approval_status": "pending",
+        "review_note": "",
         "created_at": datetime.utcnow(),
+        "reviewed_at": None,
         "proposals_count": 0
     }

@@ -157,6 +157,30 @@ export class ApiService {
     });
   }
 
+  getAdminReviewItems(approvalStatus: 'pending' | 'approved' | 'rejected' = 'pending'): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/review-items?approval_status=${approvalStatus}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateAdminJobApproval(jobId: string, approvalStatus: 'pending' | 'approved' | 'rejected', note: string = ''): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/jobs/${jobId}/approval`, {
+      approval_status: approvalStatus,
+      note
+    }, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateAdminGigApproval(gigId: string, approvalStatus: 'pending' | 'approved' | 'rejected', note: string = ''): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/gigs/${gigId}/approval`, {
+      approval_status: approvalStatus,
+      note
+    }, {
+      headers: this.authHeaders()
+    });
+  }
+
   // ── Orders (freelancer) ─────────────────────────
 
   getFreelancerOrders(status: string = ''): Observable<any> {

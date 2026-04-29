@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash
 from app.services.auth_service import register_client
 from app.services.auth_freelancer import register_freelancer
 from flask_jwt_extended import create_access_token
+import os
 import traceback
 
 auth_bp = Blueprint('auth', __name__)
@@ -30,7 +31,20 @@ def login():
         if not email or not password:
             return jsonify({"error": "Email et mot de passe requis"}), 400
 
-        # 🔹 récupération DB via current_app (important avec create_app pattern)
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@freelancehub.com")
+        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+        if email == admin_email and password == admin_password:
+            access_token = create_access_token(
+                identity="admin-static",
+                additional_claims={"role": "admin"}
+            )
+            return jsonify({
+                "access_token": access_token,
+                "role": "admin",
+                "user_id": "admin-static"
+            }), 200
+
+        # 🔹 récupération DB 
         db = current_app.db
         users_collection = db["users"]
 
@@ -38,7 +52,6 @@ def login():
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
 
-        # Enregistrement client/freelancer utilise password_hash (Werkzeug)
         password_hash = user.get("password_hash") or user.get("password")
         if not password_hash:
             return jsonify({"error": "Mot de passe non configuré pour ce compte"}), 500

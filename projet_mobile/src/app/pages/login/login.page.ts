@@ -34,6 +34,8 @@ export class LoginPage implements OnInit {
   isLoading = false;
   showContent = false;
   redirectTo: string | null = null;
+  readonly adminEmail = 'admin@freelancehub.com';
+  readonly adminPassword = 'admin123';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -77,6 +79,8 @@ export class LoginPage implements OnInit {
             this.navCtrl.navigateRoot(['/client-dashboard']);
           } else if (res.role === 'freelancer') {
             this.navCtrl.navigateRoot(['/freelancer-dashboard']);
+          } else if (res.role === 'admin') {
+            this.navCtrl.navigateRoot(['/admin-dashboard']);
           } else {
             alert('Role inconnu');
           }
@@ -115,6 +119,7 @@ export class LoginPage implements OnInit {
     const allowedByRole: Record<string, string[]> = {
       client: ['/post-job', '/hire-freelancers'],
       freelancer: ['/jobs'],
+      admin: ['/admin-dashboard'],
     };
 
     return allowedByRole[role]?.includes(this.redirectTo) ? this.redirectTo : null;

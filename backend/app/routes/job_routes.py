@@ -56,7 +56,7 @@ def create_job():
 
 @job_bp.route("/", methods=["GET"])
 def get_all_jobs():
-    query = {}
+    query = {"approval_status": request.args.get("approval_status", "approved")}
     for key in ["status", "category", "experience_level", "budget_type"]:
         if request.args.get(key):
             query[key] = request.args.get(key)

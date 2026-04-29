@@ -151,7 +151,7 @@ export class MyGigsPage implements OnInit {
         this.gigs.unshift(res.gig);
         this.showCreateModal = false;
         this.isCreating = false;
-        this.showToast('Gig créé avec succès !', 'success');
+        this.showToast('Gig cree. En attente de validation admin.', 'success');
       },
       error: (err: any) => {
         this.isCreating = false;

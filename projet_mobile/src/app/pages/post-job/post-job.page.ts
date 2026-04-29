@@ -133,7 +133,7 @@ export class PostJobPage implements OnInit {
     this.jobService.postJob(jobData).subscribe({
       next: async () => {
         this.isLoading = false;
-        await this.showToast('Job posted successfully! ✅', 'success');
+        await this.showToast('Job envoye. En attente de validation admin.', 'success');
         this.jobForm.reset();
         this.skills = [];
         this.navCtrl.back();

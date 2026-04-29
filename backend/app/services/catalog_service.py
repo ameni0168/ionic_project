@@ -168,7 +168,12 @@ def service_get_featured(limit: int = 6):
     col = get_gigs_collection()
 
     items = list(
-        col.find({})
+        col.find({
+            "$or": [
+                {"status": {"$exists": False}},
+                {"status": {"$regex": "^active$", "$options": "i"}}
+            ]
+        })
            .sort([("rating", -1), ("ordersCompleted", -1)])
            .limit(limit)
     )
