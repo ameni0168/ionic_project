@@ -61,9 +61,9 @@ def list_contracts(db, filters=None):
     for key in ["client_id", "freelancer_id", "status", "job_id"]:
         value = filters.get(key)
         if value:
-            # Convert ID fields to ObjectId, keep status as string
             if key in ["client_id", "freelancer_id", "job_id"] and ObjectId.is_valid(value):
-                query[key] = ObjectId(value)
+                # Handle both string and ObjectId storage formats
+                query[key] = {"$in": [ObjectId(value), value]}
             else:
                 query[key] = value
 

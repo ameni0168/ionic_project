@@ -36,8 +36,12 @@ export class ProjectProgressPage implements OnInit {
 
   loadProjects() {
     this.isLoading = true;
-    this.contractService.listContracts().subscribe({
+    const clientId = this.apiService.getUserId() || undefined;
+    console.log('clientId:', clientId);
+    this.contractService.listContracts({ client_id: clientId }).subscribe({
       next: (res: any) => {
+        console.log('API response:', res);         // 👈 add this
+        console.log('contracts:', res.items);
         const contracts: Contract[] = res.items || res.contracts || [];
         this.projects = contracts.map(contract => ({
           contract,
@@ -47,8 +51,8 @@ export class ProjectProgressPage implements OnInit {
         }));
         this.isLoading = false;
       },
-      error: () => {
-        this.projects = this._getMockProjects();
+      error: (err: any) => {
+        console.error('Failed to load contracts:', err);
         this.isLoading = false;
       },
     });
@@ -69,7 +73,7 @@ export class ProjectProgressPage implements OnInit {
     project.loadingSprints = true;
     this.sprintService.listContractSprints(project.contract._id).subscribe({
       next: (res: any) => {
-        project.sprints = res.items || [];
+        project.sprints = res.items || res.sprints || [];
         project.loadingSprints = false;
       },
       error: () => {
@@ -139,46 +143,5 @@ export class ProjectProgressPage implements OnInit {
     if (!this.projects.length) return 0;
     const sum = this.projects.reduce((acc, p) => acc + this.getProgressPercent(p.contract), 0);
     return Math.round(sum / this.projects.length);
-  }
-
-  private _getMockProjects(): ProjectWithSprints[] {
-    const mockContracts: any[] = [
-      {
-        _id: '1',
-        title: 'E-commerce Platform',
-        status: 'active',
-        total_sprints_count: 4,
-        completed_sprints_count: 2,
-        total_estimated_amount_cents: 600000,
-        currency: 'USD',
-        created_at: '2026-03-01',
-      },
-      {
-        _id: '2',
-        title: 'Mobile App Redesign',
-        status: 'completed',
-        total_sprints_count: 3,
-        completed_sprints_count: 3,
-        total_estimated_amount_cents: 300000,
-        currency: 'USD',
-        created_at: '2026-01-15',
-      },
-      {
-        _id: '3',
-        title: 'API Integration Service',
-        status: 'active',
-        total_sprints_count: 5,
-        completed_sprints_count: 1,
-        total_estimated_amount_cents: 450000,
-        currency: 'USD',
-        created_at: '2026-04-01',
-      },
-    ];
-    return mockContracts.map(c => ({
-      contract: c,
-      sprints: [],
-      expanded: false,
-      loadingSprints: false,
-    }));
   }
 }
