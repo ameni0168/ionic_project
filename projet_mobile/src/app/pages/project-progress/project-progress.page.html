@@ -1,0 +1,222 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="pp-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()" class="back-btn">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="pp-title">Project Progress</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="loadProjects()">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="pp-content">
+
+  <!-- ── Summary Cards ── -->
+  <div class="summary-strip" *ngIf="!isLoading">
+    <div class="summary-card">
+      <span class="s-number">{{ totalProjects }}</span>
+      <span class="s-label">Total</span>
+    </div>
+    <div class="summary-card accent-blue">
+      <span class="s-number">{{ activeProjects }}</span>
+      <span class="s-label">Active</span>
+    </div>
+    <div class="summary-card accent-green">
+      <span class="s-number">{{ completedProjects }}</span>
+      <span class="s-label">Done</span>
+    </div>
+    <div class="summary-card accent-amber">
+      <span class="s-number">{{ avgProgress }}%</span>
+      <span class="s-label">Avg Progress</span>
+    </div>
+  </div>
+
+  <!-- ── Loading ── -->
+  <div class="loading-wrap" *ngIf="isLoading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading projects…</p>
+  </div>
+
+  <!-- ── Project Cards ── -->
+  <div class="project-list" *ngIf="!isLoading">
+
+    <div
+      class="project-card"
+      *ngFor="let p of projects"
+      [class.is-expanded]="p.expanded"
+    >
+
+      <!-- Card Header (always visible) -->
+      <div class="card-top" (click)="toggleExpand(p)">
+
+        <!-- Left: title + meta -->
+        <div class="card-left">
+          <div class="card-title-row">
+            <h3 class="project-title">{{ p.contract.title }}</h3>
+            <ion-badge
+              class="status-badge"
+              [color]="getContractStatusColor(p.contract.status)"
+            >
+              {{ getContractStatusLabel(p.contract.status) }}
+            </ion-badge>
+          </div>
+
+          <!-- Sprint count -->
+          <p class="sprint-meta">
+            <ion-icon name="layers-outline"></ion-icon>
+            {{ p.contract.completed_sprints_count || 0 }} / {{ p.contract.total_sprints_count || 0 }} sprints completed
+          </p>
+
+          <!-- Budget -->
+          <p class="budget-meta" *ngIf="p.contract.total_estimated_amount_cents">
+            <ion-icon name="wallet-outline"></ion-icon>
+            {{ formatCents(p.contract.total_estimated_amount_cents, p.contract.currency) }}
+          </p>
+        </div>
+
+        <!-- Right: donut + chevron -->
+        <div class="card-right">
+          <div class="donut-wrap">
+            <svg viewBox="0 0 44 44" class="donut">
+              <circle class="donut-bg" cx="22" cy="22" r="17" />
+              <circle
+                class="donut-fill"
+                cx="22" cy="22" r="17"
+                [style.stroke]="getProgressColor(getProgressPercent(p.contract))"
+                [style.stroke-dasharray]="getProgressPercent(p.contract) * 1.068 + ' 106.8'"
+              />
+            </svg>
+            <span class="donut-label">{{ getProgressPercent(p.contract) }}%</span>
+          </div>
+          <ion-icon
+            class="chevron"
+            [name]="p.expanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+          ></ion-icon>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-track">
+        <div
+          class="progress-fill"
+          [style.width.%]="getProgressPercent(p.contract)"
+          [style.background]="getProgressColor(getProgressPercent(p.contract))"
+        ></div>
+      </div>
+
+      <!-- ── Expanded: Sprint list + chart ── -->
+      <div class="expanded-body" *ngIf="p.expanded">
+
+        <!-- Sprint loading -->
+        <div class="sprint-loading" *ngIf="p.loadingSprints">
+          <ion-spinner name="dots" color="primary"></ion-spinner>
+        </div>
+
+        <!-- Sprint timeline -->
+        <div class="sprint-timeline" *ngIf="!p.loadingSprints && p.sprints.length > 0">
+          <h4 class="section-title">
+            <ion-icon name="git-branch-outline"></ion-icon>
+            Sprints
+          </h4>
+
+          <div class="sprint-row" *ngFor="let sprint of p.sprints; let i = index">
+            <!-- connector line -->
+            <div class="timeline-col">
+              <div
+                class="timeline-dot"
+                [class.dot-done]="isSprintDone(sprint.status)"
+                [class.dot-active]="isSprintActive(sprint.status)"
+              ></div>
+              <div class="timeline-line" *ngIf="i < p.sprints.length - 1"></div>
+            </div>
+
+            <div class="sprint-info">
+              <div class="sprint-top-row">
+                <span class="sprint-title">Sprint {{ sprint.sequence }}: {{ sprint.title }}</span>
+                <ion-badge
+                  [color]="getSprintStatusColor(sprint.status)"
+                  class="sprint-badge"
+                >
+                  {{ getSprintStatusLabel(sprint.status) }}
+                </ion-badge>
+              </div>
+
+              <div class="sprint-meta-row">
+                <span *ngIf="sprint.price_cents">
+                  <ion-icon name="pricetag-outline"></ion-icon>
+                  {{ formatCents(sprint.price_cents, sprint.currency) }}
+                </span>
+                <span *ngIf="sprint.duration_days">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{ sprint.duration_days }}d
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar chart of sprints -->
+        <div class="chart-section" *ngIf="!p.loadingSprints && p.sprints.length > 0">
+          <h4 class="section-title">
+            <ion-icon name="bar-chart-outline"></ion-icon>
+            Sprint Overview
+          </h4>
+          <div class="bar-chart">
+            <div
+              class="bar-col"
+              *ngFor="let sprint of p.sprints"
+            >
+              <div class="bar-wrap">
+                <div
+                  class="bar"
+                  [class.bar-done]="isSprintDone(sprint.status)"
+                  [class.bar-active]="isSprintActive(sprint.status)"
+                  [class.bar-blocked]="sprint.status === 'blocked'"
+                ></div>
+              </div>
+              <span class="bar-label">S{{ sprint.sequence }}</span>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot done"></span>Done</span>
+            <span class="legend-item"><span class="legend-dot active"></span>Active</span>
+            <span class="legend-item"><span class="legend-dot pending"></span>Pending</span>
+          </div>
+        </div>
+
+        <!-- No sprints yet -->
+        <div class="no-sprints" *ngIf="!p.loadingSprints && p.sprints.length === 0">
+          <ion-icon name="hourglass-outline"></ion-icon>
+          <p>No sprints yet</p>
+        </div>
+
+        <!-- View full detail button -->
+        <ion-button
+          class="detail-btn"
+          expand="block"
+          fill="outline"
+          color="primary"
+          (click)="goToContractDetail(p.contract._id); $event.stopPropagation()"
+        >
+          <ion-icon slot="start" name="open-outline"></ion-icon>
+          View Full Contract
+        </ion-button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Empty state ── -->
+  <div class="empty-state" *ngIf="!isLoading && projects.length === 0">
+    <ion-icon name="folder-open-outline"></ion-icon>
+    <h3>No Projects Yet</h3>
+    <p>Your active projects will appear here once a contract is signed.</p>
+    <ion-button color="primary" (click)="goBack()">Back to Dashboard</ion-button>
+  </div>
+
+</ion-content>

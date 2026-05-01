@@ -80,7 +80,9 @@ export class ContractService {
     if (filters?.status) params.append('status', filters.status);
     if (filters?.job_id) params.append('job_id', filters.job_id);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return this.http.get(`${this.base}/${query}`, { headers: this.headers() });
+    const url = `${this.base}/${query}`;
+    console.log('🌐 API Request:', url);
+    return this.http.get(url, { headers: this.headers() });
   }
 
   // Helper to format cents to display currency
