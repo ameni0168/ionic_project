@@ -61,7 +61,11 @@ def list_contracts(db, filters=None):
     for key in ["client_id", "freelancer_id", "status", "job_id"]:
         value = filters.get(key)
         if value:
-            query[key] = ObjectId(value) if key == "job_id" and ObjectId.is_valid(value) else value
+            # Convert ID fields to ObjectId, keep status as string
+            if key in ["client_id", "freelancer_id", "job_id"] and ObjectId.is_valid(value):
+                query[key] = ObjectId(value)
+            else:
+                query[key] = value
 
     return list(db.contracts.find(query).sort("updated_at", -1))
 

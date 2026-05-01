@@ -40,6 +40,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/client-dashboard/client-dashboard.page').then(m => m.ClientDashboardPage)
   },
   {
+    path: 'project-progress',
+    loadComponent: () => import('./pages/project-progress/project-progress.page').then(m => m.ProjectProgressPage)
+  },
+  {
+    path: 'project-progress/:id',
+    loadComponent: () => import('./pages/project-progress/project-progress.page').then(m => m.ProjectProgressPage)
+  },
+  {
     path: 'talent',
     loadComponent: () => import('./pages/talent/talent.page').then(m => m.TalentPage)
   },
@@ -73,7 +81,7 @@ export const routes: Routes = [
   },
   {
     path: 'orders',
-    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage)
+    loadComponent: () => import('./pages/Orders/orders.page').then(m => m.OrdersPage)
   },
   {
     path: 'client-profile',

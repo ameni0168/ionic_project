@@ -49,6 +49,13 @@ export class ClientDashboardPage implements OnInit {
       gradient: 'linear-gradient(135deg, #f97316, #dc2626)',
       route: '/contracts'
     },
+    {
+      icon: 'analytics-outline',
+      value: '0',
+      label: 'Project Progress',
+      gradient: 'linear-gradient(135deg, #10b981, #059669)',
+      route: '/project-progress'
+    },
   ];
 
   hasActiveJobs = false;
@@ -271,7 +278,10 @@ export class ClientDashboardPage implements OnInit {
   openProfile() { this.navCtrl.navigateForward(['/client-profile']); }
    openMenu()             { }
   browseConsultations()  { this.navCtrl.navigateForward(['/talent']); }
-  viewStat(stat: any) { this.navCtrl.navigateForward([stat.route]); }
+  viewStat(stat: any) { 
+    console.log('Navigating to:', stat.route);
+    this.navCtrl.navigateForward([stat.route]); 
+  }
   findTalent() { this.navCtrl.navigateForward(['/talent']); }
   postJob() { this.navCtrl.navigateForward(['/post-job']); }
   viewJob(job: any) { this.navCtrl.navigateForward(['/job-detail', job.id]); }
