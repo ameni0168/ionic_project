@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController, ToastController, AlertController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
+import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { SprintService, Sprint } from '../../services/sprint.service';
-import { ContractService } from '../../services/contract.service';
-import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-sprint-review',
@@ -15,118 +13,123 @@ import { ApiService } from '../../services/api.service';
   imports: [CommonModule, IonicModule, FormsModule],
 })
 export class SprintReviewPage implements OnInit {
-  sprintId = '';
+  sprintId: string = '';
+  contractId: string = '';
   sprint: Sprint | null = null;
-  feedback = '';
-  reviewing = false;
+  feedback: string = '';
+  reviewing: boolean = false;
   userId: string | null = null;
+
 
   constructor(
     private route: ActivatedRoute,
-    private sprintService: SprintService,
-    private apiService: ApiService,
     private navCtrl: NavController,
     private toastCtrl: ToastController,
-    private alertCtrl: AlertController
+    private sprintService: SprintService,
   ) {}
 
   ngOnInit() {
+    this.userId = localStorage.getItem('user_id');
     this.sprintId = this.route.snapshot.paramMap.get('sprintId') || '';
-    this.userId = this.apiService.getUserId();
-    this.loadSprint();
+    this.contractId = this.route.snapshot.queryParamMap.get('contractId') || '';
+    if (this.sprintId) {
+      this.loadSprint();
+    }
   }
+
 
   loadSprint() {
+    if (!this.contractId) {
+      this.showToast('Contract ID is required to load sprint', 'danger');
+      return;
+    }
     this.reviewing = true;
-    // In production, fetch sprint details from API
-    // For now, we'll navigate with state or use contract detail
-    this.reviewing = false;
+    this.sprintService.listContractSprints(this.contractId).subscribe({
+      next: (res: any) => {
+        this.reviewing = false;
+        const items = res.items || [];
+        const found = items.find((s: Sprint) => s._id === this.sprintId);
+        if (found) {
+          this.sprint = found;
+        } else {
+          this.showToast('Sprint not found', 'danger');
+        }
+      },
+      error: (err: any) => {
+        this.reviewing = false;
+        const msg = err.error?.error || 'Failed to load sprint';
+        this.showToast(msg, 'danger');
+      },
+    });
   }
 
+
   async approveSprint() {
-    const alert = await this.alertCtrl.create({
-      header: 'Approve Sprint',
-      message: 'Approve this sprint and release payment?',
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Approve',
-          handler: () => {
-            this.submitReview('approve');
-          },
-        },
-      ],
+    if (!this.sprint) return;
+    if (!this.feedback.trim()) {
+      this.showToast('Please provide approval feedback', 'warning');
+      return;
+    }
+    this.reviewing = true;
+    this.sprintService.reviewSprint(this.sprintId, {
+      action: 'approve',
+      feedback: this.feedback,
+      reviewed_by: this.userId || undefined,
+    }).subscribe({
+      next: (res: any) => {
+        this.reviewing = false;
+        this.showToast(res.message || 'Sprint approved successfully', 'success');
+        this.navCtrl.navigateBack('/contract-list');
+      },
+      error: (err: any) => {
+        this.reviewing = false;
+        const msg = err.error?.error || 'Failed to approve sprint';
+        this.showToast(msg, 'danger');
+      },
     });
-    await alert.present();
   }
 
   async requestChanges() {
+    if (!this.sprint) return;
     if (!this.feedback.trim()) {
-      this.showToast('Please provide feedback for changes', 'warning');
+      this.showToast('Please provide change request feedback', 'warning');
       return;
     }
-
-    const alert = await this.alertCtrl.create({
-      header: 'Request Changes',
-      message: 'Ask the freelancer to revise this sprint?',
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Request',
-          handler: () => {
-            this.submitReview('request_changes');
-          },
-        },
-      ],
-    });
-    await alert.present();
-  }
-
-  private submitReview(action: 'approve' | 'request_changes') {
     this.reviewing = true;
     this.sprintService.reviewSprint(this.sprintId, {
-      action,
-      feedback: this.feedback || undefined,
+      action: 'request_changes',
+      feedback: this.feedback,
       reviewed_by: this.userId || undefined,
     }).subscribe({
-      next: () => {
-        this.showToast(
-          action === 'approve' ? 'Sprint approved and payment released' : 'Changes requested',
-          'success'
-        );
+      next: (res: any) => {
         this.reviewing = false;
-        this.navCtrl.navigateBack(['/contract-detail', this.sprint?.contract_id]);
+        this.showToast(res.message || 'Changes requested', 'success');
+        this.navCtrl.navigateBack('/contract-list');
       },
       error: (err: any) => {
-        this.showToast(err.error?.error || 'Review failed', 'danger');
         this.reviewing = false;
+        const msg = err.error?.error || 'Failed to request changes';
+        this.showToast(msg, 'danger');
       },
     });
   }
 
-  getStatusLabel(status: string): string {
-    return SprintService.getStatusLabel(status as any);
+  formatCents(cents: number, currency: string = 'USD'): string {
+    const val = (cents / 100).toFixed(2);
+    return currency === 'USD' ? `$${val}` : `${val} ${currency}`;
   }
 
-  getStatusColor(status: string): string {
-    return SprintService.getStatusColor(status as any);
+  goBack() {
+    this.navCtrl.back();
   }
 
-  formatCents(cents: number, currency: string): string {
-    return ContractService.formatCents(cents, currency);
-  }
-
-  async showToast(message: string, color: string = 'success') {
+  private async showToast(message: string, color: string = 'success') {
     const toast = await this.toastCtrl.create({
       message,
-      duration: 2000,
+      duration: 2500,
       color,
       position: 'top',
     });
     await toast.present();
-  }
-
-  goBack() {
-    window.history.back();
   }
 }

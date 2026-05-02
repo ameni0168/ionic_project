@@ -113,8 +113,11 @@ export class ContractDetailPage implements OnInit {
   }
 
   goToSprintReview(sprintId: string) {
-    this.navCtrl.navigateForward(['/sprint-review', sprintId]);
+    this.navCtrl.navigateForward(['/sprint-review', sprintId], {
+      queryParams: { contractId: this.contractId }
+    });
   }
+
 
   async startSprint(sprint: Sprint) {
     const alert = await this.alertCtrl.create({
