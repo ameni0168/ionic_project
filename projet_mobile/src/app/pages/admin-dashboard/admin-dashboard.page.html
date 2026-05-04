@@ -1,0 +1,405 @@
+<!-- admin-dashboard.page.html -->
+
+<ion-menu side="start" menuId="admin-drawer" contentId="admin-main-content">
+  <ion-header class="ion-no-border">
+    <ion-toolbar class="drawer-toolbar">
+      <div class="drawer-logo">
+        <div class="drawer-logo-icon">FH</div>
+        <div>
+          <div class="drawer-logo-text">FreelancerHub</div>
+          <div class="drawer-sub">Administration</div>
+        </div>
+      </div>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="drawer-content">
+    <nav class="drawer-nav">
+      <button class="nav-item" [class.active]="section === 'overview'" (click)="selectSection('overview')">
+        <span class="nav-icon">📊</span>
+        <span>Vue globale</span>
+      </button>
+      <button class="nav-item" [class.active]="section === 'users'" (click)="selectSection('users')">
+        <span class="nav-icon">👥</span>
+        <span>Utilisateurs</span>
+        <span class="nav-count">{{ users.length }}</span>
+      </button>
+      <button class="nav-item" [class.active]="section === 'proposals'" (click)="selectSection('proposals')">
+        <span class="nav-icon">📋</span>
+        <span>Jobs à valider</span>
+        <span class="nav-count" *ngIf="pendingProposals > 0">{{ pendingProposals }}</span>
+      </button>
+      <button class="nav-item" [class.active]="section === 'profiles'" (click)="selectSection('profiles')">
+        <span class="nav-icon">🔍</span>
+        <span>Profils & KYC</span>
+      </button>
+    </nav>
+  </ion-content>
+</ion-menu>
+
+<div class="ion-page" id="admin-main-content">
+
+  <!-- HEADER -->
+  <ion-header class="ion-no-border">
+    <ion-toolbar class="admin-toolbar">
+      <ion-buttons slot="start">
+        <ion-button (click)="openDrawer()" class="menu-btn">
+          <ion-icon name="menu-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <ion-title>{{ sectionTitle }}</ion-title>
+      <ion-buttons slot="end">
+        <div class="header-badge">Live</div>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="admin-content">
+    <div class="admin-wrap">
+
+      <!-- ==================== VUE GLOBALE ==================== -->
+      <div *ngIf="section === 'overview'">
+        <div class="kpi-grid">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Total users</div>
+            <div class="kpi-value">{{ users.length }}</div>
+            <div class="kpi-sub kpi-up">▲ +12 ce mois</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Freelancers</div>
+            <div class="kpi-value">{{ freelancerCount }}</div>
+            <div class="kpi-sub kpi-up">▲ +5 ce mois</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Clients</div>
+            <div class="kpi-value">{{ clientCount }}</div>
+            <div class="kpi-sub kpi-up">▲ +7 ce mois</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Jobs en attente</div>
+            <div class="kpi-value amber">{{ pendingProposals }}</div>
+            <div class="kpi-sub muted">à valider</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Comptes bloqués</div>
+            <div class="kpi-value red">{{ blockedCount }}</div>
+            <div class="kpi-sub muted">nécessite révision</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">KYC en attente</div>
+            <div class="kpi-value amber">{{ kycPendingCount }}</div>
+            <div class="kpi-sub muted">vérifications</div>
+          </div>
+        </div>
+
+        <div class="section-hd">
+          <div class="section-title">Actions rapides</div>
+        </div>
+        <div class="quick-actions-grid">
+          <button class="quick-action-btn" (click)="selectSection('users')">
+            <span class="qa-icon">👥</span>
+            <span class="qa-label">Gérer users</span>
+          </button>
+          <button class="quick-action-btn" (click)="selectSection('proposals')">
+            <span class="qa-icon">📋</span>
+            <span class="qa-label">Valider jobs</span>
+          </button>
+          <button class="quick-action-btn" (click)="selectSection('profiles')">
+            <span class="qa-icon">🔍</span>
+            <span class="qa-label">Vérifier KYC</span>
+          </button>
+          <button class="quick-action-btn" (click)="exportData()">
+            <span class="qa-icon">📤</span>
+            <span class="qa-label">Exporter</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== UTILISATEURS ==================== -->
+      <div *ngIf="section === 'users'">
+        <div class="search-wrap">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input
+            class="search-input"
+            placeholder="Rechercher un utilisateur..."
+            [(ngModel)]="searchQuery"
+            (input)="applyFilters()"
+          />
+        </div>
+
+        <div class="filters">
+          <button class="filter-btn" [class.active]="userFilter === 'all'" (click)="setUserFilter('all')">Tous</button>
+          <button class="filter-btn" [class.active]="userFilter === 'freelancer'" (click)="setUserFilter('freelancer')">Freelancers</button>
+          <button class="filter-btn" [class.active]="userFilter === 'client'" (click)="setUserFilter('client')">Clients</button>
+          <button class="filter-btn" [class.active]="userFilter === 'blocked'" (click)="setUserFilter('blocked')">Bloqués</button>
+        </div>
+
+        <div class="section-hd">
+          <div class="section-title">Utilisateurs</div>
+          <div class="section-count">{{ filteredUsers.length }} résultat{{ filteredUsers.length > 1 ? 's' : '' }}</div>
+        </div>
+
+        <div *ngIf="filteredUsers.length === 0" class="empty">
+          <div class="empty-icon">😶</div>
+          Aucun utilisateur trouvé
+        </div>
+
+        <div class="user-card" *ngFor="let u of filteredUsers" (click)="viewProfile(u)">
+          <div class="user-card-top">
+            <div class="avatar" [class]="u.type">{{ u.initials }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ u.name }}</div>
+              <div class="user-meta">
+                <span>{{ u.type === 'freelancer' ? '🧑‍💻 Freelancer' : '🏢 Client' }}</span>
+                <span>📍 {{ u.location }}</span>
+              </div>
+            </div>
+            <span class="status-badge" [class]="getStatusClass(u.status)">{{ getStatusLabel(u.status) }}</span>
+          </div>
+          <div class="user-card-actions">
+            <ion-button fill="outline" size="small" (click)="viewProfile(u); $event.stopPropagation()">
+              Voir profil
+            </ion-button>
+            <ion-button
+              [color]="u.status === 'active' ? 'danger' : 'success'"
+              fill="outline"
+              size="small"
+              (click)="toggleStatus(u); $event.stopPropagation()"
+            >
+              {{ u.status === 'active' || u.status === 'pending' ? 'Désactiver' : 'Activer' }}
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== JOBS / PROPOSALS ==================== -->
+      <div *ngIf="section === 'proposals'">
+        <div class="filters">
+          <button class="filter-btn" [class.active]="proposalFilter === 'all'" (click)="setProposalFilter('all')">
+            Tous ({{ proposals.length }})
+          </button>
+          <button class="filter-btn" [class.active]="proposalFilter === 'pending'" (click)="setProposalFilter('pending')">
+            En attente ({{ pendingProposals }})
+          </button>
+          <button class="filter-btn" [class.active]="proposalFilter === 'approved'" (click)="setProposalFilter('approved')">
+            Approuvés
+          </button>
+          <button class="filter-btn" [class.active]="proposalFilter === 'rejected'" (click)="setProposalFilter('rejected')">
+            Refusés
+          </button>
+        </div>
+
+        <div class="section-hd">
+          <div class="section-title">Jobs postés</div>
+          <div class="section-count">{{ filteredProposals.length }} job{{ filteredProposals.length > 1 ? 's' : '' }}</div>
+        </div>
+
+        <div *ngIf="filteredProposals.length === 0" class="empty">
+          <div class="empty-icon">📭</div>
+          Aucun job dans cette catégorie
+        </div>
+
+        <div class="proposal-card" *ngFor="let p of filteredProposals">
+          <div class="proposal-top">
+            <div>
+              <div class="proposal-title">{{ p.title }}</div>
+              <div class="proposal-meta">👤 {{ p.owner }} · 💰 {{ p.budget }}</div>
+            </div>
+            <span class="status-badge" [class]="getStatusClass(p.status)">{{ getStatusLabel(p.status) }}</span>
+          </div>
+          <div style="margin-bottom: 8px">
+            <span class="proposal-tag" [class]="'tag-' + p.tag">{{ p.category }}</span>
+          </div>
+          <div class="proposal-body">{{ p.desc }}</div>
+          <div class="proposal-deadline">📅 Deadline : {{ p.deadline }}</div>
+          <div class="proposal-actions" *ngIf="p.status === 'pending'">
+            <ion-button color="success" fill="solid" size="small" (click)="approveJob(p)">✅ Valider</ion-button>
+            <ion-button color="danger" fill="outline" size="small" (click)="rejectJob(p)">❌ Refuser</ion-button>
+          </div>
+          <div class="proposal-done" *ngIf="p.status !== 'pending'">
+            Décision prise — {{ p.status === 'approved' ? 'Job publié' : 'Job rejeté' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PROFILS & KYC ==================== -->
+      <div *ngIf="section === 'profiles'">
+        <div class="section-hd">
+          <div class="section-title">KYC en attente</div>
+          <div class="section-count">{{ kycPendingUsers.length }}</div>
+        </div>
+
+        <div class="kyc-row" *ngFor="let u of kycPendingUsers" (click)="viewProfile(u)">
+          <div class="avatar sm" [class]="u.type">{{ u.initials }}</div>
+          <div class="kyc-info">
+            <div class="kyc-name">{{ u.name }}</div>
+            <div class="kyc-sub">{{ u.type === 'freelancer' ? 'Freelancer' : 'Client' }} · {{ u.location }}</div>
+          </div>
+          <ion-button color="warning" fill="outline" size="small" (click)="openKycModal(u); $event.stopPropagation()">
+            Vérifier
+          </ion-button>
+        </div>
+
+        <div class="section-hd" style="margin-top: 20px">
+          <div class="section-title">Profils vérifiés</div>
+          <div class="section-count">{{ kycVerifiedUsers.length }}</div>
+        </div>
+
+        <div class="kyc-row" *ngFor="let u of kycVerifiedUsers" (click)="viewProfile(u)">
+          <div class="avatar sm" [class]="u.type">{{ u.initials }}</div>
+          <div class="kyc-info">
+            <div class="kyc-name">{{ u.name }}</div>
+            <div class="kyc-sub">{{ u.type === 'freelancer' ? 'Freelancer' : 'Client' }} · {{ u.location }}</div>
+          </div>
+          <span class="status-badge badge-active">✓ KYC</span>
+        </div>
+      </div>
+
+    </div>
+  </ion-content>
+
+  <!-- ==================== BOTTOM NAV ==================== -->
+  <div class="bottom-nav">
+    <button class="nav-tab" [class.active]="section === 'overview'" (click)="selectSection('overview')">
+      <span class="nav-tab-icon">📊</span>
+      <span>Vue</span>
+    </button>
+    <button class="nav-tab" [class.active]="section === 'users'" (click)="selectSection('users')">
+      <span class="nav-tab-icon">👥</span>
+      <span>Users</span>
+    </button>
+    <button class="nav-tab" [class.active]="section === 'proposals'" (click)="selectSection('proposals')">
+      <span class="nav-tab-icon">📋</span>
+      <span>Jobs</span>
+    </button>
+    <button class="nav-tab" [class.active]="section === 'profiles'" (click)="selectSection('profiles')">
+      <span class="nav-tab-icon">🔍</span>
+      <span>KYC</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- ==================== MODAL PROFIL ==================== -->
+<ion-modal [isOpen]="profileModalOpen" (didDismiss)="profileModalOpen = false">
+  <ng-template>
+    <ion-content class="modal-content" *ngIf="selectedUser">
+      <div class="modal-handle-bar"></div>
+
+      <div class="profile-banner"></div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-lg" [class]="selectedUser.type">{{ selectedUser.initials }}</div>
+        <span class="status-badge" [class]="getKycClass(selectedUser.kyc)">{{ getKycLabel(selectedUser.kyc) }}</span>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-name">{{ selectedUser.name }}</div>
+        <div class="profile-role">
+          {{ selectedUser.type === 'freelancer' ? '🧑‍💻 Freelancer · ' + selectedUser.skills : '🏢 Client · Entreprise' }}
+        </div>
+
+        <div class="profile-stats" *ngIf="selectedUser.type === 'freelancer'">
+          <div class="pstat">
+            <div class="pstat-val">{{ selectedUser.rating }}</div>
+            <div class="pstat-label">Note</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val">{{ selectedUser.jobs }}</div>
+            <div class="pstat-label">Jobs</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val">{{ selectedUser.kyc === 'verified' ? '✓' : '!' }}</div>
+            <div class="pstat-label">KYC</div>
+          </div>
+        </div>
+
+        <div class="profile-stats" *ngIf="selectedUser.type === 'client'">
+          <div class="pstat">
+            <div class="pstat-val">{{ selectedUser.posted }}</div>
+            <div class="pstat-label">Jobs postés</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val">{{ getBudgetShort(selectedUser) }}</div>
+            <div class="pstat-label">Budget</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val">{{ selectedUser.kyc === 'verified' ? '✓' : '!' }}</div>
+            <div class="pstat-label">KYC</div>
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <span class="field-label">Email</span>
+          <span class="field-val">{{ selectedUser.email }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">Téléphone</span>
+          <span class="field-val">{{ selectedUser.phone }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">Localisation</span>
+          <span class="field-val">{{ selectedUser.location }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">Statut</span>
+          <span class="status-badge" [class]="getStatusClass(selectedUser.status)">{{ getStatusLabel(selectedUser.status) }}</span>
+        </div>
+
+        <div class="modal-actions">
+          <ion-button fill="outline" (click)="profileModalOpen = false">Fermer</ion-button>
+          <ion-button
+            [color]="selectedUser.status === 'active' ? 'danger' : 'success'"
+            fill="solid"
+            (click)="toggleStatus(selectedUser); profileModalOpen = false"
+          >
+            {{ selectedUser.status === 'active' ? 'Désactiver' : 'Activer' }}
+          </ion-button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ==================== MODAL KYC ==================== -->
+<ion-modal [isOpen]="kycModalOpen" (didDismiss)="kycModalOpen = false">
+  <ng-template>
+    <ion-content class="modal-content" *ngIf="selectedUser">
+      <div class="modal-handle-bar"></div>
+      <div class="profile-body">
+        <div class="profile-name" style="margin-bottom: 16px">Contrôle KYC — {{ selectedUser.name }}</div>
+
+        <div class="kyc-check-row">
+          <span class="kyc-icon">🪪</span>
+          <div class="kyc-info">
+            <div class="kyc-name">Carte d'identité</div>
+            <div class="kyc-sub">Document national</div>
+          </div>
+          <span class="status-badge badge-pending">En attente</span>
+        </div>
+        <div class="kyc-check-row">
+          <span class="kyc-icon">📱</span>
+          <div class="kyc-info">
+            <div class="kyc-name">Téléphone</div>
+            <div class="kyc-sub">{{ selectedUser.phone }}</div>
+          </div>
+          <span class="status-badge badge-active">Vérifié</span>
+        </div>
+        <div class="kyc-check-row">
+          <span class="kyc-icon">✉️</span>
+          <div class="kyc-info">
+            <div class="kyc-name">Email</div>
+            <div class="kyc-sub">{{ selectedUser.email }}</div>
+          </div>
+          <span class="status-badge badge-active">Vérifié</span>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 24px">
+          <ion-button fill="outline" (click)="kycModalOpen = false">Annuler</ion-button>
+          <ion-button color="primary" fill="solid" (click)="approveKyc(selectedUser)">Approuver KYC</ion-button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- TOAST -->
+<div class="toast" [class.show]="toastVisible">{{ toastMessage }}</div>

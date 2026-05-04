@@ -42,6 +42,7 @@ def _serialize_job(job):
         "experience_level": job.get("experience_level", ""),
         "client_id": job.get("client_id", ""),
         "skills": job.get("skills", []),
+        "deadline": job.get("deadline", ""),
         "status": job.get("status", "open"),
         "approval_status": job.get("approval_status", "pending"),
         "review_note": job.get("review_note", ""),
@@ -78,6 +79,7 @@ def _serialize_user(user, profile=None):
         "id": str(user.get("_id")),
         "email": user.get("email", ""),
         "role": user.get("role", ""),
+        "is_verified": bool(user.get("is_verified", profile.get("is_verified", False))),
         "full_name": (
             profile.get("fullName")
             or user.get("full_name")
@@ -102,6 +104,18 @@ def _safe_object_id(value):
         return None
 
 
+def _extract_display_name(user, profile=None, fallback=""):
+    profile = profile or {}
+    return (
+        profile.get("fullName")
+        or profile.get("companyName")
+        or user.get("full_name")
+        or user.get("name")
+        or user.get("email")
+        or fallback
+    )
+
+
 @admin_bp.route("/review-items", methods=["GET"])
 @jwt_required()
 def get_review_items():
@@ -118,10 +132,35 @@ def get_review_items():
     jobs = list(db.jobs.find({"approval_status": requested}).sort("created_at", -1))
     gigs = list(db.gigs.find({"status": gig_status}).sort("createdAt", -1))
 
+    enriched_jobs = []
+    for job in jobs:
+        serialized = _serialize_job(job)
+        owner_name = serialized.get("client_id", "")
+        client_user_id = _safe_object_id(serialized.get("client_id"))
+        if client_user_id:
+            user = db.users.find_one({"_id": client_user_id}) or {}
+            profile = db.clients.find_one({"userId": client_user_id}) or {}
+            owner_name = _extract_display_name(user, profile, owner_name)
+        serialized["owner_name"] = owner_name
+        enriched_jobs.append(serialized)
+
+    enriched_gigs = []
+    for gig in gigs:
+        serialized = _serialize_gig(gig)
+        owner_name = serialized.get("freelancerId", "")
+        freelancer_profile_id = _safe_object_id(serialized.get("freelancerId"))
+        if freelancer_profile_id:
+            profile = db.freelancers.find_one({"_id": freelancer_profile_id}) or {}
+            user_id = profile.get("userId")
+            user = db.users.find_one({"_id": user_id}) if user_id else {}
+            owner_name = _extract_display_name(user or {}, profile, owner_name)
+        serialized["owner_name"] = owner_name
+        enriched_gigs.append(serialized)
+
     return jsonify(
         {
-            "jobs": [_serialize_job(job) for job in jobs],
-            "gigs": [_serialize_gig(gig) for gig in gigs],
+            "jobs": enriched_jobs,
+            "gigs": enriched_gigs,
             "totals": {"jobs": len(jobs), "gigs": len(gigs)},
         }
     ), 200
@@ -319,13 +358,18 @@ def get_admin_stats():
     total_users = db.users.count_documents({})
     active_freelancers = db.users.count_documents({"role": "freelancer", **active_filter})
     active_clients = db.users.count_documents({"role": "client", **active_filter})
-    pending_proposals = db.proposals.count_documents({"status": "pending"})
+    pending_jobs = db.jobs.count_documents({"approval_status": "pending"})
+    pending_gigs = db.gigs.count_documents({"status": "pending"})
+    blocked_users = db.users.count_documents({"is_active": False})
 
     return jsonify(
         {
             "user_total": total_users,
             "freelancers_actif": active_freelancers,
             "clients_actif": active_clients,
-            "propositions_en_attente": pending_proposals,
+            "propositions_en_attente": pending_jobs + pending_gigs,
+            "jobs_en_attente": pending_jobs,
+            "gigs_en_attente": pending_gigs,
+            "comptes_bloques": blocked_users,
         }
     ), 200

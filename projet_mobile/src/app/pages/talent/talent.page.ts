@@ -320,6 +320,8 @@ export class TalentPage implements OnInit, OnDestroy {
   private map(list: any[]) {
     return list.map(t => ({
       id: t.id || t._id,
+      profileId: t.profile_id || t.id || t._id,
+      userId: t.user_id || t.userId || '',
       name: t.full_name || 'Freelancer',
       title: t.title || '',
       avatar: t.avatar || '',

@@ -119,6 +119,9 @@ export class FreelancerService {
       { headers: this.getHeaders() }
     );
   }
+  createConversation(data: any) {
+  return this.http.post('http://localhost:5000/api/chat/conversation', data);
+}
 
 
 }

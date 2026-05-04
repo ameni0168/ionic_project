@@ -5,7 +5,8 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from pymongo import MongoClient
 from dotenv import load_dotenv
-
+from app.extension import socketio
+# from app.socket import chat_socket
 from app.routes.auth_routes       import auth_bp
 from app.routes.freelancer_routes import freelancer_bp
 from app.routes.client_routes import client_bp
@@ -13,6 +14,8 @@ from app.routes.gig_routes        import gig_bp
 from app.routes.order_routes      import order_bp, catalog_bp
 from app.routes.job_routes        import job_bp
 from app.routes.proposal_routes        import proposal_bp
+from app.routes.chat import chat_bp
+
 
 from app.routes.admin_routes import admin_bp
 from app.routes.contract_routes import contract_bp
@@ -25,6 +28,8 @@ from app.routes.payment_routes import payment_bp
 load_dotenv()
 
 jwt = JWTManager()
+# socketio = SocketIO(cors_allowed_origins="*")   # IMPORTANT
+
 
 def create_app():
     app = Flask(__name__)
@@ -36,6 +41,7 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
     jwt.init_app(app)
+    socketio.init_app(app)
 
     mongo_uri = os.getenv("MONGO_URI")
     client    = MongoClient(mongo_uri)
@@ -55,6 +61,10 @@ def create_app():
     app.register_blueprint(sprint_plan_bp,   url_prefix="/api")
     app.register_blueprint(sprint_bp,        url_prefix="/api/sprints")
     app.register_blueprint(payment_bp,       url_prefix="/api")
+    app.register_blueprint(chat_bp, url_prefix="/api/chat")
+
+    from app.socket import chat_socket   # IMPORTANT
+
 
 
 

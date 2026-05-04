@@ -71,7 +71,6 @@ export class MyGigsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadCategories();
     this.loadGigs();
   }
 

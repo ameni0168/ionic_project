@@ -31,6 +31,8 @@ def serialize_talent_card(f):
     reviews = f.get("reviews", 0) or 0
     return {
         "id": str(f.get("_id")),
+        "profile_id": str(f.get("_id")),
+        "user_id": str(f.get("userId")) if f.get("userId") else "",
         "full_name": f.get("fullName", ""),
         "title": f.get("title", ""),
         "bio": f.get("bio", ""),
@@ -55,6 +57,8 @@ def serialize_freelancer_profile(freelancer, user):
     created_str = created.isoformat() if hasattr(created, "isoformat") else str(created)
     return {
         "id": str(freelancer["_id"]),
+        "profile_id": str(freelancer["_id"]),
+        "user_id": str(freelancer.get("userId")) if freelancer.get("userId") else "",
         "fullName": freelancer.get("fullName", ""),
         "title": freelancer.get("title", ""),
         "bio": freelancer.get("bio", ""),

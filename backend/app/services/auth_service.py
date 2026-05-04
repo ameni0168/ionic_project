@@ -1,3 +1,6 @@
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.client_model import get_clients_collection
+from app.models.users_model import get_users_collection
 from datetime import datetime
 import re
 
@@ -7,6 +10,9 @@ from app.models.client_model import get_clients_collection
 from app.models.users_model import get_users_collection
 
 
+# =========================
+# REGISTER CLIENT
+# =========================
 def register_client(data):
     full_name = data.get("fullName")
     email = data.get("email")
@@ -22,6 +28,15 @@ def register_client(data):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return {"error": "Email invalide"}, 400
 
+    # required fields
+    if not all([full_name, email, phone, location, password, confirm_password]):
+        return {"error": "Tous les champs obligatoires doivent être remplis"}, 400
+
+    # email format
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return {"error": "Email invalide"}, 400
+
+    # password match
     if password != confirm_password:
         return {"error": "Les mots de passe ne correspondent pas"}, 400
 
@@ -46,6 +61,7 @@ def register_client(data):
     }
     user_id = users.insert_one(user_doc).inserted_id
 
+    # create client profile
     client_doc = {
         "userId": user_id,
         "fullName": full_name,

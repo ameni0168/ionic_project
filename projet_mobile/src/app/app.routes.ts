@@ -122,5 +122,19 @@ export const routes: Routes = [
   {
     path: 'sprint-review/:sprintId',
     loadComponent: () => import('./pages/sprint-review/sprint-review.page').then(m => m.SprintReviewPage)
-  }
+  },
+  {
+    path: 'chat/:id',
+    loadComponent: () => import('./pages/chat/chat.page').then( m => m.ChatPage)
+  },
+  {
+  path: 'conversations',
+  loadComponent: () => import('./pages/conversation/conversation.page').then(m => m.ConversationsPage)
+  },
+  {
+    path: 'admin-dashboard',
+    loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.page').then(m => m.AdminDashboardPage)
+}
+  
+
 ];

@@ -5,6 +5,9 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
+from flask_socketio import SocketIO
+
+socketio = SocketIO(cors_allowed_origins="*")
 
 load_dotenv()
 

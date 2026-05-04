@@ -8,15 +8,12 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class ApiService {
-
   private readonly baseUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'access_token';
   private readonly USER_ID_KEY = 'user_id';
   private readonly USER_ROLE_KEY = 'user_role';
 
-  constructor(private http: HttpClient) { }
-
-  // ── Gestion token ─────────────────────────
+  constructor(private http: HttpClient) {}
 
   saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
@@ -39,11 +36,14 @@ export class ApiService {
     }
 
     const token = this.getToken();
-    if (!token) return null;
+    if (!token) {
+      return null;
+    }
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.sub || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -55,11 +55,14 @@ export class ApiService {
     }
 
     const token = this.getToken();
-    if (!token) return null;
+    if (!token) {
+      return null;
+    }
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.role || null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -75,8 +78,6 @@ export class ApiService {
       'Content-Type': 'application/json'
     });
   }
-
-  // ── Auth ─────────────────────────
 
   registerClient(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/auth/register/client`, data);
@@ -102,8 +103,6 @@ export class ApiService {
     );
   }
 
-  // ── Freelancer ─────────────────────────
-
   getFreelancerProfile(): Observable<any> {
     return this.http.get(`${this.baseUrl}/freelancer/profile`, {
       headers: this.authHeaders()
@@ -122,16 +121,11 @@ export class ApiService {
     });
   }
 
-
-
-
   getFreelancerDashboard(): Observable<any> {
     return this.http.get(`${this.baseUrl}/freelancer/dashboard`, {
       headers: this.authHeaders()
     });
   }
-
-  // ── Gigs ─────────────────────────
 
   getMyGigs(): Observable<any> {
     return this.http.get(`${this.baseUrl}/gigs/`, {
@@ -181,7 +175,42 @@ export class ApiService {
     });
   }
 
-  // ── Orders (freelancer) ─────────────────────────
+  getAdminUsers(params?: {
+    role?: 'client' | 'freelancer';
+    status?: 'active' | 'disabled';
+    search?: string;
+  }): Observable<any> {
+    const query = new URLSearchParams();
+
+    if (params?.role) {
+      query.set('role', params.role);
+    }
+    if (params?.status) {
+      query.set('status', params.status);
+    }
+    if (params?.search) {
+      query.set('search', params.search);
+    }
+
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return this.http.get(`${this.baseUrl}/admin/users${suffix}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateAdminUserStatus(userId: string, isActive: boolean): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/users/${userId}/status`, {
+      is_active: isActive
+    }, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getAdminStats(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/stats`, {
+      headers: this.authHeaders()
+    });
+  }
 
   getFreelancerOrders(status: string = ''): Observable<any> {
     const params = status ? `?status=${status}` : '';
@@ -197,8 +226,6 @@ export class ApiService {
       { headers: this.authHeaders() }
     );
   }
-
-  // ── Orders (client) ─────────────────────────
 
   getClientOrders(status: string = ''): Observable<any> {
     const params = status ? `?status=${status}` : '';

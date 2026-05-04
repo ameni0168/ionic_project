@@ -1,0 +1,31 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="messages-toolbar">
+    <ion-title>Messages</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="messages-content">
+  <div *ngIf="isLoading" class="messages-loading">
+    <ion-skeleton-text animated *ngFor="let i of [1,2,3]"
+      style="height:60px;border-radius:12px;margin-bottom:12px">
+    </ion-skeleton-text>
+  </div>
+
+  <ion-list lines="none" *ngIf="!isLoading" class="messages-list">
+    <p *ngIf="conversations.length === 0" class="empty-conv">
+      Aucune conversation
+    </p>
+
+    <ion-item *ngFor="let conv of conversations" (click)="openChat(conv)" button detail="false" class="conversation-item">
+      <ion-avatar slot="start">
+        <img [src]="conv.other_user?.avatar || 'assets/default-avatar.png'"
+          onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"/>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ conv.other_user?.name || 'Utilisateur' }}</h2>
+        <p>{{ conv.last_message || 'Demarrer la conversation' }}</p>
+      </ion-label>
+      <span slot="end" class="last-time">{{ conv.last_time | date:'HH:mm' }}</span>
+    </ion-item>
+  </ion-list>
+</ion-content>

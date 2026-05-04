@@ -5,6 +5,7 @@ import { IonicModule, NavController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FreelancerService } from 'src/app/services/freelancer.service';
 import { ApiService } from 'src/app/services/api.service';
+import { ChatService } from 'src/app/services/chat.service';
 
 @Component({
   selector: 'app-talent-profile',
@@ -33,6 +34,7 @@ export class TalentProfilePage implements OnInit {
     private talentSvc: FreelancerService,
     private router: Router,
     private api: ApiService,
+    private chatService: ChatService,
   ) {}
 
   // ── INIT ─────────────────────────────────────────────
@@ -116,6 +118,8 @@ export class TalentProfilePage implements OnInit {
 
     return {
       id: t.id || t._id || null,
+      profileId: t.profile_id || t.id || t._id || null,
+      userId: t.user_id || t.userId || '',
 
       name: t.fullName || t.full_name || t.name || 'Freelancer',
       title: t.title || '',
@@ -173,20 +177,31 @@ export class TalentProfilePage implements OnInit {
   shareProfile() {
     // TODO
   }
+//   createConversation(data: any) {
+//   return this.http.post('http://localhost:5000/api/chat/conversation', data);
+// }
 
   sendMessage() {
-    if (!this.talent?.id) return;
+    if (!this.talent?.userId) return;
 
-    if (!this.api.isLoggedIn()) {
-      this.router.navigate(['/welcome'], { queryParams: { redirectTo: `/talent-profile/${this.talent.id}` } });
-      return;
-    }
+    const currentUserId = this.chatService.getCurrentUserId();
+    if (!currentUserId) return;
 
-    this.navCtrl.navigateForward(['/messages'], {
-      queryParams: {
-        to: this.talent.id,
-        name: this.talent.name,
+    this.chatService.createConversation(currentUserId, this.talent.userId).subscribe({
+      next: (res: any) => {
+        this.navCtrl.navigateForward(['/chat', res.conversation_id], {
+          state: {
+            otherUser: {
+              id: this.talent.userId,
+              name: this.talent.name,
+              avatar: this.talent.avatar
+            }
+          }
+        });
       },
+      error: () => {
+        // fallback UX: rester sur la page si la conversation ne peut pas être initialisée
+      }
     });
   }
 
@@ -204,4 +219,6 @@ export class TalentProfilePage implements OnInit {
       },
     });
   }
+  //Navigation
+goTo(path: string)     { this.navCtrl.navigateForward([path]); }
 }

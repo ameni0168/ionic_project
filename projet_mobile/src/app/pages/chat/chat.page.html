@@ -1,0 +1,59 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="chat-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="navCtrl.back()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-avatar slot="start" style="width:36px;height:36px;margin:0 8px">
+      <img [src]="otherUser?.avatar || 'assets/default-avatar.png'"
+        onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"/>
+    </ion-avatar>
+    <ion-title>{{ otherUser?.name || 'Chat' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content #scrollContent class="chat-content">
+  <div class="chat-messages">
+    <div
+      *ngFor="let msg of messages"
+      class="message-row"
+      [class.mine]="isMine(msg)"
+      [class.theirs]="!isMine(msg)">
+      <div class="message-bubble">
+        <p class="message-text">{{ msg.content }}</p>
+        <small class="message-time">
+          {{ msg.created_at | date:'HH:mm' }}
+        </small>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar class="chat-input-toolbar">
+    <div class="chat-input-row">
+      <ion-input [(ngModel)]="newMessage"
+        placeholder="Message..."
+        style="--background:#f0f0f0;--border-radius:20px;--padding-start:16px"
+        (keyup.enter)="sendMessage()">
+      </ion-input>
+      <ion-button
+  (click)="sendMessage()"
+  [disabled]="isChecking"
+  expand="block"
+  color="primary">
+
+  <ion-spinner
+    *ngIf="isChecking"
+    name="crescent"
+    slot="start">
+  </ion-spinner>
+
+  {{ isChecking ? 'Verification...' : 'Envoyer' }}
+
+</ion-button>
+
+    </div>
+  </ion-toolbar>
+</ion-footer>

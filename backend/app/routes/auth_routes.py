@@ -55,6 +55,7 @@ def login():
         if user.get("is_active", True) is False or user.get("account_status") == "disabled":
             return jsonify({"error": "Ce compte a ete desactive par l'administrateur"}), 403
 
+        # Enregistrement client/freelancer utilise password_hash (Werkzeug)
         password_hash = user.get("password_hash") or user.get("password")
         if not password_hash:
             return jsonify({"error": "Mot de passe non configure pour ce compte"}), 500
