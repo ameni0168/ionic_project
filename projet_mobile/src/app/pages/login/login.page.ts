@@ -90,8 +90,8 @@ export class LoginPage implements OnInit {
     this.navCtrl.navigateBack('/welcome');
   }
 
-  navigateToRegister() {
-    this.navCtrl.navigateForward('/auth/client-register');
+  navigateTowelcome() {
+    this.navCtrl.navigateForward('/welcome');
   }
 
   navigateToForgotPassword() {

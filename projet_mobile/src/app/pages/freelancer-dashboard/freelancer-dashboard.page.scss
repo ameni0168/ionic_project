@@ -334,6 +334,11 @@
   height: 62px;
   padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 
   .tab-btn {
     --color: var(--color-text-secondary);

@@ -8,9 +8,13 @@ import { environment } from 'src/environments/environment';
 export class ChatService {
   private socket: Socket;
   private readonly API = environment.apiUrl;
+  private readonly SOCKET_URL = this.API.replace(/\/api\/?$/, '');
 
   constructor(private http: HttpClient) {
-    this.socket = io('http://localhost:5000');
+    this.socket = io(this.SOCKET_URL, {
+      transports: ['websocket'],
+      autoConnect: true
+    });
   }
 
   private getHeaders(): HttpHeaders {
@@ -18,12 +22,10 @@ export class ChatService {
     return new HttpHeaders({ Authorization: token ? `Bearer ${token}` : '' });
   }
 
-  // ── HTTP ──────────────────────────────────────────────
-
-  createConversation(clientId: string, freelancerId: string): Observable<any> {
+  createConversation(user1: string, user2: string): Observable<any> {
     return this.http.post(
       `${this.API}/chat/conversation`,
-      { client_id: clientId, freelancer_id: freelancerId },
+      { user1, user2 },
       { headers: this.getHeaders() }
     );
   }
@@ -34,24 +36,56 @@ export class ChatService {
     });
   }
 
+  getCurrentUserId(): string {
+    const token = localStorage.getItem('access_token');
+    const fallbackUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const fallbackId =
+      fallbackUser?._id ||
+      fallbackUser?.id ||
+      fallbackUser?.user_id ||
+      '';
+
+    if (!token) return fallbackId;
+    try {
+      const base64Url = token.split('.')[1] || '';
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const payload = JSON.parse(atob(padded));
+      return payload?.sub || fallbackId;
+    } catch {
+      return fallbackId;
+    }
+  }
+
   getMessages(conversationId: string): Observable<any> {
     return this.http.get(`${this.API}/chat/messages/${conversationId}`, {
       headers: this.getHeaders()
     });
   }
 
-  // ── SOCKET ────────────────────────────────────────────
-
   joinConversation(conversationId: string) {
+    this.ensureConnected();
     this.socket.emit('join', { conversationId });
   }
 
   sendMessage(data: { conversationId: string; senderId: string; content: string }) {
+    this.ensureConnected();
     this.socket.emit('send_message', data);
   }
 
   onMessage(callback: (msg: any) => void) {
+    this.socket.off('receive_message'); // éviter les doublons d'écouteurs
     this.socket.on('receive_message', callback);
+  }
+
+  offMessage() {
+    this.socket.off('receive_message');
+  }
+
+  private ensureConnected() {
+    if (!this.socket.connected) {
+      this.socket.connect();
+    }
   }
 
   disconnect() {
