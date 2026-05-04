@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { ChatService } from 'src/app/services/chat.service';
-import { IonicModule } from '@ionic/angular';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { IonicModule, IonContent } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
+import { NavController } from '@ionic/angular';
+import { ChatService } from 'src/app/services/chat.service';
 
 @Component({
   selector: 'app-chat',
@@ -13,47 +14,54 @@ import { FormsModule } from '@angular/forms';
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class ChatPage implements OnInit, OnDestroy {
+  @ViewChild(IonContent) content!: IonContent;
+
   messages: any[] = [];
   newMessage = '';
   userId = '';
   conversationId = '';
+  otherUser: any = {};
+  isLoading = true;
 
   constructor(
     private route: ActivatedRoute,
+    public navCtrl: NavController,
     private chatService: ChatService
   ) {}
 
   ngOnInit() {
-  const userStr = localStorage.getItem('user');
-  if (!userStr) return;
+    this.userId = this.chatService.getCurrentUserId();
+    this.conversationId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.otherUser = window.history.state?.otherUser || {};
 
-  const user = JSON.parse(userStr);
-  this.userId = user._id || user.id || user.username;
+    if (!this.conversationId) {
+      this.navCtrl.back();
+      return;
+    }
 
-  // ← récupérer le conversationId depuis l'URL
-  this.conversationId = this.route.snapshot.paramMap.get('id') ?? '';
-  
-  console.log('🔑 conversationId:', this.conversationId);  // doit être non-vide
-  console.log('👤 userId:', this.userId);
+    // charger historique
+    this.chatService.getMessages(this.conversationId).subscribe({
+      next: (res: any) => {
+        this.messages = (res.messages || []).map((m: any) => ({
+          ...m,
+          senderId: m.senderId || m.sender_id
+        }));
+        this.isLoading = false;
+        setTimeout(() => this.content?.scrollToBottom(300), 100);
+      },
+      error: () => { this.isLoading = false; }
+    });
 
-  if (!this.conversationId) {
-    console.error('❌ conversationId manquant dans l URL');
-    return;
+    this.chatService.joinConversation(this.conversationId);
+
+    this.chatService.onMessage((msg: any) => {
+      this.messages.push(msg);
+      setTimeout(() => this.content?.scrollToBottom(300), 100);
+    });
   }
 
-  // charger historique
-  this.chatService.getMessages(this.conversationId).subscribe((res: any) => {
-    this.messages = res.messages;
-  });
-
-  this.chatService.joinConversation(this.conversationId);
-
-  this.chatService.onMessage((msg: any) => {
-    this.messages.push(msg);
-  });
-}
   sendMessage() {
-    if (!this.newMessage.trim()) return;
+    if (!this.newMessage.trim() || !this.userId) return;
 
     const msg = {
       conversationId: this.conversationId,
@@ -62,13 +70,16 @@ export class ChatPage implements OnInit, OnDestroy {
     };
 
     this.chatService.sendMessage(msg);
-
-    // afficher immédiatement côté émetteur
     this.messages.push({ ...msg, created_at: new Date().toISOString() });
     this.newMessage = '';
+    setTimeout(() => this.content?.scrollToBottom(300), 100);
+  }
+
+  isMine(msg: any): boolean {
+    return msg.senderId === this.userId || msg.sender_id === this.userId;
   }
 
   ngOnDestroy() {
-    this.chatService.disconnect();
+    this.chatService.offMessage();
   }
 }
