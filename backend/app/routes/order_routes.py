@@ -4,6 +4,7 @@ from app.services.order_service import (
     get_orders_for_freelancer,
     update_order_status,
     get_orders_for_client,
+    accept_and_pay_order,
 )
 from app.services.catalog_service import (
     service_list_gigs,
@@ -74,6 +75,23 @@ def client_orders():
     user_id       = get_jwt_identity()
     status_filter = request.args.get("status", "")
     result, code  = get_orders_for_client(user_id, status_filter)
+    return jsonify(result), code
+
+
+# POST /api/orders/<order_id>/accept-pay
+@order_bp.route("/<order_id>/accept-pay", methods=["POST"])
+@jwt_required()
+def accept_pay_order(order_id):
+    err = _require_role("client")
+    if err: return err
+
+    user_id = get_jwt_identity()
+    data = request.get_json(silent=True) or {}
+    result, code = accept_and_pay_order(
+        user_id,
+        order_id,
+        payment_method_id=data.get("payment_method_id"),
+    )
     return jsonify(result), code
 
 

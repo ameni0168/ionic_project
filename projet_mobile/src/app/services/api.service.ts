@@ -183,6 +183,14 @@ export class ApiService {
     });
   }
 
+  acceptAndPayOrder(orderId: string, paymentMethodId?: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/orders/${orderId}/accept-pay`,
+      { payment_method_id: paymentMethodId },
+      { headers: this.authHeaders() }
+    );
+  }
+
   orderGig(gigId: string, data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/catalog/${gigId}/order`, data, {
       headers: this.authHeaders()

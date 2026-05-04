@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ApiService } from '../../services/api.service';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-freelancer-dashboard',
@@ -36,14 +37,15 @@ export class FreelancerDashboardPage implements OnInit {
     { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',       color: 'success' },
     { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',    color: 'primary' },
     { icon: 'document-text', title: 'Mes Commandes',      route: '/orders',     color: 'secondary', badge: 0 },
-    { icon: 'briefcase',     title: 'Mes Contrats',       route: '/contracts',  color: 'warning',   badge: 0 }
+    { icon: 'briefcase',     title: 'Mes Contrats',       route: '/contracts',  color: 'secondary',   badge: 0 }
   ];
 
   recentActivities: any[] = [];
 
   constructor(
     private navCtrl: NavController,
-    private api: ApiService
+    private api: ApiService,
+    private orderService: OrderService
   ) {}
 
   ngOnInit() {
@@ -63,6 +65,9 @@ export class FreelancerDashboardPage implements OnInit {
         this.stats[2].value = String(s.rating);
         this.stats[2].trend = `${s.reviews} reviews`;
         this.stats[3].value = String(s.totalCompleted);
+
+        // Update quick actions badges
+        this.quickActions[2].badge = s.pendingOrders || 0;
 
         this.recentActivities = data.recentActivities;
         this.isLoading = false;

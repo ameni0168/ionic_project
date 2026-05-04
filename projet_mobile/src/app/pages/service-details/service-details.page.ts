@@ -73,7 +73,7 @@ export class ServiceDetailsPage implements OnInit {
         this.isOrdering = false;
         this.closeOrderModal();
         const toast = await this.toastCtrl.create({
-          message:  '✅ Commande envoyée avec succès !',
+          message:  'Commande envoyee avec succes !',
           duration: 3000, position: 'top', color: 'success',
         });
         toast.present();

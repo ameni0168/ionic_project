@@ -1,0 +1,32 @@
+gig-order-review {
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .action-buttons {
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+  }
+
+  ion-card {
+    margin-bottom: 16px;
+  }
+
+  .mt-4 {
+    margin-top: 1rem;
+  }
+}
+
