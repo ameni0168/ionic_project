@@ -1,0 +1,67 @@
+:host {
+  --bg: var(--color-background);
+  --surface: var(--color-surface);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --border: var(--color-border);
+  --accent: var(--color-primary);
+}
+
+.messages-toolbar {
+  --background: var(--surface);
+  --border-width: 0;
+  box-shadow: 0 1px 0 var(--border);
+
+  ion-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+.messages-content {
+  --background: var(--bg);
+}
+
+.messages-loading {
+  padding: 20px;
+}
+
+.messages-list {
+  background: transparent;
+  padding: 10px 10px 18px;
+}
+
+.empty-conv {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+
+.conversation-item {
+  --background: var(--surface);
+  --padding-start: 14px;
+  --inner-padding-end: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+  }
+}
+
+.last-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
