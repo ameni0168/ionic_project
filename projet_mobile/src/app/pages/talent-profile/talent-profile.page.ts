@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { FreelancerService } from 'src/app/services/freelancer.service';
+import { ChatService } from 'src/app/services/chat.service';
 
 @Component({
   selector: 'app-talent-profile',
@@ -30,6 +31,7 @@ export class TalentProfilePage implements OnInit {
     private route: ActivatedRoute,
     private navCtrl: NavController,
     private talentSvc: FreelancerService,
+    private chatService: ChatService,
   ) {}
 
   // ── INIT ─────────────────────────────────────────────
@@ -175,26 +177,28 @@ export class TalentProfilePage implements OnInit {
 // }
 
   sendMessage() {
-  if (!this.talent?.id) return;
+    if (!this.talent?.id) return;
 
-  const user = JSON.parse(localStorage.getItem('user')!);
+    const currentUserId = this.chatService.getCurrentUserId();
+    if (!currentUserId) return;
 
-  this.talentSvc.createConversation({
-    user1: user._id,
-    user2: this.talent.id
-  }).subscribe((res: any) => {
-
-    const conversationId = res.conversation_id;
-
-    this.navCtrl.navigateForward(['/chat'], {
-      queryParams: {
-        conversationId,
-        name: this.talent.name
+    this.chatService.createConversation(currentUserId, this.talent.id).subscribe({
+      next: (res: any) => {
+        this.navCtrl.navigateForward(['/chat', res.conversation_id], {
+          state: {
+            otherUser: {
+              id: this.talent.id,
+              name: this.talent.name,
+              avatar: this.talent.avatar
+            }
+          }
+        });
+      },
+      error: () => {
+        // fallback UX: rester sur la page si la conversation ne peut pas être initialisée
       }
     });
-
-  });
-}
+  }
 
   hireNow() {
     if (!this.talent?.id) return;
@@ -205,4 +209,6 @@ export class TalentProfilePage implements OnInit {
       },
     });
   }
+  //Navigation
+goTo(path: string)     { this.navCtrl.navigateForward([path]); }
 }

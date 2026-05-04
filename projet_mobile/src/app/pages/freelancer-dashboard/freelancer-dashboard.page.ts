@@ -36,7 +36,7 @@ export class FreelancerDashboardPage implements OnInit {
     { icon: 'search',        title: 'Trouver du Travail', route: '/jobs',      color: 'success' },
     { icon: 'add-circle',    title: 'Créer un Gig',       route: '/my-gigs',  color: 'primary' },
     { icon: 'document-text', title: 'Mes Commandes',      route: '/orders',     color: 'secondary', badge: 0 },
-    { icon: 'chatbubbles',   title: 'Messages',           route: '/messages',   color: 'tertiary',  badge: 0 }
+    { icon: 'chatbubbles',   title: 'Messages',           route: '/conversations',   color: 'tertiary',  badge: 0 }
   ];
 
   recentActivities: any[] = [];
@@ -93,7 +93,7 @@ export class FreelancerDashboardPage implements OnInit {
   onActivityClick(activity: any) {
     switch (activity.type) {
       case 'order':   this.navCtrl.navigateForward(['/orders']);   break;
-      case 'message': this.navCtrl.navigateForward(['/messages']); break;
+      case 'message': this.navCtrl.navigateForward(['/conversations']); break;
       case 'payment': this.navCtrl.navigateForward(['/wallet']);   break;
       case 'review':  this.navCtrl.navigateForward(['/reviews']);  break;
       default:        this.navCtrl.navigateForward(['/my-gigs']);  break;
@@ -109,7 +109,7 @@ export class FreelancerDashboardPage implements OnInit {
         break;
       case 'gigs':     this.navCtrl.navigateForward(['/my-gigs']);             break;
       case 'orders':   this.navCtrl.navigateForward(['/orders']);              break;
-      case 'messages': this.navCtrl.navigateForward(['/messages']);            break;
+      case 'messages': this.navCtrl.navigateForward(['/conversations']);       break;
       case 'profile':  this.navCtrl.navigateForward(['/freelancer-profile']); break;
     }
   }
