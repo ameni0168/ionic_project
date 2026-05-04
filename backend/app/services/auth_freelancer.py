@@ -14,33 +14,33 @@ def register_freelancer(data):
     password = data.get("password")
     confirm_password = data.get("confirmPassword")
 
-    # 1️⃣ Vérification champs obligatoires
+    #  Vérification champs obligatoires
     if not all([full_name, email, bio, password, confirm_password]):
         return {"error": "Tous les champs obligatoires doivent être remplis"}, 400
 
-    # 2️⃣ Email format
+    # 2️ Email format
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return {"error": "Email invalide"}, 400
 
-    # 3️⃣ Password match
+    # 3️ Password match
     if password != confirm_password:
         return {"error": "Les mots de passe ne correspondent pas"}, 400
 
-    # 4️⃣ Password length
+    # 4️ Password length
     if len(password) < 8:
         return {"error": "Mot de passe trop court (min 8 caractères)"}, 400
 
     users = get_users_collection()
     freelancers = get_freelancers_collection()
 
-    # 5️⃣ Email unique (toujours dans users)
+    # 5️ Email unique (toujours dans users)
     if users.find_one({"email": email}):
         return {"error": "Email déjà utilisé"}, 400
 
-    # 6️⃣ Hash password
+    # 6️ Hash password
     hashed_password = generate_password_hash(password)
 
-    # 7️⃣ Créer user (AUTH)
+    # 7️ Créer user (AUTH)
     user_doc = {
         "email": email,
         "password": hashed_password,
@@ -50,7 +50,7 @@ def register_freelancer(data):
 
     user_id = users.insert_one(user_doc).inserted_id
 
-    # 8️⃣ Créer profil freelancer (BUSINESS)
+    # 8️ Créer profil freelancer (BUSINESS)
     freelancer_doc = {
         "userId": user_id,
         "fullName": full_name,

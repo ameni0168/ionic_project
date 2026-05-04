@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { freelancerAuthGuard } from './guards/freelancer-auth.guard';
+import { clientAuthGuard } from './guards/client-auth.guard';
 
 export const routes: Routes = [
   {
@@ -122,5 +124,15 @@ export const routes: Routes = [
   {
     path: 'sprint-review/:sprintId',
     loadComponent: () => import('./pages/sprint-review/sprint-review.page').then(m => m.SprintReviewPage)
+  },
+  {
+    path: 'gig-order-delivery/:id',
+    loadComponent: () => import('./pages/gig-order-delivery/gig-order-delivery.page').then(m => m.GigOrderDeliveryPage),
+    canActivate: [freelancerAuthGuard]
+  },
+  {
+    path: 'gig-order-review/:id',
+    loadComponent: () => import('./pages/gig-order-review/gig-order-review.page').then(m => m.GigOrderReviewPage),
+    canActivate: [clientAuthGuard]
   }
 ];

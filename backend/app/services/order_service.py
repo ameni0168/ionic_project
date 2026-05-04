@@ -5,13 +5,15 @@ from app.models.users_model import get_users_collection
 from app.extension import db
 from bson import ObjectId
 from datetime import datetime, timezone
+from app.services.payment_service import pay_completed_gig_order
 
 
 # ── Transitions de statut autorisées ──────────────────────────────────────────
 # Seul le freelancer peut confirmer/refuser/terminer
 ALLOWED_TRANSITIONS = {
     "pending":     ["in_progress", "cancelled"],   # freelancer accepte ou refuse
-    "in_progress": ["completed",   "cancelled"],   # freelancer livre ou annule
+    "in_progress": ["submitted",   "cancelled"],   # freelancer livre ou annule
+    "submitted":   [],                             # client doit accepter et payer
     "completed":   [],                             # terminal
     "cancelled":   [],                             # terminal
 }
@@ -35,6 +37,9 @@ def _serialize_order(order: dict) -> dict:
         "updatedAt":    order.get("updatedAt", datetime.utcnow()).isoformat(),
         "completedAt":  order.get("completedAt", "").isoformat()
                         if order.get("completedAt") else None,
+        "submittedAt":  order.get("submittedAt", "").isoformat()
+                        if order.get("submittedAt") else None,
+        "paymentStatus": order.get("payment_status", "unpaid"),
     }
 
 
@@ -74,6 +79,7 @@ def get_orders_for_freelancer(user_id: str, status_filter: str = "") -> tuple:
     counts = {
         "pending":     orders_col.count_documents({"freelancerId": freelancer["_id"], "status": "pending"}),
         "in_progress": orders_col.count_documents({"freelancerId": freelancer["_id"], "status": "in_progress"}),
+        "submitted":   orders_col.count_documents({"freelancerId": freelancer["_id"], "status": "submitted"}),
         "completed":   orders_col.count_documents({"freelancerId": freelancer["_id"], "status": "completed"}),
         "cancelled":   orders_col.count_documents({"freelancerId": freelancer["_id"], "status": "cancelled"}),
     }
@@ -120,22 +126,8 @@ def update_order_status(user_id: str, order_id: str, new_status: str) -> tuple:
         "updatedAt": datetime.now(timezone.utc)
     }
 
-    # Si la commande est terminée, enregistrer la date et mettre à jour les stats
-    if new_status == "completed":
-        update["completedAt"] = datetime.now(timezone.utc)
-
-        # Incrémenter ordersCompleted sur le gig
-        gigs_col = get_gigs_collection()
-        gigs_col.update_one(
-            {"_id": order.get("gigId")},
-            {"$inc": {"ordersCompleted": 1}}
-        )
-
-        # Incrémenter completedProjects sur le freelancer
-        freelancers.update_one(
-            {"_id": freelancer["_id"]},
-            {"$inc": {"completedProjects": 1}}
-        )
+    if new_status == "submitted":
+        update["submittedAt"] = datetime.now(timezone.utc)
 
     orders_col.update_one({"_id": ObjectId(order_id)}, {"$set": update})
 
@@ -158,8 +150,56 @@ def get_orders_for_client(user_id: str, status_filter: str = "") -> tuple:
     counts = {
         "pending":     orders_col.count_documents({"clientId": ObjectId(user_id), "status": "pending"}),
         "in_progress": orders_col.count_documents({"clientId": ObjectId(user_id), "status": "in_progress"}),
+        "submitted":   orders_col.count_documents({"clientId": ObjectId(user_id), "status": "submitted"}),
         "completed":   orders_col.count_documents({"clientId": ObjectId(user_id), "status": "completed"}),
         "cancelled":   orders_col.count_documents({"clientId": ObjectId(user_id), "status": "cancelled"}),
     }
 
     return {"orders": result, "counts": counts}, 200
+
+
+def accept_and_pay_order(user_id: str, order_id: str, payment_method_id=None) -> tuple:
+    orders_col = get_orders_collection()
+    gigs_col = get_gigs_collection()
+    freelancers = get_freelancers_collection()
+
+    try:
+        client_oid = ObjectId(user_id)
+        order = orders_col.find_one({
+            "_id": ObjectId(order_id),
+            "clientId": client_oid,
+        })
+    except Exception:
+        return {"error": "ID de commande invalide"}, 400
+
+    if not order:
+        return {"error": "Commande introuvable ou acces refuse"}, 404
+
+    if order.get("status") != "submitted":
+        return {"error": "Seule une commande livree peut etre acceptee et payee"}, 400
+
+    payment, error = pay_completed_gig_order(
+        db,
+        order,
+        payment_method_id=payment_method_id,
+        actor_id=user_id,
+    )
+    if error:
+        message, code = error
+        return {"error": message}, code
+
+    gigs_col.update_one(
+        {"_id": order.get("gigId")},
+        {"$inc": {"ordersCompleted": 1}},
+    )
+    freelancers.update_one(
+        {"_id": order.get("freelancerId")},
+        {"$inc": {"completedProjects": 1}},
+    )
+
+    return {
+        "message": "Commande acceptee et payee",
+        "status": "completed",
+        "payment_status": payment["status"],
+        "payment_id": str(payment["_id"]),
+    }, 200

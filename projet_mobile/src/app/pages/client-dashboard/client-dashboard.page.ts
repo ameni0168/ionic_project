@@ -1,11 +1,11 @@
 
-
 // src/app/pages/client-dashboard/client-dashboard.page.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, NavController } from '@ionic/angular';
+import { IonicModule, NavController, ToastController, AlertController } from '@ionic/angular';
 import { DashboardService } from 'src/app/services/client-dashboard.service';
 import { MarketplaceContentService } from 'src/app/services/marketplace-content.service';
+import { OrderService } from 'src/app/services/order.service';
 
 interface DashboardStats {
   active_projects: number;
@@ -74,6 +74,9 @@ export class ClientDashboardPage implements OnInit {
     private dashboardSvc: DashboardService,
     private marketplaceContent: MarketplaceContentService,
     private navCtrl: NavController,
+    private orderService: OrderService,
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -276,6 +279,44 @@ export class ClientDashboardPage implements OnInit {
   viewStat(stat: any) { this.navCtrl.navigateForward([stat.route]); }
   findTalent() { this.navCtrl.navigateForward(['/talent']); }
   postJob() { this.navCtrl.navigateForward(['/post-job']); }
+  async acceptAndPayGig(ev: Event, job: any) {
+    ev.stopPropagation();
+    const alert = await this.alertCtrl.create({
+      header: 'Accept & Pay Gig Order',
+      message: `Pay $${job.price} for "${job.title}"?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Pay Now',
+          handler: () => {
+            this.orderService.acceptAndPayGigOrder(job.id).subscribe({
+              next: () => {
+                this.toastCtrl.create({
+                  message: 'Gig order paid successfully!',
+                  duration: 2000,
+                  color: 'success'
+                }).then(toast => toast.present());
+                this._loadDashboard(); // Refresh
+              },
+              error: (err) => {
+                this.toastCtrl.create({
+                  message: err.error?.error || 'Payment failed',
+                  duration: 3000,
+                  color: 'danger'
+                }).then(toast => toast.present());
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  reviewGigOrder(job: any) {
+    this.navCtrl.navigateForward([`/gig-order-review/${job.id}`]);
+  }
+
   viewJob(job: any) { this.navCtrl.navigateForward(['/job-detail', job.id]); }
   viewAllJobs() { this.navCtrl.navigateForward(['/jobs']); }
   viewProposals() { this.navCtrl.navigateForward(['/proposal']); }

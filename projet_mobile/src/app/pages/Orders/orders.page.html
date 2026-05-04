@@ -1,174 +1,175 @@
-<ion-header mode="ios">
-  <ion-toolbar>
+<!-- dashboard.page.html -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="dashboard-toolbar">
     <ion-buttons slot="start">
       <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+        <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>My Orders</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="toggleSort($event)">
-        <ion-icon slot="icon-only" name="swap-vertical-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
 
-  <!-- Barre de recherche -->
-  <ion-toolbar class="search-toolbar">
-    <div class="search-wrapper">
-      <ion-icon name="search-outline" class="search-icon"></ion-icon>
-      <input
-        class="search-input"
-        type="text"
-        placeholder="Search by title, client, message..."
-        [(ngModel)]="searchQuery"
-        (input)="onSearchChange()"
-      />
-      <ion-button
-        *ngIf="searchQuery"
-        fill="clear"
-        size="small"
-        class="clear-btn"
-        (click)="clearSearch()">
-        <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+    <ion-title>My Orders</ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="openMenu()">
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
       </ion-button>
-    </div>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-
-  <!-- ── Sort menu (hors header, position calculée par JS) ── -->
-  <div class="sort-overlay" *ngIf="showSortMenu" (click)="showSortMenu=false"></div>
-  <div class="sort-menu"
-       *ngIf="showSortMenu"
-       @fadeIn
-       [style.top.px]="sortMenuY"
-       [style.right.px]="sortMenuRight">
-    <div class="sort-title">Sort by</div>
-    <div *ngFor="let s of sortOptions"
-         class="sort-item"
-         [class.sort-active]="sortBy === s.value"
-         (click)="setSort(s.value)">
-      <ion-icon *ngIf="sortBy === s.value" name="checkmark" class="sort-check"></ion-icon>
-      {{ s.label }}
-    </div>
-  </div>
-
-  <!-- ── Filtres statut (cartes compteurs) ── -->
-  <div class="filter-container">
-    <div
-      *ngFor="let f of filters"
-      class="filter-card"
-      [class.active]="activeFilter === f.value"
-      [attr.data-color]="f.color"
-      (click)="setFilter(f.value)">
-      <ion-icon [name]="f.icon" class="filter-icon" [color]="activeFilter === f.value ? f.color : 'medium'"></ion-icon>
-      <div class="count" [style.color]="activeFilter === f.value ? 'var(--ion-color-' + f.color + ')' : ''">
-        {{ getCount(f.value) }}
+<ion-content>
+  <!-- MODERN STATS CARDS -->
+  <div class="stats-section" *ngIf="!loading">
+    <div class="stats-card" (click)="setFilter('all')">
+      <div class="stat-icon total-icon">
+        <ion-icon name="document-text-outline"></ion-icon>
       </div>
-      <div class="label">{{ f.label }}</div>
+      <div class="stat-value">{{ orders.length }}</div>
+      <div class="stat-label">Total Orders</div>
+    </div>
+
+    <div class="stats-card" (click)="setFilter('pending')">
+      <div class="stat-icon pending-icon">
+        <ion-icon name="time-outline"></ion-icon>
+      </div>
+      <div class="stat-value">{{ getCount('pending') }}</div>
+      <div class="stat-label">Pending</div>
+      <div class="stat-trend">{{ getCount('pending') > 0 ? getCount('pending') + ' pending' : 'None pending' }}</div>
+    </div>
+
+    <div class="stats-card" (click)="setFilter('in_progress')">
+      <div class="stat-icon active-icon">
+        <ion-icon name="play-circle-outline"></ion-icon>
+      </div>
+      <div class="stat-value">{{ getCount('in_progress') }}</div>
+      <div class="stat-label">In Progress</div>
+      <div class="stat-trend">{{ getCount('in_progress') > 0 ? getCount('in_progress') + ' active' : 'None active' }}</div>
     </div>
   </div>
 
-  <!-- ── Résumé recherche active ── -->
-  <div class="search-summary" *ngIf="searchQuery || activeFilter" @fadeIn>
-    <span>
-      {{ orders.length }} result{{ orders.length !== 1 ? 's' : '' }}
-      <span *ngIf="activeFilter"> · {{ getStatusLabel(activeFilter) }}</span>
-      <span *ngIf="searchQuery"> · "{{ searchQuery }}"</span>
-    </span>
-    <ion-button fill="clear" size="small" (click)="clearSearch(); setFilter('')">
-      Clear all
-    </ion-button>
+  <!-- IMPROVED SEGMENT -->
+  <div class="filters-section">
+    <ion-segment [(ngModel)]="activeFilter" (ionChange)="filterOrders()" class="filter-segment">
+      <ion-segment-button value="all">
+        <ion-icon name="apps-outline"></ion-icon>
+        <ion-label>All</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="pending">
+        <ion-icon name="hourglass-outline"></ion-icon>
+        <ion-label>Pending</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="in_progress">
+        <ion-icon name="rocket-outline"></ion-icon>
+        <ion-label>Active</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="submitted">
+        <ion-icon name="eye-outline"></ion-icon>
+        <ion-label>Review</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="completed">
+        <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        <ion-label>Completed</ion-label>
+      </ion-segment-button>
+    </ion-segment>
   </div>
 
-  <!-- ── Loading ── -->
-  <div class="loading" *ngIf="isLoading">
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-dashboard">
     <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading your orders...</p>
   </div>
 
-  <!-- ── Empty state ── -->
-  <div class="empty-state" *ngIf="!isLoading && orders.length === 0" @fadeIn>
-    <ion-icon name="{{ searchQuery ? 'search-outline' : 'document-text-outline' }}"></ion-icon>
-    <h3>{{ searchQuery ? 'No results found' : 'No orders yet' }}</h3>
-    <p>{{ searchQuery ? 'Try different keywords.' : 'Orders from clients will appear here.' }}</p>
-    <ion-button *ngIf="searchQuery || activeFilter" fill="outline" size="small"
-                (click)="clearSearch(); setFilter('')">
-      Clear filters
+  <!-- IMPROVED EMPTY STATE -->
+  <div *ngIf="!loading && filteredOrders.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <ion-icon name="folder-open-outline"></ion-icon>
+    </div>
+    <h3>No orders found</h3>
+    <p>You don't have any orders in this category yet</p>
+    <ion-button (click)="goToGigs()" class="create-gig-btn">
+      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+      Create a Gig
     </ion-button>
   </div>
 
-  <!-- ── Liste commandes ── -->
-  <div class="orders-list" *ngIf="!isLoading && orders.length > 0">
-    <div class="order-card" *ngFor="let order of orders" @fadeInUp>
+  <!-- MODERN ORDERS LIST -->
+  <div *ngIf="!loading && filteredOrders.length > 0" class="orders-container">
+    <div *ngFor="let order of filteredOrders" class="order-card-modern" (click)="viewOrder(order)">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="client-info">
+          <div class="client-avatar">
+            <ion-icon name="person-circle-outline"></ion-icon>
+          </div>
+          <div class="client-details">
+            <h3 class="gig-title">{{ order.gigTitle }}</h3>
+            <p class="client-name">{{ order.clientName }}</p>
+          </div>
+        </div>
+        <div class="price-badge">
+          <span class="order-price">{{ order.price | currency:'USD':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
 
-      <!-- Bande statut (côté gauche) -->
-      <div class="status-stripe" [attr.data-status]="order.status"></div>
-
+      <!-- Card Body -->
       <div class="card-body">
-
-        <!-- Header -->
-        <div class="card-header">
-          <div class="card-title-block">
-            <h3>{{ order.title }}</h3>
-            <div class="client">
-              <ion-icon name="person-circle-outline"></ion-icon>
-              {{ order.clientName }}
-            </div>
+        <div class="order-meta">
+          <div class="meta-item">
+            <ion-icon name="calendar-outline"></ion-icon>
           </div>
-          <div class="status-badge-wrap">
-            <ion-badge [color]="getStatusColor(order.status)" class="status-badge">
-              <ion-icon [name]="getStatusIcon(order.status)"></ion-icon>
-              {{ getStatusLabel(order.status) }}
-            </ion-badge>
+          <div class="meta-item">
+            <ion-icon name="document-text-outline"></ion-icon>
+            <span>Order #{{ order.id }}</span>
           </div>
         </div>
+      </div>
 
-        <!-- Prix + date -->
-        <div class="card-meta">
-          <span class="price">${{ order.price }}</span>
-          <span class="date">
-            <ion-icon name="time-outline"></ion-icon>
-            {{ formatDate(order.createdAt) }}
-          </span>
+      <!-- Card Footer -->
+      <div class="card-footer">
+        <div class="status-wrapper">
+          <ion-badge [class]="'status-badge status-' + order.status">
+            <ion-icon [name]="getStatusIcon(order.status)"></ion-icon>
+            {{ getStatusLabel(order.status) }}
+          </ion-badge>
         </div>
+        
+        <div class="action-buttons">
+          <ion-button *ngIf="order.status === 'pending'" 
+                      (click)="$event.stopPropagation(); startOrder(order)" 
+                      fill="solid"
+                      class="action-btn start-btn">
+            <ion-icon slot="start" name="play-outline"></ion-icon>
+            Start
+          </ion-button>
 
-        <!-- Message client -->
-        <div *ngIf="order.message" class="message">
-          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
-          <span>{{ order.message }}</span>
-        </div>
+          <ion-button *ngIf="order.status === 'in_progress'" 
+                      (click)="$event.stopPropagation(); deliverOrder(order)" 
+                      fill="solid"
+                      class="action-btn deliver-btn">
+            <ion-icon slot="start" name="send-outline"></ion-icon>
+            Deliver
+          </ion-button>
 
-        <!-- Requirements -->
-        <div *ngIf="order.requirements" class="requirements">
-          <ion-icon name="list-outline"></ion-icon>
-          <span>{{ order.requirements }}</span>
-        </div>
+          <ion-button *ngIf="order.status === 'submitted'" 
+                      fill="clear"
+                      class="action-btn review-btn">
+            <ion-icon slot="start" name="eye-outline"></ion-icon>
+            In Review
+          </ion-button>
 
-        <!-- Date de complétion -->
-        <div *ngIf="order.status === 'completed' && order.completedAt" class="completed">
-          <ion-icon name="checkmark-circle"></ion-icon>
-          Delivered {{ formatDate(order.completedAt!) }}
-        </div>
-
-        <!-- Boutons d'action -->
-        <div class="actions" *ngIf="getActions(order).length > 0">
-          <ion-button
-            *ngFor="let action of getActions(order)"
-            [color]="action.color"
-            (click)="confirmAction(order, action)"
-            expand="block">
-            <ion-icon [name]="action.icon" slot="start"></ion-icon>
-            {{ action.label }}
+          <ion-button *ngIf="order.status === 'completed'" 
+                      fill="clear"
+                      class="action-btn completed-btn">
+            <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+            Completed
           </ion-button>
         </div>
-
       </div>
     </div>
   </div>
-
-  <!-- Padding bas de page -->
-  <div style="height: 40px;"></div>
-
 </ion-content>

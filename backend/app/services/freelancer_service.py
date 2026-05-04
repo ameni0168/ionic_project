@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -8,6 +8,7 @@ from app.models.freelancer_model import get_freelancers_collection
 from app.models.users_model import get_users_collection
 from app.models.gig_model import get_gigs_collection
 from app.models.order_model import get_orders_collection
+from app.extension import db
 
 
 def safe_id(user_id):
@@ -231,6 +232,7 @@ def get_dashboard_stats(user_id):
     freelancers = get_freelancers_collection()
     gigs_col = get_gigs_collection()
     orders_col = get_orders_collection()
+    payments_col = db["payments"]
 
     freelancer = freelancers.find_one({"userId": ObjectId(user_id)})
     if not freelancer:
@@ -242,20 +244,35 @@ def get_dashboard_stats(user_id):
     active_gigs = [g for g in all_gigs if g.get("status") == "active"]
     gig_ids = [g["_id"] for g in all_gigs]
 
-    now = datetime.now(timezone.utc)
-    first_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    now = datetime.utcnow()
+    first_of_month = datetime(now.year, now.month, 1)
     monthly_orders = list(
         orders_col.find(
             {
                 "gigId": {"$in": gig_ids},
                 "status": "completed",
                 "completedAt": {"$gte": first_of_month},
+                "payment_id": None,
             }
         )
     )
-    monthly_earnings = round(
-        sum(float(o.get("price", o.get("amount", 0)) or 0) for o in monthly_orders), 2
+    freelancer_payment_ids = [str(ObjectId(user_id)), ObjectId(user_id), str(freelancer_id), freelancer_id]
+    monthly_payments = list(
+        payments_col.find(
+            {
+                "freelancer_id": {"$in": freelancer_payment_ids},
+                "status": "released",
+                "released_at": {"$gte": first_of_month},
+            }
+        )
     )
+    monthly_order_earnings = sum(
+        float(o.get("price", o.get("amount", 0)) or 0) for o in monthly_orders
+    )
+    monthly_contract_earnings = sum(
+        int(p.get("amount_cents", 0) or 0) / 100 for p in monthly_payments
+    )
+    monthly_earnings = round(monthly_order_earnings + monthly_contract_earnings, 2)
 
     total_completed = orders_col.count_documents(
         {"gigId": {"$in": gig_ids}, "status": "completed"}

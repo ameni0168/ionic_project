@@ -1,449 +1,522 @@
-// ─────────────────────────────────────────
-// DESIGN SYSTEM
-// ─────────────────────────────────────────
+/* dashboard.page.scss */
+/* =========================
+   VARIABLES & THEME MODERN
+========================= */
+:root {
+  --green-primary: #10b981;
+  --green-dark: #059669;
+  --green-light: #34d399;
+  --green-ultra-light: #ecfdf5;
+  
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
 
-:host {
-    --radius: 18px;
-    --radius-sm: 10px;
-    --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.07);
-    --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.13);
-  
-    // Couleurs statut
-    --color-pending:     var(--ion-color-warning);
-    --color-in_progress: var(--ion-color-primary);
-    --color-completed:   var(--ion-color-success);
-    --color-cancelled:   var(--ion-color-danger);
+/* =========================
+   BACKGROUND
+========================= */
+ion-content {
+  --background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  --padding-bottom: 20px;
+}
+
+/* =========================
+   TOOLBAR MODERN
+========================= */
+.dashboard-toolbar {
+  --background: rgba(255, 255, 255, 0.98);
+  --backdrop-filter: blur(10px);
+  --border-width: 0;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+
+  ion-title {
+    font-weight: 700;
+    font-size: 24px;
+    background: linear-gradient(135deg, #059669, #10b981);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
   }
-  
-  // ─────────────────────────────────────────
-  // SEARCH BAR
-  // ─────────────────────────────────────────
-  
-  .search-toolbar {
-    --background: var(--ion-background-color);
-    --border-width: 0;
-    padding: 8px 16px 12px;
+
+  ion-button {
+    --color: #059669;
+    --color-hover: #10b981;
   }
-  
-  .search-wrapper {
-    display: flex;
-    align-items: center;
-    background: var(--ion-color-light);
-    border-radius: 14px;
-    padding: 0 12px;
-    border: 1.5px solid transparent;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  
-    &:focus-within {
-      border-color: var(--ion-color-primary);
-      box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.12);
-    }
-  
-    .search-icon {
-      font-size: 18px;
-      color: var(--ion-color-medium);
-      flex-shrink: 0;
-    }
-  
-    .search-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 11px 10px;
-      font-size: 14px;
-      color: var(--ion-color-dark);
-  
-      &::placeholder {
-        color: var(--ion-color-medium);
-      }
-    }
-  
-    .clear-btn {
-      --padding-start: 4px;
-      --padding-end: 4px;
-      height: 28px;
-      color: var(--ion-color-medium);
-      flex-shrink: 0;
-    }
-  }
-  
-  // ─────────────────────────────────────────
-  // RÉSUMÉ RECHERCHE
-  // ─────────────────────────────────────────
-  
-  .search-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 20px 8px;
-    font-size: 12px;
-    color: var(--ion-color-medium);
-  
-    ion-button {
-      font-size: 12px;
-      --padding-start: 8px;
-      --padding-end: 8px;
-    }
-  }
-  
-  // ─────────────────────────────────────────
-  // SORT MENU
-  // ─────────────────────────────────────────
-  
-  // Overlay invisible pour fermer le menu en cliquant ailleurs
-  .sort-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 998;
-  }
-  
-  // Menu positionné par JS via [style.top] et [style.right]
-  .sort-menu {
-    position: fixed;          // fixed = hors de tout contexte de stacking
-    z-index: 999;
-    background: var(--ion-background-color, #fff);
-    border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    min-width: 190px;
+}
+
+/* =========================
+   STATS CARDS MODERNES
+========================= */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 20px 16px;
+
+  .stats-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-  
-    .sort-title {
-      padding: 12px 16px 8px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--ion-color-medium);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
+    
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--green-primary), var(--green-light));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
     }
-  
-    .sort-item {
-      padding: 12px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background 0.15s ease;
-      border-top: 1px solid rgba(0, 0, 0, 0.04);
-  
-      &:hover { background: var(--ion-color-light); }
-  
-      &.sort-active {
-        color: var(--ion-color-primary);
-        font-weight: 600;
-      }
-  
-      .sort-check {
-        font-size: 16px;
-        color: var(--ion-color-primary);
-      }
-    }
-  }
-  
-  // ─────────────────────────────────────────
-  // FILTER CARDS
-  // ─────────────────────────────────────────
-  
-  .filter-container {
-    display: flex;
-    gap: 10px;
-    padding: 16px 16px 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
-  
-    .filter-card {
-      flex-shrink: 0;
-      min-width: 82px;
-      padding: 12px 10px;
-      border-radius: var(--radius);
-      text-align: center;
-      cursor: pointer;
-      background: var(--ion-color-light);
-      border: 2px solid transparent;
-      transition: all 0.22s ease;
-      box-shadow: var(--shadow-soft);
-  
-      &:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-hover);
-      }
-  
-      &.active {
-        border-color: var(--ion-color-primary);
-        background: rgba(var(--ion-color-primary-rgb), 0.07);
-      }
-  
-      // Couleur bordure selon statut actif
-      &.active[data-color="warning"]  { border-color: var(--ion-color-warning); background: rgba(var(--ion-color-warning-rgb), 0.08); }
-      &.active[data-color="primary"]  { border-color: var(--ion-color-primary); background: rgba(var(--ion-color-primary-rgb), 0.08); }
-      &.active[data-color="success"]  { border-color: var(--ion-color-success); background: rgba(var(--ion-color-success-rgb), 0.08); }
-      &.active[data-color="danger"]   { border-color: var(--ion-color-danger);  background: rgba(var(--ion-color-danger-rgb),  0.08); }
-  
-      .filter-icon {
-        font-size: 20px;
-        margin-bottom: 4px;
-      }
-  
-      .count {
-        font-size: 20px;
-        font-weight: 700;
-        line-height: 1.1;
-      }
-  
-      .label {
-        font-size: 10px;
-        color: var(--ion-color-medium);
-        letter-spacing: 0.4px;
-        margin-top: 2px;
-      }
-    }
-  }
-  
-  // ─────────────────────────────────────────
-  // LISTE DES COMMANDES
-  // ─────────────────────────────────────────
-  
-  .orders-list {
-    padding: 8px 16px;
-  }
-  
-  // ─────────────────────────────────────────
-  // ORDER CARD
-  // ─────────────────────────────────────────
-  
-  .order-card {
-    display: flex;                // bande gauche + contenu
-    background: var(--ion-color-light);
-    border-radius: var(--radius);
-    margin-bottom: 14px;
-    overflow: hidden;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  
+
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-hover);
-    }
-  
-    // ── Bande colorée à gauche selon statut ──
-    .status-stripe {
-      width: 5px;
-      flex-shrink: 0;
-      border-radius: var(--radius) 0 0 var(--radius);
-  
-      &[data-status="pending"]     { background: var(--ion-color-warning); }
-      &[data-status="in_progress"] { background: var(--ion-color-primary); }
-      &[data-status="completed"]   { background: var(--ion-color-success); }
-      &[data-status="cancelled"]   { background: var(--ion-color-danger);  }
-    }
-  
-    // ── Corps de la carte ──
-    .card-body {
-      flex: 1;
-      padding: 14px 14px 12px 12px;
-    }
-  
-    // HEADER
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-  
-      .card-title-block {
-        flex: 1;
-        margin-right: 10px;
-  
-        h3 {
-          margin: 0 0 4px;
-          font-size: 15px;
-          font-weight: 600;
-          line-height: 1.3;
-        }
-  
-        .client {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          font-size: 13px;
-          color: var(--ion-color-medium);
-  
-          ion-icon { font-size: 15px; }
-        }
-      }
-  
-      .status-badge {
-        font-size: 11px;
-        padding: 4px 8px;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-  
-        ion-icon { font-size: 12px; }
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-xl);
+      
+      &::before {
+        transform: scaleX(1);
       }
     }
-  
-    // PRIX + DATE
-    .card-meta {
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 24px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-  
-      .price {
-        font-size: 19px;
-        font-weight: 700;
-        color: var(--ion-color-success);
-      }
-  
-      .date {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 12px;
-        color: var(--ion-color-medium);
-  
-        ion-icon { font-size: 13px; }
-      }
-    }
-  
-    // MESSAGE + REQUIREMENTS
-    .message,
-    .requirements {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      margin-bottom: 8px;
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      line-height: 1.5;
-      background: rgba(0, 0, 0, 0.04);
-      transition: background 0.2s ease;
-  
-      &:hover { background: rgba(0, 0, 0, 0.07); }
-  
+      justify-content: center;
+      
       ion-icon {
-        font-size: 15px;
-        flex-shrink: 0;
-        margin-top: 1px;
-        color: var(--ion-color-medium);
+        font-size: 28px;
       }
-  
-      span { flex: 1; }
+      
+      &.total-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+      }
+      
+      &.pending-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+      
+      &.active-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
     }
-  
-    // COMPLETED
-    .completed {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 0 2px;
-      font-size: 12px;
-      color: var(--ion-color-success);
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--gray-800);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--gray-600);
       font-weight: 500;
-  
-      ion-icon { font-size: 14px; }
+      margin-top: 4px;
     }
-  
-    // ACTIONS
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-  
-      ion-button {
-        flex: 1;
+    
+    .stat-trend {
+      font-size: 11px;
+      color: var(--green-dark);
+      margin-top: 8px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+  }
+}
+
+/* =========================
+   SEGMENT MODERN
+========================= */
+.filters-section {
+  padding: 0 16px 20px;
+
+  .filter-segment {
+    --background: white;
+    border-radius: 16px;
+    padding: 4px;
+    box-shadow: var(--shadow-sm);
+    
+    ion-segment-button {
+      --color: var(--gray-600);
+      --color-checked: #059669;
+      --indicator-color: #10b981;
+      --indicator-height: 3px;
+      --border-radius: 12px;
+      
+      min-height: 48px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      ion-icon {
+        font-size: 18px;
+        margin-right: 6px;
+      }
+      
+      ion-label {
         font-size: 13px;
         font-weight: 500;
-        --border-radius: 10px;
-        --box-shadow: none;
-        height: 38px;
+      }
+      
+      &[aria-checked="true"] {
+        background: rgba(16, 185, 129, 0.1);
+        transform: scale(1.02);
+        
+        ion-label {
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+/* =========================
+   CONTAINER DES COMMANDES
+========================= */
+.orders-container {
+  padding: 8px 16px 24px;
+}
+
+/* =========================
+   CARTE MODERNE
+========================= */
+.order-card-modern {
+  background: white;
+  border-radius: 24px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  .card-header {
+    padding: 20px 20px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .client-info {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+
+      .client-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        ion-icon {
+          font-size: 28px;
+          color: white;
+        }
+      }
+
+      .client-details {
+        flex: 1;
+
+        .gig-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--gray-800);
+          margin: 0 0 4px 0;
+          line-height: 1.3;
+        }
+
+        .client-name {
+          font-size: 13px;
+          color: var(--gray-600);
+          margin: 0;
+        }
+      }
+    }
+
+    .price-badge {
+      .order-price {
+        font-size: 20px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #059669, #10b981);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 0 20px 12px;
+    
+    .order-meta {
+      display: flex;
+      gap: 16px;
+      
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--gray-600);
+        
+        ion-icon {
+          font-size: 14px;
+          color: #10b981;
+        }
+      }
+    }
+  }
+
+  .card-footer {
+    padding: 12px 20px 20px;
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .status-wrapper {
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        
+        ion-icon {
+          font-size: 14px;
+        }
+        
+        &.status-pending {
+          background: #fef3c7;
+          color: #d97706;
+        }
+        
+        &.status-in_progress {
+          background: #d1fae5;
+          color: #059669;
+        }
+        
+        &.status-submitted {
+          background: #e0e7ff;
+          color: #4f46e5;
+        }
+        
+        &.status-completed {
+          background: #d1fae5;
+          color: #059669;
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      
+      .action-btn {
+        --border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        height: 36px;
+        
+        ion-icon {
+          font-size: 16px;
+        }
+        
+        &.start-btn {
+          --background: linear-gradient(135deg, #10b981, #059669);
+          --background-hover: linear-gradient(135deg, #059669, #047857);
+          --box-shadow: var(--shadow-sm);
+        }
+        
+        &.deliver-btn {
+          --background: linear-gradient(135deg, #3b82f6, #2563eb);
+          --background-hover: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        
+        &.review-btn {
+          --color: #4f46e5;
+          --color-hover: #4338ca;
+        }
+        
+        &.completed-btn {
+          --color: #059669;
+        }
+      }
+    }
+  }
+}
+
+/* =========================
+   EMPTY STATE MODERN
+========================= */
+.empty-state {
+  text-align: center;
+  padding: 80px 32px;
   
-        &:hover { opacity: 0.88; }
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    ion-icon {
+      font-size: 48px;
+      color: #059669;
+    }
+  }
+  
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0 0 8px 0;
+  }
+  
+  p {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin: 0 0 24px 0;
+  }
+  
+  .create-gig-btn {
+    --background: linear-gradient(135deg, #10b981, #059669);
+    --border-radius: 12px;
+    --padding-start: 24px;
+    --padding-end: 24px;
+    font-weight: 600;
+  }
+}
+
+/* =========================
+   LOADING MODERN
+========================= */
+.loading-dashboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 32px;
+  
+  ion-spinner {
+    --color: #059669;
+    width: 40px;
+    height: 40px;
+  }
+  
+  p {
+    font-size: 14px;
+    color: var(--gray-600);
+  }
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.order-card-modern {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 480px) {
+  .stats-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px 12px;
+    
+    .stats-card {
+      padding: 12px;
+      
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        
+        ion-icon {
+          font-size: 22px;
+        }
+      }
+      
+      .stat-value {
+        font-size: 24px;
+      }
+      
+      .stat-label {
+        font-size: 11px;
       }
     }
   }
   
-  // ─────────────────────────────────────────
-  // EMPTY STATE
-  // ─────────────────────────────────────────
   
-  .empty-state {
-    text-align: center;
-    padding: 70px 24px;
-  
-    ion-icon {
-      font-size: 62px;
-      opacity: 0.45;
-      margin-bottom: 16px;
-    }
-  
-    h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0 0 8px;
-    }
-  
-    p {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-      margin: 0 0 20px;
-    }
+  .filter-segment ion-segment-button ion-icon {
+    margin-right: 0;
+    font-size: 20px;
   }
   
-  // ─────────────────────────────────────────
-  // LOADING
-  // ─────────────────────────────────────────
-  
-  .loading {
-    text-align: center;
-    padding: 80px;
-  }
-  
-  // ─────────────────────────────────────────
-  // SCROLLBAR
-  // ─────────────────────────────────────────
-  
-  ::-webkit-scrollbar { height: 5px; width: 5px; }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 10px;
-  }
-  
-  // ─────────────────────────────────────────
-  // DARK MODE
-  // ─────────────────────────────────────────
-  
-  @media (prefers-color-scheme: dark) {
-  
-    .order-card {
-      background: rgba(30, 30, 32, 0.92);
-      border-color: rgba(255, 255, 255, 0.06);
-    }
-  
-    .filter-card {
-      background: rgba(40, 40, 44, 0.85);
-    }
-  
-    .message, .requirements {
-      background: rgba(255, 255, 255, 0.06);
-      &:hover { background: rgba(255, 255, 255, 0.09); }
-    }
-  
-    .search-wrapper {
-      background: rgba(255, 255, 255, 0.07);
-      .search-input { color: var(--ion-color-light); }
-    }
-  
-    .sort-panel {
-      background: #1e1e22;
-      border-color: rgba(255, 255, 255, 0.08);
-      .sort-item:hover { background: rgba(255, 255, 255, 0.05); }
+  .order-card-modern .card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    
+    .action-buttons {
+      justify-content: center;
     }
   }
+}
