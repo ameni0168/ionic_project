@@ -94,5 +94,33 @@ export const routes: Routes = [
   {
     path: 'jobs',
     loadComponent: () => import('./pages/jobs/jobs.page').then(m => m.JobsPage)
+  },
+  {
+    path: 'contracts',
+    loadComponent: () => import('./pages/contract-list/contract-list.page').then(m => m.ContractListPage)
+  },
+  {
+    path: 'contract-detail/:id',
+    loadComponent: () => import('./pages/contract-detail/contract-detail.page').then(m => m.ContractDetailPage)
+  },
+  {
+    path: 'sprint-plan-builder/:contractId',
+    loadComponent: () => import('./pages/sprint-plan-builder/sprint-plan-builder.page').then(m => m.SprintPlanBuilderPage)
+  },
+  {
+    path: 'sprint-plan-builder/:contractId/:planId',
+    loadComponent: () => import('./pages/sprint-plan-builder/sprint-plan-builder.page').then(m => m.SprintPlanBuilderPage)
+  },
+  {
+    path: 'sprint-plan-review/:planId',
+    loadComponent: () => import('./pages/sprint-plan-review/sprint-plan-review.page').then(m => m.SprintPlanReviewPage)
+  },
+  {
+    path: 'sprint-workspace/:sprintId',
+    loadComponent: () => import('./pages/sprint-workspace/sprint-workspace.page').then(m => m.SprintWorkspacePage)
+  },
+  {
+    path: 'sprint-review/:sprintId',
+    loadComponent: () => import('./pages/sprint-review/sprint-review.page').then(m => m.SprintReviewPage)
   }
 ];

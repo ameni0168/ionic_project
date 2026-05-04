@@ -14,12 +14,28 @@ def _require_admin():
     return None
 
 
+def _normalize_categories(value):
+    if isinstance(value, list):
+        items = value
+    elif value is None:
+        items = []
+    else:
+        items = [value]
+
+    normalized = []
+    for item in items:
+        text = str(item).strip()
+        if text and text not in normalized:
+            normalized.append(text)
+    return normalized
+
+
 def _serialize_job(job):
     return {
         "id": str(job.get("_id")),
         "title": job.get("title", ""),
         "description": job.get("description", ""),
-        "category": job.get("category", ""),
+        "category": _normalize_categories(job.get("category", [])),
         "budget_min": job.get("budget_min", 0),
         "budget_max": job.get("budget_max", 0),
         "budget_type": job.get("budget_type", ""),
@@ -41,7 +57,7 @@ def _serialize_gig(gig):
         "id": str(gig.get("_id")),
         "title": gig.get("title", ""),
         "description": gig.get("description", ""),
-        "category": gig.get("category", ""),
+        "category": _normalize_categories(gig.get("category", [])),
         "price": gig.get("price", 0),
         "deliveryTime": gig.get("deliveryTime", ""),
         "freelancerId": str(gig.get("freelancerId", "")),
@@ -51,6 +67,39 @@ def _serialize_gig(gig):
         "createdAt": gig.get("createdAt").isoformat() if gig.get("createdAt") else "",
         "reviewedAt": gig.get("reviewedAt").isoformat() if gig.get("reviewedAt") else "",
     }
+
+
+def _serialize_user(user, profile=None):
+    profile = profile or {}
+    created_at = user.get("createdAt")
+    is_active = user.get("is_active", True)
+
+    return {
+        "id": str(user.get("_id")),
+        "email": user.get("email", ""),
+        "role": user.get("role", ""),
+        "full_name": (
+            profile.get("fullName")
+            or user.get("full_name")
+            or user.get("name")
+            or ""
+        ),
+        "phone": profile.get("phone", ""),
+        "location": profile.get("location", ""),
+        "company": profile.get("companyName", ""),
+        "portfolioUrl": profile.get("portfolioUrl", ""),
+        "bio": profile.get("bio", ""),
+        "is_active": is_active,
+        "account_status": user.get("account_status", "active" if is_active else "disabled"),
+        "createdAt": created_at.isoformat() if created_at else "",
+    }
+
+
+def _safe_object_id(value):
+    try:
+        return ObjectId(value)
+    except Exception:
+        return None
 
 
 @admin_bp.route("/review-items", methods=["GET"])
@@ -152,3 +201,131 @@ def review_gig(gig_id):
 
     gig = db.gigs.find_one({"_id": ObjectId(gig_id)})
     return jsonify({"message": "Validation gig mise a jour", "gig": _serialize_gig(gig)}), 200
+
+
+@admin_bp.route("/users", methods=["GET"])
+@jwt_required()
+def get_all_users():
+    error = _require_admin()
+    if error:
+        return error
+
+    db = current_app.db
+    role = (request.args.get("role") or "").strip().lower()
+    status = (request.args.get("status") or "").strip().lower()
+    search = (request.args.get("search") or "").strip().lower()
+
+    query = {}
+    if role in ["client", "freelancer"]:
+        query["role"] = role
+
+    users = list(db.users.find(query).sort("createdAt", -1))
+    client_profiles = {item.get("userId"): item for item in db.clients.find({})}
+    freelancer_profiles = {item.get("userId"): item for item in db.freelancers.find({})}
+
+    results = []
+    for user in users:
+        profile = (
+            freelancer_profiles.get(user.get("_id"))
+            if user.get("role") == "freelancer"
+            else client_profiles.get(user.get("_id"))
+        )
+        serialized = _serialize_user(user, profile)
+
+        if status == "active" and not serialized["is_active"]:
+            continue
+        if status == "disabled" and serialized["is_active"]:
+            continue
+
+        if search:
+            haystack = " ".join(
+                [
+                    serialized.get("email", ""),
+                    serialized.get("full_name", ""),
+                    serialized.get("phone", ""),
+                    serialized.get("company", ""),
+                    serialized.get("location", ""),
+                ]
+            ).lower()
+            if search not in haystack:
+                continue
+
+        results.append(serialized)
+
+    return jsonify({"users": results, "total": len(results)}), 200
+
+
+@admin_bp.route("/users/<user_id>/status", methods=["PATCH"])
+@jwt_required()
+def update_user_status(user_id):
+    error = _require_admin()
+    if error:
+        return error
+
+    if user_id == "admin-static":
+        return jsonify({"error": "Le compte admin statique ne peut pas etre modifie"}), 400
+
+    data = request.get_json() or {}
+    is_active = data.get("is_active")
+
+    if not isinstance(is_active, bool):
+        return jsonify({"error": "Le champ 'is_active' doit etre un booleen"}), 400
+
+    user_object_id = _safe_object_id(user_id)
+    if not user_object_id:
+        return jsonify({"error": "User ID invalide"}), 400
+
+    db = current_app.db
+    result = db.users.update_one(
+        {"_id": user_object_id},
+        {
+            "$set": {
+                "is_active": is_active,
+                "account_status": "active" if is_active else "disabled",
+                "updatedAt": datetime.utcnow(),
+            }
+        },
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "Utilisateur introuvable"}), 404
+
+    user = db.users.find_one({"_id": user_object_id})
+    profile = None
+    if user.get("role") == "client":
+        profile = db.clients.find_one({"userId": user_object_id})
+    elif user.get("role") == "freelancer":
+        profile = db.freelancers.find_one({"userId": user_object_id})
+
+    message = "Compte active avec succes" if is_active else "Compte desactive avec succes"
+    return jsonify({"message": message, "user": _serialize_user(user, profile)}), 200
+
+
+@admin_bp.route("/stats", methods=["GET"])
+@jwt_required()
+def get_admin_stats():
+    error = _require_admin()
+    if error:
+        return error
+
+    db = current_app.db
+    active_filter = {
+        "$or": [
+            {"is_active": True},
+            {"is_active": {"$exists": False}},
+        ]
+    }
+
+    total_users = db.users.count_documents({})
+    active_freelancers = db.users.count_documents({"role": "freelancer", **active_filter})
+    active_clients = db.users.count_documents({"role": "client", **active_filter})
+    pending_proposals = db.proposals.count_documents({"status": "pending"})
+
+    return jsonify(
+        {
+            "user_total": total_users,
+            "freelancers_actif": active_freelancers,
+            "clients_actif": active_clients,
+            "propositions_en_attente": pending_proposals,
+        }
+    ), 200

@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, current_app
 from bson import ObjectId
+from flask import Blueprint, current_app, jsonify, request
+
 from app.models.job_model import job_schema
 
 job_bp = Blueprint("job_bp", __name__)
@@ -9,15 +10,44 @@ def get_db():
     return current_app.db
 
 
+def _normalize_categories(value):
+    if isinstance(value, list):
+        items = value
+    elif value is None:
+        items = []
+    else:
+        items = [value]
+
+    normalized = []
+    for item in items:
+        text = str(item).strip()
+        if text and text not in normalized:
+            normalized.append(text)
+    return normalized
+
+
+def _category_filter(value):
+    return {
+        "$or": [
+            {"category": value},
+            {"category": {"$in": [value]}},
+        ]
+    }
+
+
 def serialize(doc):
     if doc:
         doc["_id"] = str(doc["_id"])
+        doc["category"] = _normalize_categories(doc.get("category", []))
+        for field in ["selected_proposal_id", "contract_id"]:
+            if doc.get(field) is not None:
+                doc[field] = str(doc[field])
     return doc
 
 
 @job_bp.route("/", methods=["POST"])
 def create_job():
-    data = request.get_json()
+    data = request.get_json() or {}
 
     required = [
         "title",
@@ -35,6 +65,10 @@ def create_job():
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
 
+    categories = _normalize_categories(data.get("category"))
+    if not categories:
+        return jsonify({"error": "The field 'category' must contain at least one value"}), 400
+
     new_job = job_schema(
         title=data["title"],
         description=data["description"],
@@ -42,7 +76,7 @@ def create_job():
         budget_max=data["budget_max"],
         budget_type=data["budget_type"],
         deadline=data["deadline"],
-        category=data["category"],
+        category=categories,
         experience_level=data["experience_level"],
         client_id=data["client_id"],
         skills=data.get("skills", []),
@@ -51,29 +85,29 @@ def create_job():
     db = get_db()
     result = db.jobs.insert_one(new_job)
     new_job["_id"] = str(result.inserted_id)
+    new_job["category"] = categories
     return jsonify({"message": "Job created successfully", "job": new_job}), 201
 
 
 @job_bp.route("/", methods=["GET"])
 def get_all_jobs():
     query = {"approval_status": request.args.get("approval_status", "approved")}
-    for key in ["status", "category", "experience_level", "budget_type"]:
+    for key in ["status", "experience_level", "budget_type"]:
         if request.args.get(key):
             query[key] = request.args.get(key)
+
+    if request.args.get("category"):
+        query.update(_category_filter(request.args.get("category")))
 
     db = get_db()
     jobs = [serialize(j) for j in db.jobs.find(query).sort("created_at", -1)]
     return jsonify({"jobs": jobs, "total": len(jobs)}), 200
 
 
-# Avant /<job_id> pour ne pas prendre "client" comme id Mongo
 @job_bp.route("/client/<client_id>", methods=["GET"])
 def get_jobs_by_client(client_id):
     db = get_db()
-    jobs = [
-        serialize(j)
-        for j in db.jobs.find({"client_id": client_id}).sort("created_at", -1)
-    ]
+    jobs = [serialize(j) for j in db.jobs.find({"client_id": client_id}).sort("created_at", -1)]
     return jsonify({"jobs": jobs, "total": len(jobs)}), 200
 
 
@@ -93,7 +127,7 @@ def get_job(job_id):
 
 @job_bp.route("/<job_id>", methods=["PUT"])
 def update_job(job_id):
-    data = request.get_json()
+    data = request.get_json() or {}
     allowed = [
         "title",
         "description",
@@ -107,9 +141,15 @@ def update_job(job_id):
         "status",
     ]
 
-    update_data = {k: v for k, v in data.items() if k in allowed}
+    update_data = {key: value for key, value in data.items() if key in allowed}
     if not update_data:
         return jsonify({"error": "No valid fields to update"}), 400
+
+    if "category" in update_data:
+        categories = _normalize_categories(update_data["category"])
+        if not categories:
+            return jsonify({"error": "The field 'category' must contain at least one value"}), 400
+        update_data["category"] = categories
 
     try:
         db = get_db()
@@ -137,18 +177,15 @@ def delete_job(job_id):
 
 @job_bp.route("/<job_id>/status", methods=["PATCH"])
 def update_job_status(job_id):
-    data = request.get_json()
+    data = request.get_json() or {}
     new_status = data.get("status")
 
-    if new_status not in ["open", "in_progress", "closed"]:
+    if new_status not in ["draft", "open", "under_review", "active", "completed", "cancelled", "archived"]:
         return jsonify({"error": "Invalid status"}), 400
 
     try:
         db = get_db()
-        result = db.jobs.update_one(
-            {"_id": ObjectId(job_id)},
-            {"$set": {"status": new_status}},
-        )
+        result = db.jobs.update_one({"_id": ObjectId(job_id)}, {"$set": {"status": new_status}})
     except Exception:
         return jsonify({"error": "Invalid job ID"}), 400
 
