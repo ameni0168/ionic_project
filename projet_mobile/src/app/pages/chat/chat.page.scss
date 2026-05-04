@@ -1,0 +1,32 @@
+:host {
+  --bg: var(--color-background);
+  --surface: var(--color-surface);
+  --border: var(--color-border);
+}
+
+.chat-toolbar {
+  --background: var(--surface);
+  --border-width: 0;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.chat-content {
+  --background: var(--bg);
+}
+
+.chat-messages {
+  padding: 12px;
+}
+
+.chat-input-toolbar {
+  --background: var(--surface);
+  --border-width: 0;
+  box-shadow: 0 -1px 0 var(--border);
+  padding: 4px 8px;
+}
+
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

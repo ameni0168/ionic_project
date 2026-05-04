@@ -1,25 +1,48 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Chat</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="chat-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="navCtrl.back()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-avatar slot="start" style="width:36px;height:36px;margin:0 8px">
+      <img [src]="otherUser?.avatar || 'assets/default-avatar.png'"
+        onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'"/>
+    </ion-avatar>
+    <ion-title>{{ otherUser?.name || 'Chat' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-
-  <ion-list>
-    <ion-item *ngFor="let msg of messages">
-      <ion-label>
-        <strong>{{ msg.senderId }}</strong><br>
-        {{ msg.content }}
-      </ion-label>
-    </ion-item>
-  </ion-list>
-
+<ion-content #scrollContent class="chat-content">
+  <div class="chat-messages">
+    <div *ngFor="let msg of messages"
+      [style.display]="'flex'"
+      [style.justify-content]="isMine(msg) ? 'flex-end' : 'flex-start'"
+      style="margin-bottom:8px">
+      <div [style.background]="isMine(msg) ? '#4f6ef7' : 'var(--color-surface)'"
+        [style.color]="isMine(msg) ? '#fff' : 'var(--color-text-primary)'"
+        style="max-width:70%;padding:10px 14px;border-radius:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+        <p style="margin:0;font-size:15px">{{ msg.content }}</p>
+        <small [style.color]="isMine(msg) ? 'rgba(255,255,255,0.7)' : '#aaa'"
+          style="font-size:11px;display:block;text-align:right;margin-top:4px">
+          {{ msg.created_at | date:'HH:mm' }}
+        </small>
+      </div>
+    </div>
+  </div>
 </ion-content>
 
 <ion-footer>
-  <ion-item>
-    <ion-input [(ngModel)]="newMessage" placeholder="Message..."></ion-input>
-    <ion-button (click)="sendMessage()">Send</ion-button>
-  </ion-item>
+  <ion-toolbar class="chat-input-toolbar">
+    <div class="chat-input-row">
+      <ion-input [(ngModel)]="newMessage"
+        placeholder="Message..."
+        style="--background:#f0f0f0;--border-radius:20px;--padding-start:16px"
+        (keyup.enter)="sendMessage()">
+      </ion-input>
+      <ion-button (click)="sendMessage()" shape="round" style="--border-radius:50%;width:44px;height:44px">
+        <ion-icon name="send" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+  </ion-toolbar>
 </ion-footer>
