@@ -56,23 +56,26 @@
   <!-- ========== LISTE JOBS ACTIFS ========== -->
   <div class="active-jobs-section" *ngIf="hasActiveJobs">
     <h3 class="section-subtitle">Jobs en cours</h3>
-    <ion-list lines="none" class="jobs-list">
-      <ion-item
-        *ngFor="let job of activeJobs"
-        class="job-item"
-        (click)="viewJob(job)"
-        detail="false"
-      >
-        <ion-avatar slot="start" class="job-avatar">
-          <img [src]="job.avatar" onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'" />
-        </ion-avatar>
-        <ion-label>
-          <h2 class="job-title">{{ job.title }}</h2>
-          <p class="job-meta">{{ job.status }} · {{ job.date }}</p>
-        </ion-label>
-        <ion-badge slot="end" [color]="job.badgeColor">{{ job.badge }}</ion-badge>
-      </ion-item>
-    </ion-list>
+      <ion-list lines="none" class="jobs-list">
+        <ion-item
+          *ngFor="let job of activeJobs"
+          class="job-item"
+          (click)="viewJob(job)"
+          detail="false"
+        >
+          <ion-avatar slot="start" class="job-avatar">
+            <img [src]="job.avatar" onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'" />
+          </ion-avatar>
+          <ion-label>
+            <h2 class="job-title">{{ job.title }}</h2>
+            <p class="job-meta">{{ job.status }} · {{ job.date }}</p>
+          </ion-label>
+          <ion-badge slot="end" [color]="job.badgeColor">{{ job.badge }}</ion-badge>
+          <ion-button *ngIf="job.status === 'submitted'" slot="end" fill="solid" color="primary" size="small" (click)="reviewGigOrder(job); $event.stopPropagation()">
+            Review
+          </ion-button>
+        </ion-item>
+      </ion-list>
   </div>
 
   

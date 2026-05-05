@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.models.users_model import get_users_collection
 from app.models.client_model import get_clients_collection
 from app.models.order_model import get_orders_collection
+from app.extension import db
 
 
 def serialize_client(client: dict) -> dict:
@@ -151,6 +152,7 @@ def get_client_dashboard(user_id: str):
     users = get_users_collection()
     clients = get_clients_collection()
     orders_col = get_orders_collection()
+    payments_col = db["payments"]
 
     oid = safe_id(user_id)
     if not oid:
@@ -166,7 +168,7 @@ def get_client_dashboard(user_id: str):
 
     query_active = {
         "clientId": oid,
-        "status": {"$in": ["pending", "in_progress"]},
+        "status": {"$in": ["pending", "in_progress", "submitted"]},
     }
     active_cursor = list(
         orders_col.find(query_active).sort("createdAt", -1).limit(5)
@@ -190,10 +192,26 @@ def get_client_dashboard(user_id: str):
             }
         )
 
-    completed_orders = list(orders_col.find({"clientId": oid, "status": "completed"}))
-    total_spent = sum(
+    completed_orders = list(orders_col.find({
+        "clientId": oid,
+        "status": "completed",
+        "payment_id": None,
+    }))
+    order_total_spent = sum(
         float(x.get("price", x.get("amount", 0)) or 0) for x in completed_orders
     )
+    released_payments = list(
+        payments_col.find(
+            {
+                "client_id": {"$in": [str(oid), oid]},
+                "status": "released",
+            }
+        )
+    )
+    contract_total_spent = sum(
+        int(x.get("amount_cents", 0) or 0) / 100 for x in released_payments
+    )
+    total_spent = order_total_spent + contract_total_spent
 
     stats = {
         "active_projects": orders_col.count_documents(query_active),

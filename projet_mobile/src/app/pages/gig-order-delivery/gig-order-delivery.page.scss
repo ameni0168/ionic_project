@@ -1,0 +1,55 @@
+gig-order-delivery {
+  .workspace-container {
+    padding: 16px;
+  }
+
+  .submission-card {
+    margin-bottom: 16px;
+
+    ion-card-subtitle {
+      color: var(--ion-color-medium);
+      font-size: 14px;
+    }
+  }
+
+  .attachments-section {
+    margin-top: 24px;
+
+    .section-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--ion-color-medium);
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+  }
+
+  .empty-attachments {
+    text-align: center;
+    padding: 24px;
+    color: var(--ion-color-medium);
+    font-style: italic;
+  }
+
+  .tips-card {
+    ion-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  ion-footer ion-toolbar {
+    --border: 0;
+  }
+}
+

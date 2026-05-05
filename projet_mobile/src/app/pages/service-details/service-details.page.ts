@@ -5,6 +5,7 @@ import { FormsModule }       from '@angular/forms';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { ActivatedRoute }    from '@angular/router';
 import { CatalogService }    from 'src/app/services/catalog.service';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector:    'app-gig-detail',
@@ -30,6 +31,7 @@ export class ServiceDetailsPage implements OnInit {
     public navCtrl:    NavController,
     private catalogSvc: CatalogService,
     private toastCtrl:  ToastController,
+    private apiService: ApiService,
   ) {}
 
   ngOnInit() {
@@ -62,10 +64,49 @@ export class ServiceDetailsPage implements OnInit {
   }
 
   // ── ORDER ──────────────────────────────────────────────────────
-  openOrderModal()  { this.orderForm = { message: '', requirements: '' }; this.orderError = ''; this.showOrderModal = true; }
+  async openOrderModal()  {
+    const token = this.apiService.getToken();
+    const role = this.apiService.getUserRole();
+
+    if (!token) {
+      const toast = await this.toastCtrl.create({
+        message: 'Connectez-vous pour passer une commande.',
+        duration: 2500,
+        position: 'top',
+        color: 'warning',
+      });
+      await toast.present();
+      this.navCtrl.navigateForward(['/auth/login'], {
+        queryParams: { redirectTo: `/service-details/${this.gig?.id || ''}` },
+      });
+      return;
+    }
+
+    if (role !== 'client') {
+      const toast = await this.toastCtrl.create({
+        message: 'Seul un compte client peut commander un service.',
+        duration: 3000,
+        position: 'top',
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+
+    this.orderForm = { message: '', requirements: '' };
+    this.orderError = '';
+    this.showOrderModal = true;
+  }
+
   closeOrderModal() { this.showOrderModal = false; }
 
   submitOrder() {
+    const role = this.apiService.getUserRole();
+    if (role !== 'client') {
+      this.orderError = 'Seul un compte client peut commander un service.';
+      return;
+    }
+
     this.orderError = '';
     this.isOrdering = true;
     this.catalogSvc.orderGig(this.gig.id, this.orderForm).subscribe({
@@ -73,7 +114,7 @@ export class ServiceDetailsPage implements OnInit {
         this.isOrdering = false;
         this.closeOrderModal();
         const toast = await this.toastCtrl.create({
-          message:  '✅ Commande envoyée avec succès !',
+          message:  'Commande envoyee avec succes !',
           duration: 3000, position: 'top', color: 'success',
         });
         toast.present();

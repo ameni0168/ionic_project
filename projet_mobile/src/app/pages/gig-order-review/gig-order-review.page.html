@@ -1,0 +1,73 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Gig Order Review</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="loading" class="loading">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <div *ngIf="!loading && order">
+    <!-- Order Header -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ order.gigTitle }}</ion-card-title>
+        <ion-card-subtitle>Freelancer: {{ order.freelancerName }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="price-row">
+          <strong>${{ order.price }}</strong>
+          <ion-badge color="success">Submitted for review</ion-badge>
+        </div>
+        <p>{{ order.clientMessage }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Delivery Details -->
+    <ion-card *ngIf="delivery">
+      <ion-card-header>
+        <ion-card-title>Freelancer Delivery</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <h3>Delivery Note</h3>
+        <p>{{ delivery.note }}</p>
+
+        <h3 *ngIf="delivery.attachments && delivery.attachments.length" class="mt-4">Attachments</h3>
+        <ion-list *ngIf="delivery.attachments && delivery.attachments.length">
+          <ion-item *ngFor="let att of delivery.attachments">
+            <ion-label>
+              <h3>{{ att.title || 'Link' }}</h3>
+              <p><a [href]="att.url" target="_blank">{{ att.url }}</a></p>
+            </ion-label>
+            <ion-button fill="clear" slot="end" [href]="att.url" target="_blank">
+              Open
+            </ion-button>
+          </ion-item>
+        </ion-list>
+
+        <ion-note *ngIf="!delivery.attachments || delivery.attachments.length === 0">
+          No attachments provided
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+      <ion-button expand="block" fill="outline" color="danger" (click)="rejectOrder()">
+        Request Changes
+      </ion-button>
+      <ion-button expand="block" color="success" (click)="acceptAndPay()" [disabled]="isProcessing">
+        <ion-spinner *ngIf="isProcessing" slot="start" name="crescent"></ion-spinner>
+        Accept & Pay ${{ order.price }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
+

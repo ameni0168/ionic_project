@@ -207,6 +207,10 @@ def service_get_by_category(category: str, limit: int = 10):
 
 def service_order_gig(gig_id: str, client_id: str, data: dict):
     col = get_gigs_collection()
+    try:
+        client_oid = ObjectId(client_id)
+    except Exception:
+        return {"error": "Invalid client ID"}, 400
 
     try:
         gig = col.find_one({"_id": ObjectId(gig_id)})
@@ -218,11 +222,15 @@ def service_order_gig(gig_id: str, client_id: str, data: dict):
 
     order_doc = {
         "gigId": gig["_id"],
-        "clientId": client_id,
+        "clientId": client_oid,
         "freelancerId": gig.get("freelancerId"),
         "title": gig.get("title", ""),
         "price": float(gig.get("price", 0)),
+        "currency": gig.get("currency", "USD"),
+
         "status": "pending",
+        "payment_status": "unpaid",
+        "payment_id": None,
         "message": data.get("message", ""),
         "requirements": data.get("requirements", ""),
         "createdAt": datetime.utcnow(),
@@ -235,4 +243,5 @@ def service_order_gig(gig_id: str, client_id: str, data: dict):
         "message": "Order created successfully",
         "order_id": str(order_id),
         "status": "pending",
+        "payment_status": "unpaid",
     }, 201

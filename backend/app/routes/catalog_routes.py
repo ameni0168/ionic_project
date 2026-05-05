@@ -12,8 +12,6 @@ from app.services.catalog_service import (
 catalog_bp = Blueprint("catalog", __name__)
 
 
-# ── GET /api/catalog/ ─────────────────────────────────────────────
-# Paramètres : q, category, min_price, max_price, delivery_time, sort, page
 @catalog_bp.route("/", methods=["GET"])
 def list_gigs():
     filters = {
