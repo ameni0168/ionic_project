@@ -49,6 +49,13 @@ export class ClientDashboardPage implements OnInit {
       gradient: 'linear-gradient(135deg, #f97316, #dc2626)',
       route: '/contracts'
     },
+    {
+      icon: 'analytics-outline',
+      value: '0',
+      label: 'Project Progress',
+      gradient: 'linear-gradient(135deg, #10b981, #059669)',
+      route: '/project-progress'
+    },
   ];
 
   hasActiveJobs = false;

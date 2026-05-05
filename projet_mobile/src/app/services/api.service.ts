@@ -13,7 +13,7 @@ export class ApiService {
   private readonly USER_ID_KEY = 'user_id';
   private readonly USER_ROLE_KEY = 'user_role';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
@@ -127,6 +127,219 @@ export class ApiService {
     });
   }
 
+  // ── Client ─────────────────────────
+
+  getClientProfile(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/client/profile`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateClientProfile(data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/client/profile`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getClientDashboard(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/client/dashboard`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  // ── Jobs (pour les clients) ─────────────────────────
+
+  getMyJobs(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/jobs/my-jobs`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getJobById(jobId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/jobs/${jobId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  createJob(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/jobs`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateJob(jobId: string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/jobs/${jobId}`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  deleteJob(jobId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/jobs/${jobId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getJobProposals(jobId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/jobs/${jobId}/proposals`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  selectProposal(jobId: string, proposalId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/jobs/${jobId}/select-proposal`, 
+      { proposalId },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  // ── Proposals (pour les freelancers) ─────────────────────────
+
+  submitProposal(jobId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/jobs/${jobId}/proposals`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getMyProposals(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/proposals/my-proposals`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getProposalById(proposalId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/proposals/${proposalId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateProposal(proposalId: string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/proposals/${proposalId}`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  // ── Contracts ─────────────────────────
+
+  getMyContracts(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/my-contracts`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getContractById(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getContractByJob(jobId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/job/${jobId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  updateContractStatus(contractId: string, status: string): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/contracts/${contractId}/status`, 
+      { status },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  // ── Sprint Plans ─────────────────────────
+
+  createSprintPlan(contractId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/contracts/${contractId}/sprint-plans`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSprintPlansByContract(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}/sprint-plans`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getActiveSprintPlan(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}/sprint-plans/active`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSprintPlanById(planId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/sprint-plans/${planId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  submitSprintPlanForReview(planId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprint-plans/${planId}/submit`, {}, {
+      headers: this.authHeaders()
+    });
+  }
+
+  approveSprintPlan(planId: string, feedback?: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprint-plans/${planId}/approve`, 
+      { feedback },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  rejectSprintPlan(planId: string, feedback: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprint-plans/${planId}/reject`, 
+      { feedback },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  // ── Sprints ─────────────────────────
+
+  getSprintsByContract(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}/sprints`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSprintById(sprintId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/sprints/${sprintId}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  startSprint(sprintId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprints/${sprintId}/start`, {}, {
+      headers: this.authHeaders()
+    });
+  }
+
+  // ── Sprint Reviews ─────────────────────────
+
+  submitSprintReview(sprintId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprints/${sprintId}/review`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSprintReviewsByContract(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}/sprint-reviews`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSprintReviewBySprint(sprintId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/sprints/${sprintId}/review`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  reviewSprintSubmission(reviewId: string, decision: string, feedback: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sprint-reviews/${reviewId}/review`, 
+      { decision, feedback },
+      { headers: this.authHeaders() }
+    );
+  }
+
+  // ── Gigs (existants) ─────────────────────────
+
   getMyGigs(): Observable<any> {
     return this.http.get(`${this.baseUrl}/gigs/`, {
       headers: this.authHeaders()
@@ -236,6 +449,20 @@ export class ApiService {
 
   orderGig(gigId: string, data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/catalog/${gigId}/order`, data, {
+      headers: this.authHeaders()
+    });
+  }
+
+  // ── Projets (pour le client) ─────────────────────────
+  
+  getClientProjects(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/client/projects`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getProjectProgress(contractId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts/${contractId}/progress`, {
       headers: this.authHeaders()
     });
   }

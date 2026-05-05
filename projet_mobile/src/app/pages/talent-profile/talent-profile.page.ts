@@ -174,9 +174,7 @@ export class TalentProfilePage implements OnInit {
     this.navCtrl.back();
   }
 
-  shareProfile() {
-    // TODO
-  }
+  
 //   createConversation(data: any) {
 //   return this.http.post('http://localhost:5000/api/chat/conversation', data);
 // }

@@ -53,6 +53,8 @@ def job_schema(
         "selected_proposal_id": None,
         "selected_freelancer_id": None,
         "contract_id": None,
+        "status": "open",
+        "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
-        "proposals_count": 0,
+        "proposals_count": 0
     }

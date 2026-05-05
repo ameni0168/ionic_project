@@ -40,6 +40,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/client-dashboard/client-dashboard.page').then(m => m.ClientDashboardPage)
   },
   {
+    path: 'project-progress',
+    loadComponent: () => import('./pages/project-progress/project-progress.page').then(m => m.ProjectProgressPage)
+  },
+  {
+    path: 'project-progress/:id',
+    loadComponent: () => import('./pages/project-progress/project-progress.page').then(m => m.ProjectProgressPage)
+  },
+  {
     path: 'talent',
     loadComponent: () => import('./pages/talent/talent.page').then(m => m.TalentPage)
   },
